@@ -4,5 +4,5 @@
 
 
 static PyObject *getdns_error;
-void *context_destructor(PyObject *capsule);
-struct getdns_dict *pydict_to_getdnsdict(PyDictObject *);
+struct getdns_dict *extensions_to_getdnsdict(PyDictObject *);
+PyObject *decode_getdns_response(struct getdns_dict *);

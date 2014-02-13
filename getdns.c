@@ -59,11 +59,7 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
     struct getdns_dict *extensions_dict;
     int callback = 0;
     getdns_return_t ret;
-    uint32_t len;
     struct getdns_dict *resp = 0;
-    size_t list_len;
-    size_t i;
-    struct getdns_bindata *resp_item;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsH|OO" , kwlist,
                                      &context_capsule, &name, &request_type,
