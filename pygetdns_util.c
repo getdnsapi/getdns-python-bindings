@@ -9,26 +9,138 @@ struct getdns_dict *
 extensions_to_getdnsdict(PyDictObject *pydict)
 {
     struct getdns_dict *newdict = 0;
-    Py_ssize_t pos = 0;
+    Py_ssize_t pos = 0, optiondictpos = 0, optionlistpos = 0;
     PyObject *key, *value;
-    int  tmp_int;
-    char *tmp_key;
+    char *tmpoptionlistkey;
+    struct getdns_list *optionslist = 0;         /* for options list */
+    int optionlistsize;                   /* how many options in options list */
+    int i;                                /* loop counter */
+    PyObject *optionitem;
+    PyObject *optiondictkey, *optiondictvalue; /* for processing option list dicts */
+    struct getdns_bindata *option_data;
+    struct getdns_dict *tmpoptions_list_dict; /* a dict to hold add_opt_parameters[options] stuff */
 
     if (!PyDict_Check(pydict))  {
         PyErr_SetString(getdns_error, "Expected dict, didn't get one");
         return NULL;
     }
-    newdict = getdns_dict_create();
-    while (PyDict_Next((PyObject *)pydict, &pos, &key, &value))  {
+    newdict = getdns_dict_create(); /* this is what we'll return */
+
+    while (PyDict_Next((PyObject *)pydict, &pos, &key, &value))  { /* these options take TRUE or FALSE args */
+        char *tmp_key;
+        int  tmp_int;
+
         tmp_key = PyString_AsString(PyObject_Str(key));
         if ( (!strncmp(tmp_key, "dnssec_return_status", strlen("dnssec_return_status")))  ||
-             (!strncmp(tmp_key, "return_both_v4_and_v6", strlen("return_both_v4_and_v6"))) )  {
+             (!strncmp(tmp_key, "return_only_secure", strlen("return_only_secure")))  ||
+             (!strncmp(tmp_key, "return_both_v4_and_v6", strlen("return_both_v4_and_v6")))  ||
+             (!strncmp(tmp_key, "dnssec_return_supporting_responses", strlen("dnssec_return_supporting_responses")))  ||
+             (!strncmp(tmp_key, "return_api_information", strlen("return_api_information")))  ||
+             (!strncmp(tmp_key, "return_call_debugging", strlen("return_call_debugging")))  ||
+             (!strncmp(tmp_key, "add_warning_for_bad_dns", strlen("add_warning_for_bad_dns"))) )  {
+            if (!PyInt_Check(value))  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
+                return NULL;
+            }
+            if ( !((PyInt_AsLong(value) == GETDNS_EXTENSION_TRUE) || (PyInt_AsLong(value) == GETDNS_EXTENSION_FALSE)) )  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
+                return NULL;
+            }
+            tmp_int = (int)PyInt_AsLong(value);
+            (void)getdns_dict_set_int(newdict, tmp_key, tmp_int);
+        } else if (!strncmp(tmp_key, "specify_class", strlen("specify_class")))  { /* takes integer */
             if (!PyInt_Check(value))  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
                 return NULL;
             }
             tmp_int = (int)PyInt_AsLong(value);
             (void)getdns_dict_set_int(newdict, tmp_key, tmp_int);
+
+/*
+ *  dns OPT resource record setup
+ *
+ *    extensions['add_opt_parameters'][option_name]
+ */
+
+
+        } else if (!strncmp(tmp_key, "add_opt_parameters", strlen("add_opt_parameters")))  { /* this is a dict */
+            PyObject *in_optdict; /* points at dictionary passed in */
+            struct getdns_dict *out_optdict = 0;
+            Py_ssize_t opt_pos = 0;
+            PyObject *opt_key, *opt_value;
+            char *tmp_opt_key;
+            int optint;
+
+            in_optdict = value;
+            if (!PyDict_Check(in_optdict))  {
+                PyErr_SetString(getdns_error, "Expected dict, didn't get one");
+                return NULL;
+            }
+            out_optdict = getdns_dict_create();
+            while (PyDict_Next((PyObject *)in_optdict, &opt_pos, &opt_key, &opt_value))  {
+                tmp_opt_key = PyString_AsString(opt_key);
+                if ( (!strncmp(tmp_opt_key, "maximum_udp_payload_size", strlen("maximum_udp_payload_size")))  ||
+                     (!strncmp(tmp_opt_key, "extended_rcode", strlen("extended_rcode"))) ||
+                     (!strncmp(tmp_opt_key, "version", strlen("version"))) ||
+                     (!strncmp(tmp_opt_key, "do_bit", strlen("do_bit"))) )  {
+                    if (!PyInt_Check(opt_value))  {
+                        PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
+                        return NULL;
+                    }
+                    optint = (int)PyInt_AsLong(opt_value);
+                    (void)getdns_dict_set_int(out_optdict, tmp_opt_key, optint);
+                }  else if (!strncmp(tmp_opt_key, "options", strlen("options")))  { /* options */
+/*
+ * options with arbitrary opt code
+ *
+ *    add_opt_parameters is a dict containing
+ *      options is a list containing
+ *        dicts for each option containing
+ *          option_code (int)
+ *          option_data (bindata)
+ *    
+ */
+
+                    if (!PyList_Check(opt_value))  {
+                        PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
+                        return NULL;
+                    }
+                    optionslist = getdns_list_create();
+
+                    optionlistsize = PyList_Size(opt_value);
+
+                    for ( i = 0 ; i < optionlistsize ; i++)  {
+                        tmpoptions_list_dict = getdns_dict_create();
+                        optionitem = PyList_GetItem(opt_value, i);
+                        if (!PyDict_Check(optionitem))  {
+                            PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
+                            return NULL;
+                        }
+                        /* optionitem should be a dict with keys option_code and option_data */
+                        while (PyDict_Next(optionitem, &optiondictpos, &optiondictkey, &optiondictvalue))  {
+                            tmpoptionlistkey = PyString_AsString(PyObject_Str(optiondictkey));
+                            if  (!strncmp(tmpoptionlistkey, "option_code", strlen("option_code")))  {
+                                if (!PyInt_Check(optiondictvalue))  {
+                                    PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
+                                    return NULL;
+                                }
+                                getdns_dict_set_int(tmpoptions_list_dict, "option_code", (uint32_t)PyInt_AsLong(optiondictvalue));
+                            }  else if (!strncmp(tmpoptionlistkey, "option_data", strlen("option_data")))  {
+                                option_data = (struct getdns_bindata *)malloc(sizeof(struct getdns_bindata));
+                                option_data->size = PyObject_Length(optiondictvalue);
+                                option_data->data = (uint8_t *)PyString_AsString(PyObject_Bytes(optiondictvalue)); /* This is almost certainly wrong */
+                                getdns_dict_set_bindata(tmpoptions_list_dict, "option_data", option_data);
+                            } else  {
+                                PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
+                                return NULL;
+                            }
+                            getdns_list_set_dict(optionslist, optionlistpos, tmpoptions_list_dict);
+                        }
+                    } /* for i ... optionlistsize */
+                    getdns_dict_set_list(out_optdict, "options", optionslist);
+                }     /* for options */
+                getdns_dict_set_dict(newdict, "add_opt_parameters", out_optdict);
+            } /* while PyDict_Next(tmp_optdict ... ) */
         } else {
             PyErr_SetString(getdns_error, GETDNS_RETURN_NO_SUCH_EXTENSION_TEXT);
             return NULL;
