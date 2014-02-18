@@ -189,54 +189,6 @@ decode_getdns_response(struct getdns_dict *response)
     return results;
 }
 
-/*
- * Helper function to process each answer type
- */
-int process_data(size_t rec_count,
-		         size_t rr_count,
-		         char* type,
-		         PyObject* resultslist,
-		         struct getdns_list *this_answer,
-		         struct getdns_dict *response)
-{
-    getdns_return_t this_ret;
-    struct getdns_dict *this_rr = NULL;
-    struct getdns_dict *this_rdata = NULL;
-	struct getdns_bindata *this_a_record = NULL;
-
-	printf("process_data %s \n", type);
-    PyObject *resultitem = PyDict_New();
-
-    this_ret = getdns_list_get_dict(
-    		this_answer, rr_count, &this_rr);
-    /* Get the RDATA */
-
-    this_ret = getdns_dict_get_dict(
-    		this_rr, "rdata", &this_rdata);
-
-	this_ret = getdns_dict_get_bindata(
-			this_rdata, type, &this_a_record);
-	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
-	{
-		fprintf(stderr,
-			"Weird: the A record at %d in record at %d "
-			"had no address. Exiting.\n",
-			(int) rr_count, (int) rec_count);
-		getdns_dict_destroy(response);
-		return 0;
-	}
-	char *this_address_str = getdns_display_ip_address(this_a_record);
-	if (this_address_str) {
-		printf("The %s address is %s\n", type, this_address_str);
-		PyObject *addr1 = PyDict_New();
-		PyDict_SetItem(addr1, PyString_FromString(type),
-			  PyString_FromString(this_address_str));
-		PyDict_SetItem(resultitem, PyString_FromString("answer"), addr1);
-		PyList_Append(resultslist, resultitem);
-		free(this_address_str);
-	}
-	return 1;
-}
 
 /*
  * Error checking helper
@@ -246,6 +198,7 @@ void error_exit(char* msg, getdns_return_t ret)
     char error_str[512];
     if (ret != GETDNS_RETURN_GOOD)  {
         sprintf(error_str, "%s: %d", msg, ret);
+        printf("ERROR: %s: %d", msg, ret);
         PyErr_SetString(getdns_error, error_str);
     }
 }
@@ -262,7 +215,6 @@ decode_getdns_results_tree_response(struct getdns_dict *response)
     getdns_return_t ret;
     PyObject *results;
     PyObject *resultslist;
-    size_t rr_count = 0;
     size_t rec_count = 0;
     getdns_return_t this_ret;
 
@@ -294,126 +246,444 @@ decode_getdns_results_tree_response(struct getdns_dict *response)
     for ( rec_count = 0; rec_count < n_addrs; ++rec_count )
     {
 
-	    struct getdns_dict * this_record;
+	    struct getdns_dict *this_record;
 	    //TODO: Handle errors for below 2 functions
         this_ret = getdns_list_get_dict(
         		addr_list, rec_count, &this_record);
-        /* Get the answer section */
-        struct getdns_list * this_answer;
-        this_ret = getdns_dict_get_list(
-        		this_record, "answer", &this_answer);
 
-        /* Get each RR in the answer section */
-        size_t num_rrs;
-        this_ret = getdns_list_get_length(this_answer, &num_rrs);
-        printf("Num of rrs = %lu\n", num_rrs);
+        // Get the header section
+        printf("Getting header...\n");
+        if (!build_response_header(response, resultslist,
+        		this_record)) {
+        	return NULL;
+        }
 
-        for (rr_count = 0; rr_count < num_rrs; ++rr_count )
-        {
-            //PyObject *resultitem = PyDict_New();
-            struct getdns_dict *this_rr = NULL;
-            //TODO: Handle errors from the below.
-            this_ret = getdns_list_get_dict(
-            		this_answer, rr_count, &this_rr);
-            if (this_ret != GETDNS_RETURN_GOOD)  {
-                error_exit("getdns_list_get_dict failed", this_ret);
-                return NULL;
-            }
-            /* Get the RDATA */
-            struct getdns_dict * this_rdata = NULL;
-            this_ret = getdns_dict_get_dict(
-            		this_rr, "rdata", &this_rdata);
-            if (this_ret != GETDNS_RETURN_GOOD)  {
-            	error_exit("getdns_get_get_dict rdata failed", this_ret);
-                return NULL;
-            }
+        // Get the question section
+        printf("Getting question...\n");
+        if (!build_response_question(response, resultslist,
+        		this_record)) {
+        	return NULL;
+        }
+        /*
+        // Get the answer_type section
+        printf("Getting answer_type...\n");
+        if (!build_response_answer_type("answer_type", response, resultslist,
+        		this_record, rec_count)) {
+        	return NULL;
+        }
 
-            /* Get the RDATA type */
-            uint32_t this_type;
-            this_ret = getdns_dict_get_int(
-            		this_rr, "type", &this_type);
-            if (this_ret != GETDNS_RETURN_GOOD)  {
-            	error_exit("getdns_dict_get_int failed", this_ret);
-                return NULL;
-            }
+        // Get the answer_type section
+        printf("Getting canonical_name...\n");
+        if (!build_response_canonical_name("canonical_name", response, resultslist,
+        		this_record, rec_count)) {
+        	return NULL;
+        }
+        */
 
-            printf("Type = %d\n", this_type);
-            /* If it is a valid RR stash the value in PyObject */
-            switch (this_type) {
+        // Get the answer section
+        printf("Getting answer...\n");
+        if (!build_response_components("answer", response, resultslist,
+        		this_record, rec_count)) {
+        	return NULL;
+        }
+        // Get the authority section
+        printf("Getting authority...\n");
+        if (!build_response_components("authority", response, resultslist,
+        		this_record, rec_count)) {
+        	return NULL;
+        }
+        // Get the additional section
+        printf("Getting additional...\n");
+        if (!build_response_components("additional", response, resultslist,
+        		this_record, rec_count)) {
+        	return NULL;
+        }
 
-            case GETDNS_RRTYPE_A:
-            {
-            	if (!process_data(rec_count, rr_count,
-            			          "ipv4_address", resultslist,
-            			          this_answer, response)) {
-            		return NULL;
-            	}
-            	break;
-            }
-            case GETDNS_RRTYPE_AAAA:
-           {
-				if (!process_data(rec_count, rr_count,
-						          "ipv6_address", resultslist,
-								  this_answer, response)) {
-					return NULL;
-				}
-				break;
-            }
-            case GETDNS_RRTYPE_NS:
-           {
-				if (!process_data(rec_count, rr_count,
-						          "nsdname", resultslist,
-								  this_answer, response)) {
-					return NULL;
-				}
-				break;
-            }
-            case GETDNS_RRTYPE_MD:
-            case GETDNS_RRTYPE_MF:
-            case GETDNS_RRTYPE_MB:
-           {
-				if (!process_data(rec_count, rr_count,
-						          "madname", resultslist,
-								  this_answer, response)) {
-					return NULL;
-				}
-				break;
-            }
-            case GETDNS_RRTYPE_CNAME:
-            {
- 				if (!process_data(rec_count, rr_count,
- 						          "cname", resultslist,
- 								  this_answer, response)) {
- 					return NULL;
- 				}
- 				break;
-             }
-            case GETDNS_RRTYPE_TXT:
-            {
- 				if (!process_data(rec_count, rr_count,
- 						          "txt_strings", resultslist,
- 								  this_answer, response)) {
- 					return NULL;
- 				}
- 				break;
-             }
-            case GETDNS_RRTYPE_APL:
-            {
- 				if (!process_data(rec_count, rr_count,
- 						          "address_family ", resultslist,
- 								  this_answer, response)) {
- 					return NULL;
- 				}
- 				break;
-             }
-
-            default:
-            	return NULL;
-            }
-       }
     }
-
     PyDict_SetItem(results, PyString_FromString("results_tree"), resultslist);
     return results;
+}
+
+/*
+ * Helper function to process each answer type
+ */
+int process_data(size_t rec_count,
+		         size_t rr_count,
+		         uint32_t type,
+		         struct getdns_bindata* name,
+		         uint32_t class,
+		         uint32_t ttl,
+		         char* rrtype,
+		         PyObject* resultslist,
+		         struct getdns_list *this_answer,
+		         struct getdns_dict *response,
+		         char* component)
+{
+    getdns_return_t this_ret;
+    struct getdns_dict *this_rr = NULL;
+    struct getdns_dict *this_rdata = NULL;
+	struct getdns_bindata *this_a_record = NULL;
+
+	printf("process_data rrtype: %s type %u class %u ttl %u\n", rrtype, type, class, ttl);
+    PyObject *resultitem = PyDict_New();
+
+    this_ret = getdns_list_get_dict(
+    		this_answer, rr_count, &this_rr);
+
+    // Get the RDATA
+    this_ret = getdns_dict_get_dict(
+    		this_rr, "rdata", &this_rdata);
+
+	this_ret = getdns_dict_get_bindata(
+			this_rdata, rrtype, &this_a_record);
+	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
+	{
+		fprintf(stderr,
+			"Weird: the A record at %d in record at %d "
+			"had no address. Exiting.\n",
+			(int) rr_count, (int) rec_count);
+		getdns_dict_destroy(response);
+		return 0;
+	}
+	char *this_address_str = getdns_display_ip_address(this_a_record);
+	if (this_address_str) {
+		printf("The %s address is %s\n", rrtype, this_address_str);
+
+		// add items to answer
+        PyObject *resultitem = PyDict_New();
+        PyObject *rdata = PyDict_New();
+        PyDict_SetItem(rdata, PyString_FromString(rrtype),
+        		       PyString_FromString(this_address_str));
+
+		PyObject *res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:O}",
+				"type", type, "class", class, "ttl", ttl, "name",
+				(char *)name->data, "rdata", rdata);
+		printf("The %s address is %s\n", rrtype, this_address_str);
+		PyDict_SetItem(resultitem, PyString_FromString(component), res1);
+
+		PyList_Append(resultslist, resultitem);
+		free(this_address_str);
+	}
+	return 1;
+}
+
+/*
+ * Pass in "answer", "authority" or "additional" to build the relavant sections
+ */
+int build_response_components(char* component,
+		                      struct getdns_dict *response,
+		                      PyObject *resultslist,
+		                      struct getdns_dict *this_record,
+		                      size_t rec_count)
+{
+    getdns_return_t this_ret;
+    size_t rr_count;
+
+    struct getdns_list *this_component;
+    this_ret = getdns_dict_get_list(
+    		this_record, component, &this_component);
+
+    /* Get each RR in the answer section */
+    size_t num_rrs;
+    this_ret = getdns_list_get_length(this_component, &num_rrs);
+    printf("Num of rrs for %s = %lu\n", component, num_rrs);
+
+    for (rr_count = 0; rr_count < num_rrs; ++rr_count )
+    {
+        //PyObject *resultitem = PyDict_New();
+        struct getdns_dict *this_rr = NULL;
+
+        this_ret = getdns_list_get_dict(
+        		this_component, rr_count, &this_rr);
+        if (this_ret != GETDNS_RETURN_GOOD)  {
+            error_exit("getdns_list_get_dict failed", this_ret);
+            return 0;
+        }
+        // Get the RDATA
+        struct getdns_dict * this_rdata = NULL;
+        this_ret = getdns_dict_get_dict(
+        		this_rr, "rdata", &this_rdata);
+        if (this_ret != GETDNS_RETURN_GOOD)  {
+        	error_exit("getdns_get_get_dict rdata failed", this_ret);
+            return 0;
+        }
+
+        //get the name
+        struct getdns_bindata *name = NULL;
+    	this_ret = getdns_dict_get_bindata(
+    			this_rr, "name", &name);
+    	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
+    	{
+    		fprintf(stderr,
+    			"Weird: the A record at %d in record at %d "
+    			"had no address. Exiting.\n",
+    			(int) rr_count, (int) rec_count);
+    		getdns_dict_destroy(response);
+    		return 0;
+    	}
+
+        // Get the  type
+        uint32_t this_type;
+        this_ret = getdns_dict_get_int(
+        		this_rr, "type", &this_type);
+        if (this_ret != GETDNS_RETURN_GOOD)  {
+        	error_exit("getdns_dict_get_int failed", this_ret);
+            return NULL;
+        }
+
+        // Get the class
+        uint32_t class;
+        this_ret = getdns_dict_get_int(
+        		this_rr, "class", &class);
+        if (this_ret != GETDNS_RETURN_GOOD)  {
+        	error_exit("getdns_dict_get_int failed", this_ret);
+            return NULL;
+        }
+
+        // Get the ttl
+        uint32_t ttl;
+        this_ret = getdns_dict_get_int(
+        		this_rr, "ttl", &ttl);
+        if (this_ret != GETDNS_RETURN_GOOD)  {
+        	error_exit("getdns_dict_get_int failed", this_ret);
+            return NULL;
+        }
+
+    	printf("type %u class %u ttl %u\n", this_type, class, ttl);
+
+        /* If it is a valid RR stash the value in PyObject */
+        switch (this_type) {
+
+        case GETDNS_RRTYPE_A:
+        {
+        	if (!process_data(rec_count, rr_count,
+        			          this_type, name, class, ttl,
+        			          "ipv4_address", resultslist,
+        			          this_component, response, component)) {
+        		return 0;
+        	}
+        	break;
+        }
+        case GETDNS_RRTYPE_AAAA:
+       {
+			if (!process_data(rec_count, rr_count,
+					          this_type, name, class, ttl,
+					          "ipv6_address", resultslist,
+					          this_component, response, component)) {
+				return 0;
+			}
+			break;
+        }
+        case GETDNS_RRTYPE_NS:
+       {
+			if (!process_data(rec_count, rr_count,
+					          this_type, name, class, ttl,
+					          "nsdname", resultslist,
+					          this_component, response, component)) {
+				return 0;
+			}
+			break;
+        }
+        case GETDNS_RRTYPE_MD:
+        case GETDNS_RRTYPE_MF:
+        case GETDNS_RRTYPE_MB:
+       {
+			if (!process_data(rec_count, rr_count,
+					          this_type, name, class, ttl,
+					          "madname", resultslist,
+					          this_component, response, component)) {
+				return 0;
+			}
+			break;
+        }
+        case GETDNS_RRTYPE_CNAME:
+        {
+			if (!process_data(rec_count, rr_count,
+							  this_type, name, class, ttl,
+							  "cname", resultslist,
+							  this_component, response, component)) {
+				return 0;
+			}
+			break;
+         }
+        case GETDNS_RRTYPE_TXT:
+        {
+			if (!process_data(rec_count, rr_count,
+							  this_type, name, class, ttl,
+							  "txt_strings", resultslist,
+							  this_component, response, component)) {
+				return 0;
+			}
+			break;
+         }
+        case GETDNS_RRTYPE_APL:
+        {
+			if (!process_data(rec_count, rr_count,
+							  this_type, name, class, ttl,
+							  "address_family ", resultslist,
+							  this_component, response, component)) {
+				return 0;
+			}
+			break;
+         }
+
+        case GETDNS_RRTYPE_SOA:
+         {
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "mname", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "rname", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "serial", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "refresh", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "retry", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "expire", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+
+ 			break;
+          }
+
+        default:
+        	return 0;
+        }
+   }
+
+return 1;
+}
+
+/*
+ * Pass in "header" to build the relavant sections
+ */
+int build_response_header(struct getdns_dict *response,
+		                      PyObject *resultslist,
+		                      struct getdns_dict *this_record)
+{
+    getdns_return_t this_ret;
+
+	PyObject *headeritem = PyDict_New();
+	// Get the header
+	struct getdns_dict *header = NULL;
+	this_ret = getdns_dict_get_dict(
+			this_record, "header", &header);
+	if (this_ret != GETDNS_RETURN_GOOD)  {
+		error_exit("getdns_get_get_dict header failed", this_ret);
+		return 0;
+	}
+
+    // Get the id
+     uint32_t id;
+     this_ret = getdns_dict_get_int(
+    		 header, "id", &id);
+     if (this_ret != GETDNS_RETURN_GOOD)  {
+     	error_exit("getdns_dict_get_int failed", this_ret);
+         return 0;
+     }
+     printf("header id = %d\n", id);
+     // Get the status
+      uint32_t status;
+      this_ret = getdns_dict_get_int(
+     		 header, "status", &status);
+      if (this_ret != GETDNS_RETURN_GOOD)  {
+      	  error_exit("getdns_dict_get_int failed", this_ret);
+          //return 0;
+      }
+      printf("header status = %d\n", status);
+
+    //get the opcode
+      uint32_t opcode ;
+  	this_ret = getdns_dict_get_bindata(
+  			header, "opcode", &opcode);
+  	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
+  	{
+  		fprintf(stderr,
+  			"Weird: invalid opcode in header Exiting.\n");
+  		getdns_dict_destroy(response);
+  		return 0;
+  	}
+  	printf("header opcode = %d\n", opcode);
+
+return 1;
+}
+
+/*
+ * Pass in "header" to build the relavant sections
+ */
+int build_response_question(struct getdns_dict *response,
+		                      PyObject *resultslist,
+		                      struct getdns_dict *this_record)
+{
+    getdns_return_t this_ret;
+
+	PyObject *headeritem = PyDict_New();
+	// Get the question
+	struct getdns_dict *question = NULL;
+	this_ret = getdns_dict_get_dict(
+			this_record, "question", &question);
+	if (this_ret != GETDNS_RETURN_GOOD)  {
+		error_exit("getdns_get_get_dict header failed", this_ret);
+		return NULL;
+	}
+
+    // Get the id
+     uint32_t qtype;
+     this_ret = getdns_dict_get_int(
+    		 question, "qtype", &qtype);
+     if (this_ret != GETDNS_RETURN_GOOD)  {
+     	error_exit("getdns_dict_get_int failed", this_ret);
+         return NULL;
+     }
+     printf("question qtype = %d\n", qtype);
+     // Get the qclass
+      uint32_t qclass;
+      this_ret = getdns_dict_get_int(
+     		 question, "qclass", &qclass);
+      if (this_ret != GETDNS_RETURN_GOOD)  {
+      	error_exit("getdns_dict_get_int failed", this_ret);
+          return NULL;
+      }
+      printf("question qclass = %d\n", qclass);
+
+      //get the qname
+      struct getdns_bindata *qname = NULL;
+  	this_ret = getdns_dict_get_bindata(
+  			question, "qname", &qname);
+  	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
+  	{
+  		fprintf(stderr,
+  			"Weird: invalid opcode in header Exiting.\n");
+  		getdns_dict_destroy(response);
+  		return 0;
+  	}
+  	printf("question qname = %s\n", getdns_display_ip_address(qname));
+
+return 1;
 }
 
