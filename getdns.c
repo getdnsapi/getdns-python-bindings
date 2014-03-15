@@ -127,7 +127,7 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 /*
- * Implements the results_tree for the getDns API
+ * Implements the replies_tree for the getDns API
  * Returns a PyObject with the response.
  */
 static PyObject *
@@ -183,7 +183,7 @@ replies_tree(PyObject *self, PyObject *args, PyObject *keywds)
         printf("Item %s\n", resp_item->data);
     }
 #endif
-    return decode_getdns_results_tree_response(resp);
+    return decode_getdns_replies_tree_response(resp);
 
 }
 
