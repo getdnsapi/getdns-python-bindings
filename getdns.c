@@ -108,7 +108,7 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, "Dictionary parse failure");
         return NULL;
     }
-    if ((ret = getdns_general_sync(context, name, GETDNS_RRTYPE_A,
+    if ((ret = getdns_general_sync(context, name, request_type,
                                    extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, "Lookup failure");
         return NULL;
