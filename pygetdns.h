@@ -33,3 +33,8 @@
 static PyObject *getdns_error;
 struct getdns_dict *extensions_to_getdnsdict(PyDictObject *);
 PyObject *decode_getdns_response(struct getdns_dict *);
+
+typedef struct pygetdns_libevent_callback_data  {
+    char *callback_func;
+    void *userarg;
+} pygetdns_libevent_callback_data;

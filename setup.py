@@ -2,11 +2,11 @@ from distutils.core import setup, Extension
 
 CFLAGS = [ '-g' ]
 module1 = Extension('getdns',
-                    include_dirs = [ '/usr/local/include',
-                                     ],
-                    libraries = [ 'getdns' ],
+                    include_dirs = [ '/usr/local/include', ],
+                    libraries = [ 'getdns', 'getdns_ext_event' ],
                     library_dirs = [ '/usr/local/lib' ],
-                    sources = [ 'getdns.c', 'pygetdns_util.c' ]
+                    sources = [ 'getdns.c', 'pygetdns_util.c' ],
+                    runtime_library_dirs = [ '/usr/local/lib' ]
                     )
 
 setup(name='PackageName',

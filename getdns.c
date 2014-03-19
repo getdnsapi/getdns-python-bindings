@@ -39,8 +39,52 @@
 #include <stdio.h>
 #include <string.h>
 #include <getdns/getdns.h>
+#include <getdns/getdns_ext_libevent.h>
+#include <event2/event.h>
 #include "pygetdns.h"
 
+
+
+/*
+ *  A shim to sit between the event callback function
+ *  and the python callback.  This is a wee bit hacky
+ */
+
+
+void         
+callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict *resp,
+  void *u, getdns_transaction_t tid)
+{
+    PyObject *main_module;
+    PyObject *main_dict;
+    PyObject *getdns_runner;
+    PyObject *func_args;
+    pygetdns_libevent_callback_data *callback_data;
+    PyObject *response;
+
+    if ((main_module = PyImport_AddModule("__main__")) == 0)  {
+        PyErr_SetString(getdns_error, "No __main__");
+        /* need to throw an error here */
+    }
+    callback_data = (pygetdns_libevent_callback_data *)u;
+    main_dict = PyModule_GetDict(main_module);
+    if ((getdns_runner = PyDict_GetItemString(main_dict, callback_data->callback_func)) == 0)  {
+        PyErr_SetString(getdns_error, "callback not found");
+        /* need to throw an error here XXX */
+    }
+    /* Python callback prototype: */
+    /* callback(context, callback_type, response, userarg, tid) */
+
+    if ((response = decode_getdns_response(resp)) == 0)  {
+        PyErr_SetString(getdns_error, "Unable to decode response");
+        /* need to throw exceptiion XXX */
+    }
+    PyObject_CallFunction(getdns_runner, "OO", context, response);
+#if 0
+    PyObject_CallFunction(getdns_runner, "OsOOO", context, type, response,
+                          callback_data->userarg, tid);
+#endif
+}
 
 
 /**
@@ -84,6 +128,8 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
         "name",
         "request_type",
         "extensions",
+        "userarg",
+        "transaction_id",
         "callback",
         0
     };
@@ -94,13 +140,15 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
     uint16_t  request_type;
     PyDictObject *extensions_obj;
     struct getdns_dict *extensions_dict;
-    int callback = 0;
+    void *userarg;
+    getdns_transaction_t tid;
+    char * callback = 0;
     getdns_return_t ret;
     struct getdns_dict *resp = 0;
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsH|OO" , kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsH|OOOs" , kwlist,
                                      &context_capsule, &name, &request_type,
-                                     &extensions_obj, &callback))  {
+                                     &extensions_obj, &userarg, &tid, &callback))  {
         return NULL;
     }
     context = PyCapsule_GetPointer(context_capsule, "context");
@@ -108,23 +156,38 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, "Dictionary parse failure");
         return NULL;
     }
+    if (callback)  {
+        struct event_base *gen_event_base;
+        int dispatch_ret;
+        pygetdns_libevent_callback_data callback_data;
+
+        if ((gen_event_base = event_base_new()) == NULL)  {
+            PyErr_SetString(getdns_error, "Unable to create event base");
+            return NULL;
+        }
+        
+        callback_data.callback_func = callback;
+        callback_data.userarg = userarg;
+        (void)getdns_extension_set_libevent_base(context, gen_event_base);
+
+        if ((ret = getdns_general(context, name, request_type, extensions_dict, (void *)&callback_data,
+                                  NULL, callback_shim)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, "getdns_general() failed");
+            event_base_free(gen_event_base);
+            return NULL;
+        }
+        dispatch_ret = event_base_dispatch(gen_event_base);
+        return Py_None;
+    }
     if ((ret = getdns_general_sync(context, name, request_type,
                                    extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, "Lookup failure");
         return NULL;
     }
-#if 0
-    (void)getdns_list_get_length(resp, &list_len);
-    printf("%d answers\n", list_len);
-
-    for ( i = 0 ; i < list_len ; i++ )  {
-        getdns_list_get_bindata(resp, i, &resp_item);
-        printf("%s\n", resp_item->data);
-    }
-#endif
     return decode_getdns_response(resp);
 
 }
+
 
 /*
  * Implements the replies_tree for the getDns API
