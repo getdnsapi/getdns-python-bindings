@@ -38,6 +38,307 @@
 #include <getdns/getdns.h>
 #include "pygetdns.h"
 
+/* rtypes supported in replies_tree
+A (1)  done
+
+ipv4_address (a bindata)
+
+NS (2) done
+
+nsdname (a bindata)
+
+MD (3) done
+
+madname (a bindata)
+
+MF (4) done
+
+madname (a bindata)
+
+CNAME (5) done
+
+cname (a bindata)
+
+SOA (6) done
+
+mname (a bindata), rname (a bindata), serial (an int), refresh (an int), refresh (an int), retry (an int), and expire (an int)
+
+MB (7) done
+
+madname (a bindata)
+
+MG (8)
+
+mgmname (a bindata)
+
+MR (9)
+
+newname (a bindata)
+
+NULL (10)
+
+anything (a bindata)
+
+WKS (11) done
+
+address (a bindata), protocol (an int), and bitmap (a bindata)
+
+PTR (12) done
+
+ptrdname (a bindata)
+
+HINFO (13) done
+
+cpu (a bindata) and os (a bindata)
+
+MINFO (14) done
+
+rmailbx (a bindata) and emailbx (a bindata)
+
+MX (15) done, not working as expected.
+
+preference (an int) and exchange (a bindata)
+
+TXT (16) done
+
+txt_strings (a list) which contains zero or more bindata elements that are text strings
+
+RP (17) done
+
+mbox_dname (a bindata) and txt_dname (a bindata)
+
+AFSDB (18) done
+
+subtype (an int) and hostname (a bindata)
+
+done (19) done
+
+psdn_address (a bindata)
+
+ISDN (20) done
+
+isdn_address (a bindata) and sa (a bindata)
+
+RT (21) done
+
+preference (an int) and intermediate_host (a bindata)
+
+NSAP (22) done
+
+nsap (a bindata)
+
+SIG (24) done
+
+sig_obsolete (a bindata)
+
+KEY (25) done
+
+key_obsolete (a bindata)
+
+PX (26)
+
+preference (an int), map822 (a bindata), and mapx400 (a bindata)
+
+GPOS (27)
+
+longitude (a bindata), latitude (a bindata), and altitude (a bindata)
+
+AAAA (28) done
+
+ipv6_address (a bindata)
+
+LOC (29) done
+
+loc_obsolete (a bindata)
+
+NXT (30) done
+
+nxt_obsolete (a bindata)
+
+EID (31) done
+
+eid_unknown (a bindata)
+
+NIMLOC (32) done
+
+nimloc_unknown (a bindata)
+
+SRV (33)
+
+priority (an int), weight (an int), port (an int), and target (a bindata)
+
+ATMA (34)
+
+format (an int) and address (a bindata)
+
+NAPTR (35)
+
+order (an int), preference (an int), flags (a bindata), service (a bindata), regexp (a bindata), and replacement (a bindata).
+
+KX (36)
+
+preference (an int) and exchanger (a bindata)
+
+CERT (37) done
+
+type (an int), key_tag (an int), algorithm (an int), and certificate_or_crl (a bindata)
+
+A6 (38) done
+
+a6_obsolete (a bindata)
+
+DNAME (39) done
+
+target (a bindata)
+
+SINK (40) done
+
+sink_unknown (a bindata)
+
+OPT (41)  done
+
+options (a list). Each element of the options list is a dict with two names: option_code (an int) and option_data (a bindata).
+
+APL (42) done
+
+apitems (a list). Each element of the apitems list is a dict with four names: address_family (an int), prefix (an int), n (an int), and afdpart (a bindata)
+
+DS (43) DONE
+
+key_tag (an int), algorithm (an int), digest_type (an int), and digest (a bindata)
+
+SSHFP (44)
+
+algorithm (an int), fp_type (an int), and fingerprint (a bindata)
+
+IPSECKEY (45)
+
+algorithm (an int), gateway_type (an int), precedence (an int), gateway, and public_key (a bindata)
+
+RRSIG (46)
+
+type_covered (an int), algorithm (an int), labels (an int), original_ttl (an int), signature_expiration (an int), signature_inception (an int), key_tag (an int), signers_name (a bindata), and signature (a bindata)
+
+NSEC (47)
+
+next_domain_name (a bindata) and type_bit_maps (a bindata)
+
+DNSKEY (48)
+
+flags (an int), protocol (an int), algorithm (an int), and public_key (a bindata)
+
+DHCID (49) done
+
+dhcid_opaque (a bindata)
+
+NSEC3 (50)
+
+hash_algorithm (an int), flags (an int), iterations (an int), salt (a bindata), next_hashed_owner_name (a bindata), and type_bit_maps (a bindata)
+
+NSEC3PARAM (51)
+
+hash_algorithm (an int), flags (an int), iterations (an int), and salt (a bindata)
+
+TLSA (52)
+
+certificate_usage (an int), selector (an int), matching_type (an int), and certificate_association_data (a bindata).
+
+HIP (55)
+
+pk_algorithm (an int), hit (a bindata), public_key (a bindata), and rendezvous_servers (a list) with each element a bindata with the dname of the rendezvous_server.
+
+NINFO (56) done
+
+ninfo_unknown (a bindata)
+
+RKEY (57) done
+
+rkey_unknown (a bindata)
+
+TALINK (58) done
+
+talink_unknown (a bindata)
+
+CDS (59) done
+
+cds_unknown (a bindata)
+
+SPF (99) done
+
+text (a bindata)
+
+UINFO (100) done
+
+uinfo_unknown (a bindata)
+
+UID (101) done
+
+uid_unknown (a bindata)
+
+GID (102) done
+
+gid_unknown (a bindata)
+
+UNSPEC (103) done
+
+unspec_unknown (a bindata)
+
+NID (104)
+
+preference (an int) and node_id (a bindata)
+
+L32 (105)
+
+preference (an int) and locator32 (a bindata)
+
+L64 (106)
+
+preference (an int) and locator64 (a bindata)
+
+LP (107)
+
+preference (an int) and fqdn (a bindata)
+
+EUI48 (108)
+
+eui48_address (a bindata)
+
+EUI64 (109)
+
+eui64_address (a bindata)
+
+TKEY (249)
+
+algorithm (a bindata), inception (an int), expiration (an int), mode (an int), error (an int), key_data (a bindata), and other_data (a bindata)
+
+TSIG (250)
+
+algorithm (a bindata), time_signed (a bindata), fudge (an int), mac (a bindata), original_id (an int), error (an int), and other_data (a bindata)
+
+MAILB (253) done
+
+mailb-unknown (a bindata)
+
+MAILA (254) done
+
+maila-unknown (a bindata)
+
+URI (256)
+
+priority (an int), weight (an int), and target (a bindata)
+
+CAA (257)
+
+flags (an int), tag (a bindata), and value (a bindata)
+
+TA (32768) done
+
+ta_unknown (a bindata)
+
+DLV (32769)
+
+Identical to DS (43)
+ */
 
 struct getdns_dict *
 extensions_to_getdnsdict(PyDictObject *pydict)
@@ -719,7 +1020,7 @@ int build_response_components(char* component,
         }
         case GETDNS_RRTYPE_MX:
        {
-    	   //TODO: not working as expected
+    	   //TODO: not working as expected for gmail.com
 			if (!process_data(rec_count, rr_count,
 					          this_type, name, class, ttl,
 					          "preference", resultslist,
@@ -1007,6 +1308,299 @@ int build_response_components(char* component,
  			}
  			break;
           }
+
+        case GETDNS_RRTYPE_NSAP:
+          {
+  			if (!process_data(rec_count, rr_count,
+  							  this_type, name, class, ttl,
+  							  "nsap", resultslist,
+  							  this_component, response, component)) {
+  				return 0;
+  			}
+  			break;
+           }
+
+        case GETDNS_RRTYPE_SIG:
+          {
+  			if (!process_data(rec_count, rr_count,
+  							  this_type, name, class, ttl,
+  							  "sig_obsolete", resultslist,
+  							  this_component, response, component)) {
+  				return 0;
+  			}
+  			break;
+           }
+        case GETDNS_RRTYPE_KEY:
+          {
+  			if (!process_data(rec_count, rr_count,
+  							  this_type, name, class, ttl,
+  							  "key_obsolete", resultslist,
+  							  this_component, response, component)) {
+  				return 0;
+  			}
+  			break;
+           }
+        case GETDNS_RRTYPE_NXT:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "nxt_obsolete", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_EID:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "eid_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_NIMLOC:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "nimloc_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_LOC:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "loc_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+
+        case GETDNS_RRTYPE_DHCID:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "dhcid_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_NINFO:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "ninfo_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_RKEY:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "rkey_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_TALINK:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "talink_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_CDS:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "cds_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_SPF:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "text", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_UINFO:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "uinfo_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_UID:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "uid_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_GID:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "gid_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_UNSPEC:
+            {
+    			if (!process_data(rec_count, rr_count,
+    							  this_type, name, class, ttl,
+    							  "unspec_unknown", resultslist,
+    							  this_component, response, component)) {
+    				return 0;
+    			}
+    			break;
+             }
+        case GETDNS_RRTYPE_SINK:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "sink_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_TA:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "ta_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_MAILA:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "maila_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_MAILB:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "mailb_unknown", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_DNAME:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "target", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_A6:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "a6_obsolete", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_MG:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "mgmname", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_MR:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "newname", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+        case GETDNS_RRTYPE_NULL:
+           {
+   			if (!process_data(rec_count, rr_count,
+   							  this_type, name, class, ttl,
+   							  "anything", resultslist,
+   							  this_component, response, component)) {
+   				return 0;
+   			}
+   			break;
+            }
+
+         case GETDNS_RRTYPE_DS:
+         {
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "digest_type", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "key_tag", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "algorithm", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+
+ 			if (!process_data(rec_count, rr_count,
+ 							  this_type, name, class, ttl,
+ 							  "digest", resultslist,
+ 							  this_component, response, component)) {
+ 				return 0;
+ 			}
+         }
 
         default:
         	return 0;
