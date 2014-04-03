@@ -426,10 +426,72 @@ replies_tree(PyObject *self, PyObject *args, PyObject *keywds)
         getdns_list_get_bindata(resp, i, &resp_item);
         printf("Item %s\n", resp_item->data);
     }
-#endif
+#endif 
     return decode_getdns_replies_tree_response(resp);
 
 }
+
+/*
+ * Implements the replies_tree for the getDns API
+ * Returns a PyObject with the response.
+ */
+static PyObject *
+reply_full(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = {
+        "context",
+        "name",
+        "request_type",
+        "extensions",
+        "callback",
+        0
+    };
+
+    PyObject *context_capsule;
+    struct getdns_context *context;
+    char *name;
+    uint16_t  request_type;
+    PyDictObject *extensions_obj;
+    struct getdns_dict *extensions_dict;
+    int callback = 0;
+    getdns_return_t ret;
+    struct getdns_dict *resp = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsH|OO" , kwlist,
+                                     &context_capsule, &name, &request_type,
+                                     &extensions_obj, &callback))  {
+        return NULL;
+    }
+    context = PyCapsule_GetPointer(context_capsule, "context");
+    if ((extensions_dict = extensions_to_getdnsdict(extensions_obj)) == 0)  {
+        PyErr_SetString(getdns_error, "Dictionary parse failure");
+        return NULL;
+    }
+    if ((ret = getdns_general_sync(context, name, request_type,
+                                   extensions_dict, &resp))
+    		                       != GETDNS_RETURN_GOOD)  {
+    	//TODO: refine error handling consistently thru the app, a error handler
+    	// with helpful messages.
+    	char error[255];
+    	sprintf(error, "getdns_general_sync failed with error code = %d", ret);
+        PyErr_SetString(getdns_error, error);
+        return NULL;
+    }
+#if 0 
+    int list_len;
+    (void)getdns_list_get_length(resp, &list_len);
+    printf("%d answers\n", list_len);
+    int i = 0;
+    struct getdns_bindata *resp_item;
+    for ( i = 0 ; i < list_len ; i++ )  {
+        getdns_list_get_bindata(resp, i, &resp_item);
+        printf("Item %s\n", resp_item->data);
+    }
+#endif 
+    return getFullResponse(resp);
+
+}
+
 
 
 static struct PyMethodDef getdns_methods[] = {
@@ -439,6 +501,7 @@ static struct PyMethodDef getdns_methods[] = {
     { "service", (PyCFunction)service, METH_KEYWORDS },
     { "hostname", (PyCFunction)hostname, METH_KEYWORDS },
     { "replies_tree", (PyCFunction)replies_tree, METH_KEYWORDS },
+    { "reply_full", (PyCFunction)reply_full, METH_KEYWORDS },
     { 0, 0 }
 };
 

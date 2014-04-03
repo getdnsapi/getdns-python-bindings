@@ -1,5 +1,4 @@
-/**
- *
+ /*
  * \ file pygetdns_util.c
  * @brief utility functions to support pygetdns bindings
  */
@@ -196,7 +195,7 @@ SINK (40) done
 
 sink_unknown (a bindata)
 
-OPT (41)  done
+OPT (41)  pseudo record, not queryable
 
 options (a list). Each element of the options list is a dict with two names: option_code (an int) and option_data (a bindata).
 
@@ -557,13 +556,13 @@ decode_getdns_replies_tree_response(struct getdns_dict *response)
     printf("decode_getdns_replies_tree_response\n");
     (void)getdns_dict_get_int(response, "status", &error);
     if (error != GETDNS_RESPSTATUS_GOOD)  {
-    	error_exit("No answers, return value", error);
+        error_exit("No answers, return value", error);
         return NULL;
     }
 
     if ((ret = getdns_dict_get_list(response, "replies_tree",
                                     &addr_list)) != GETDNS_RETURN_GOOD)  {
-    	error_exit("Extracting answers failed", ret);
+        error_exit("Extracting answers failed", ret);
         return NULL;
     }
 
@@ -579,57 +578,57 @@ decode_getdns_replies_tree_response(struct getdns_dict *response)
     for ( rec_count = 0; rec_count < n_addrs; ++rec_count )
     {
 
-	    struct getdns_dict *this_record;
-	    //TODO: Handle errors for below 2 functions
+        struct getdns_dict *this_record;
+        //TODO: Handle errors for below 2 functions
         this_ret = getdns_list_get_dict(
-        		addr_list, rec_count, &this_record);
+                addr_list, rec_count, &this_record);
 
         // Get the header section
         printf("Getting header...\n");
         if (!build_response_header(response, resultslist,
-        		this_record)) {
-        	return NULL;
+                this_record)) {
+            return NULL;
         }
 
         // Get the question section
         printf("Getting question...\n");
         if (!build_response_question(response, resultslist,
-        		this_record)) {
-        	return NULL;
+                this_record)) {
+            return NULL;
         }
         /*
         // Get the answer_type section
         printf("Getting answer_type...\n");
         if (!build_response_answer_type("answer_type", response, resultslist,
-        		this_record, rec_count)) {
-        	return NULL;
+                this_record, rec_count)) {
+            return NULL;
         }
 
         // Get the answer_type section
         printf("Getting canonical_name...\n");
         if (!build_response_canonical_name("canonical_name", response, resultslist,
-        		this_record, rec_count)) {
-        	return NULL;
+                this_record, rec_count)) {
+            return NULL;
         }
         */
 
         // Get the answer section
         printf("Getting answer...\n");
         if (!build_response_components("answer", response, resultslist,
-        		this_record, rec_count)) {
-        	return NULL;
+                this_record, rec_count)) {
+            return NULL;
         }
         // Get the authority section
         printf("Getting authority...\n");
         if (!build_response_components("authority", response, resultslist,
-        		this_record, rec_count)) {
-        	return NULL;
+                this_record, rec_count)) {
+            return NULL;
         }
         // Get the additional section
         printf("Getting additional...\n");
         if (!build_response_components("additional", response, resultslist,
-        		this_record, rec_count)) {
-        	return NULL;
+                this_record, rec_count)) {
+            return NULL;
         }
 
     }
@@ -642,109 +641,109 @@ decode_getdns_replies_tree_response(struct getdns_dict *response)
  * Handle lists in process_list_data
  */
 int process_data(size_t rec_count,
-		         size_t rr_count,
-		         uint32_t type,
-		         struct getdns_bindata* name,
-		         uint32_t class,
-		         uint32_t ttl,
-		         char* rrtype,
-		         PyObject* resultslist,
-		         struct getdns_list *this_answer,
-		         struct getdns_dict *response,
-		         char* component)
+                 size_t rr_count,
+                 uint32_t type,
+                 struct getdns_bindata* name,
+                 uint32_t class,
+                 uint32_t ttl,
+                 char* rrtype,
+                 PyObject* resultslist,
+                 struct getdns_list *this_answer,
+                 struct getdns_dict *response,
+                 char* component)
 {
     getdns_return_t this_ret;
     struct getdns_dict *this_rr = NULL;
     struct getdns_dict *this_rdata = NULL;
-	struct getdns_bindata *this_a_record = NULL;
-	uint32_t intdata;
-	struct getdns_list *listdata = NULL;
+    struct getdns_bindata *this_a_record = NULL;
+    uint32_t intdata;
+    struct getdns_list *listdata = NULL;
 
-	printf("process_data rrtype: %s type %u class %u ttl %u\n",
-			rrtype, type, class, ttl);
+    printf("process_data rrtype: %s type %u class %u ttl %u\n",
+            rrtype, type, class, ttl);
     PyObject *resultitem = PyDict_New();
 
     this_ret = getdns_list_get_dict(
-    		this_answer, rr_count, &this_rr);
+            this_answer, rr_count, &this_rr);
 
     // Get the RDATA
     this_ret = getdns_dict_get_dict(
-    		this_rr, "rdata", &this_rdata);
+            this_rr, "rdata", &this_rdata);
 
     //TODO: How do I know which datatype I got back?
     // eg int or bindata etc?
-	this_ret = getdns_dict_get_bindata(
-			this_rdata, rrtype, &this_a_record);
-	if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
-	{
-		this_ret = getdns_dict_get_int(
-				this_rdata, rrtype, &intdata);
-		if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
-		{
-			this_ret = getdns_dict_get_list(
-					this_rdata, rrtype, &listdata);
-			if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
-			{
-				this_ret = getdns_dict_get_names(
-						this_rdata, &listdata);
-				{
-				fprintf(stderr,
-					"Weird: the A record at %d in record at %d "
-					"had no data. Exiting with error %d.\n",
-					(int) rr_count, (int) rec_count, this_ret);
-				getdns_dict_destroy(response);
-				return 0;
-				}
-			}
-		}
-	}
-	char *this_address_str = getdns_display_ip_address(this_a_record);
-	if (this_address_str) {
-		printf("The %s address is %s count %d\n", rrtype, this_address_str, rr_count);
+    this_ret = getdns_dict_get_bindata(
+            this_rdata, rrtype, &this_a_record);
+    if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
+    {
+        this_ret = getdns_dict_get_int(
+                this_rdata, rrtype, &intdata);
+        if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
+        {
+            this_ret = getdns_dict_get_list(
+                    this_rdata, rrtype, &listdata);
+            if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
+            {
+                this_ret = getdns_dict_get_names(
+                        this_rdata, &listdata);
+                {
+                fprintf(stderr,
+                    "Weird: the A record at %d in record at %d "
+                    "had no data. Exiting with error %d.\n",
+                    (int) rr_count, (int) rec_count, this_ret);
+                getdns_dict_destroy(response);
+                return 0;
+                }
+            }
+        }
+    }
+    char *this_address_str = getdns_display_ip_address(this_a_record);
+    if (this_address_str) {
+        printf("The %s address is %s count %d\n", rrtype, this_address_str, rr_count);
 
-		// add items to answer
+        // add items to answer
         PyObject *resultitem = PyDict_New();
         PyObject *rdata = PyDict_New();
         PyDict_SetItem(rdata, PyString_FromString(rrtype),
-        		       PyString_FromString(this_address_str));
+                       PyString_FromString(this_address_str));
 
-		PyObject *res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:O}",
-				"type", type, "class", class, "ttl", ttl, "name",
-				(char *)name->data, "rdata", rdata);
+        PyObject *res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:O}",
+                "type", type, "class", class, "ttl", ttl, "name",
+                (char *)name->data, "rdata", rdata);
 
-		PyDict_SetItem(resultitem, PyString_FromString(component), res1);
-		PyList_Append(resultslist, resultitem);
-		free(this_address_str);
-	} else {
-		// Build answer without address, eg for SOA.
-		PyObject *res1;
-		printf("Building the %s\n", rrtype);
-		// eg. for SOA (6)
-		// mname (a bindata), rname (a bindata), serial (an int), refresh (an int),
-		// refresh (an int), retry (an int), and expire (an int)
-		// We add a record for each field returned, eg. name = 'mname'
-		// and rdata = 'www.panix.com' and so on for other fields.
-		if (this_a_record) {
-			printf("Building the %s.\n", rrtype);
+        PyDict_SetItem(resultitem, PyString_FromString(component), res1);
+        PyList_Append(resultslist, resultitem);
+        free(this_address_str);
+    } else {
+        // Build answer without address, eg for SOA.
+        PyObject *res1;
+        printf("Building the %s\n", rrtype);
+        // eg. for SOA (6)
+        // mname (a bindata), rname (a bindata), serial (an int), refresh (an int),
+        // refresh (an int), retry (an int), and expire (an int)
+        // We add a record for each field returned, eg. name = 'mname'
+        // and rdata = 'www.panix.com' and so on for other fields.
+        if (this_a_record) {
+            printf("Building the %s.\n", rrtype);
 
-			res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:s}",
-					"type", type, "class", class, "ttl", ttl, "name",
-					rrtype,"rdata",(char *)this_a_record->data);
-			printf("Built the %s and value = %s.\n", rrtype,
-					(char *)this_a_record->data);
-		} else {
-			res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:i}",
-					"type", type, "class", class, "ttl", ttl, "name",
-					rrtype,"rdata",intdata);
-			printf("Built the %s and value = %u.\n", rrtype,
-					intdata);
+            res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:s}",
+                    "type", type, "class", class, "ttl", ttl, "name",
+                    rrtype,"rdata",(char *)this_a_record->data);
+            printf("Built the %s and value = %s.\n", rrtype,
+                    (char *)this_a_record->data);
+        } else {
+            res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:i}",
+                    "type", type, "class", class, "ttl", ttl, "name",
+                    rrtype,"rdata",intdata);
+            printf("Built the %s and value = %u.\n", rrtype,
+                    intdata);
 
-		}
+        }
 
-		PyDict_SetItem(resultitem, PyString_FromString(component), res1);
-		PyList_Append(resultslist, resultitem);
-	}
-	return 1;
+        PyDict_SetItem(resultitem, PyString_FromString(component), res1);
+        PyList_Append(resultslist, resultitem);
+    }
+    return 1;
 }
 
 /*
@@ -753,75 +752,75 @@ int process_data(size_t rec_count,
  * eg TXT rtype
  */
 int process_list_bindata(size_t rec_count,
-		         size_t rr_count,
-		         uint32_t type,
-		         struct getdns_bindata* name,
-		         uint32_t class,
-		         uint32_t ttl,
-		         char* rrtype,
-		         PyObject* resultslist,
-		         struct getdns_list *this_answer,
-		         struct getdns_dict *response,
-		         char* component)
+                 size_t rr_count,
+                 uint32_t type,
+                 struct getdns_bindata* name,
+                 uint32_t class,
+                 uint32_t ttl,
+                 char* rrtype,
+                 PyObject* resultslist,
+                 struct getdns_list *this_answer,
+                 struct getdns_dict *response,
+                 char* component)
 {
     getdns_return_t this_ret;
     struct getdns_dict *this_rr = NULL;
     struct getdns_dict *this_rdata = NULL;
-	struct getdns_list *listdata = NULL;
+    struct getdns_list *listdata = NULL;
 
-	printf("process_data rrtype: %s type %u class %u ttl %u\n",
-			rrtype, type, class, ttl);
+    printf("process_data rrtype: %s type %u class %u ttl %u\n",
+            rrtype, type, class, ttl);
     PyObject *resultitem = PyDict_New();
 
     this_ret = getdns_list_get_dict(
-    		this_answer, rr_count, &this_rr);
+            this_answer, rr_count, &this_rr);
 
     // Get the RDATA
     this_ret = getdns_dict_get_dict(
-		this_rr, "rdata", &this_rdata);
+        this_rr, "rdata", &this_rdata);
 
-	this_ret = getdns_dict_get_list(
-			this_rdata, rrtype, &listdata);
-	if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
-	{
-		fprintf(stderr,
-			"Weird: the A record at %d in record at %d "
-			"had no data. Exiting with error %d.\n",
-			(int) rr_count, (int) rec_count, this_ret);
-		getdns_dict_destroy(response);
-		return 0;
-	}
+    this_ret = getdns_dict_get_list(
+            this_rdata, rrtype, &listdata);
+    if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
+    {
+        fprintf(stderr,
+            "Weird: the A record at %d in record at %d "
+            "had no data. Exiting with error %d.\n",
+            (int) rr_count, (int) rec_count, this_ret);
+        getdns_dict_destroy(response);
+        return 0;
+    }
 
-	// build list values and add to response
+    // build list values and add to response
     size_t num_vals;
     // Ignore any error
     this_ret = getdns_list_get_length(listdata, &num_vals);
     printf("Error: %d. num %d\n", this_ret, num_vals);
     if (this_ret == GETDNS_RETURN_GOOD)
     {
-		// Go through each record
-		size_t i = 0;
-		for ( i = 0; i < num_vals; ++i )
-		{
-			// get value
-			struct getdns_bindata *this_data;
-			this_ret = getdns_list_get_bindata(listdata, i, &this_data);
-			printf("Error: %d.\n", this_ret);
-			if (this_ret == GETDNS_RETURN_GOOD && this_data) {
-				printf("Building the %s.\n", rrtype);
-				PyObject *res1;
-				res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:s}",
-						"type", type, "class", class, "ttl", ttl, "name",
-						rrtype,"rdata",(char *)this_data->data);
-				printf("Built the %s and value = %s.\n", rrtype,
-						(char *)this_data->data);
+        // Go through each record
+        size_t i = 0;
+        for ( i = 0; i < num_vals; ++i )
+        {
+            // get value
+            struct getdns_bindata *this_data;
+            this_ret = getdns_list_get_bindata(listdata, i, &this_data);
+            printf("Error: %d.\n", this_ret);
+            if (this_ret == GETDNS_RETURN_GOOD && this_data) {
+                printf("Building the %s.\n", rrtype);
+                PyObject *res1;
+                res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:s}",
+                        "type", type, "class", class, "ttl", ttl, "name",
+                        rrtype,"rdata",(char *)this_data->data);
+                printf("Built the %s and value = %s.\n", rrtype,
+                        (char *)this_data->data);
 
-				PyDict_SetItem(resultitem, PyString_FromString(component), res1);
-				PyList_Append(resultslist, resultitem);
-			}
-		}
+                PyDict_SetItem(resultitem, PyString_FromString(component), res1);
+                PyList_Append(resultslist, resultitem);
+            }
+        }
     }
-	return 1;
+    return 1;
 }
 
 /*
@@ -830,48 +829,48 @@ int process_list_bindata(size_t rec_count,
  * eg OPT rtype
  */
 int process_list_dict(size_t rec_count,
-		         size_t rr_count,
-		         uint32_t type,
-		         struct getdns_bindata* name,
-		         uint32_t class,
-		         uint32_t ttl,
-		         char* rrtype,
-		         PyObject* resultslist,
-		         struct getdns_list *this_answer,
-		         struct getdns_dict *response,
-		         char* component)
+                 size_t rr_count,
+                 uint32_t type,
+                 struct getdns_bindata* name,
+                 uint32_t class,
+                 uint32_t ttl,
+                 char* rrtype,
+                 PyObject* resultslist,
+                 struct getdns_list *this_answer,
+                 struct getdns_dict *response,
+                 char* component)
 {
     getdns_return_t this_ret;
     struct getdns_dict *this_rr = NULL;
     struct getdns_dict *this_rdata = NULL;
-	struct getdns_list *listdata = NULL;
+    struct getdns_list *listdata = NULL;
 
-	printf("process_data rrtype: %s type %u class %u ttl %u\n",
-			rrtype, type, class, ttl);
+    printf("process_data rrtype: %s type %u class %u ttl %u\n",
+            rrtype, type, class, ttl);
     PyObject *resultitem = PyDict_New();
 
     this_ret = getdns_list_get_dict(
-    		this_answer, rr_count, &this_rr);
+            this_answer, rr_count, &this_rr);
     printf("Error: %d.\n", this_ret);
     // Get the RDATA
     this_ret = getdns_dict_get_dict(
-		this_rr, "rdata", &this_rdata);
+        this_rr, "rdata", &this_rdata);
 
     printf("Error: %d.\n", this_ret);
 
-	this_ret = getdns_dict_get_list(
-			this_rdata, rrtype, &listdata);
-	if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
-	{
-		fprintf(stderr,
-			"Weird: the A record at %d in record at %d "
-			"had no data. Exiting with error %d.\n",
-			(int) rr_count, (int) rec_count, this_ret);
-		getdns_dict_destroy(response);
-		return 0;
-	}
+    this_ret = getdns_dict_get_list(
+            this_rdata, rrtype, &listdata);
+    if (this_ret == GETDNS_RETURN_WRONG_TYPE_REQUESTED)
+    {
+        fprintf(stderr,
+            "Weird: the A record at %d in record at %d "
+            "had no data. Exiting with error %d.\n",
+            (int) rr_count, (int) rec_count, this_ret);
+        getdns_dict_destroy(response);
+        return 0;
+    }
 
-	// build list values and add to response
+    // build list values and add to response
     size_t num_vals;
     this_ret = getdns_list_get_length(listdata, &num_vals);
     printf("Error: %d. The num of recs is %d\n", this_ret, num_vals);
@@ -879,7 +878,7 @@ int process_list_dict(size_t rec_count,
     size_t i = 0;
     for ( i = 0; i < num_vals; ++i )
     {
-    	struct getdns_dict *this_val;
+        struct getdns_dict *this_val;
         this_ret = getdns_list_get_dict(listdata, i, &this_val);  // Ignore any error
         // get value
         struct getdns_bindata *this_data;
@@ -887,36 +886,36 @@ int process_list_dict(size_t rec_count,
         char *this_str = getdns_display_ip_address(this_data);
         printf("The data is %s\n", this_str);
 
-		printf("Building the %s.\n", rrtype);
-		PyObject *res1;
-		res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:s}",
-				"type", type, "class", class, "ttl", ttl, "name",
-				rrtype,"rdata",(char *)this_str);
-		printf("Built the %s and value = %s.\n", rrtype,
-				(char *)this_str);
+        printf("Building the %s.\n", rrtype);
+        PyObject *res1;
+        res1 = Py_BuildValue("{s:i,s:i,s:i,s:s,s:s}",
+                "type", type, "class", class, "ttl", ttl, "name",
+                rrtype,"rdata",(char *)this_str);
+        printf("Built the %s and value = %s.\n", rrtype,
+                (char *)this_str);
         free(this_str);
 
-		PyDict_SetItem(resultitem, PyString_FromString(component), res1);
-		PyList_Append(resultslist, resultitem);
-	}
-	return 1;
+        PyDict_SetItem(resultitem, PyString_FromString(component), res1);
+        PyList_Append(resultslist, resultitem);
+    }
+    return 1;
 }
 
 /*
  * Pass in "answer", "authority" or "additional" to build the relavant sections
  */
 int build_response_components(char* component,
-		                      struct getdns_dict *response,
-		                      PyObject *resultslist,
-		                      struct getdns_dict *this_record,
-		                      size_t rec_count)
+                              struct getdns_dict *response,
+                              PyObject *resultslist,
+                              struct getdns_dict *this_record,
+                              size_t rec_count)
 {
     getdns_return_t this_ret;
     size_t rr_count;
 
     struct getdns_list *this_component;
     this_ret = getdns_dict_get_list(
-    		this_record, component, &this_component);
+            this_record, component, &this_component);
 
     /* Get each RR in the answer section */
     size_t num_rrs;
@@ -929,7 +928,7 @@ int build_response_components(char* component,
         struct getdns_dict *this_rr = NULL;
 
         this_ret = getdns_list_get_dict(
-        		this_component, rr_count, &this_rr);
+                this_component, rr_count, &this_rr);
         if (this_ret != GETDNS_RETURN_GOOD)  {
             error_exit("getdns_list_get_dict failed", this_ret);
             return 0;
@@ -937,674 +936,665 @@ int build_response_components(char* component,
         // Get the RDATA
         struct getdns_dict * this_rdata = NULL;
         this_ret = getdns_dict_get_dict(
-        		this_rr, "rdata", &this_rdata);
+                this_rr, "rdata", &this_rdata);
         if (this_ret != GETDNS_RETURN_GOOD)  {
-        	error_exit("getdns_get_get_dict rdata failed", this_ret);
+            error_exit("getdns_get_get_dict rdata failed", this_ret);
             return 0;
         }
 
         //get the name
         struct getdns_bindata *name = NULL;
-    	this_ret = getdns_dict_get_bindata(
-    			this_rr, "name", &name);
-    	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
-    	{
-    		fprintf(stderr,
-    			"Weird: the A record at %d in record at %d "
-    			"had no address. Exiting.\n",
-    			(int) rr_count, (int) rec_count);
-    		getdns_dict_destroy(response);
-    		return 0;
-    	}
+        this_ret = getdns_dict_get_bindata(
+                this_rr, "name", &name);
+        if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
+        {
+            fprintf(stderr,
+                "Weird: the A record at %d in record at %d "
+                "had no address. Exiting.\n",
+                (int) rr_count, (int) rec_count);
+            getdns_dict_destroy(response);
+            return 0;
+        }
 
         // Get the  type
         uint32_t this_type;
         this_ret = getdns_dict_get_int(
-        		this_rr, "type", &this_type);
+                this_rr, "type", &this_type);
         if (this_ret != GETDNS_RETURN_GOOD)  {
-        	error_exit("getdns_dict_get_int failed", this_ret);
+            error_exit("getdns_dict_get_int failed", this_ret);
             return NULL;
         }
 
         // Get the class
         uint32_t class;
         this_ret = getdns_dict_get_int(
-        		this_rr, "class", &class);
+                this_rr, "class", &class);
         if (this_ret != GETDNS_RETURN_GOOD)  {
-        	error_exit("getdns_dict_get_int failed", this_ret);
+            error_exit("getdns_dict_get_int failed", this_ret);
             return NULL;
         }
 
         // Get the ttl
         uint32_t ttl;
         this_ret = getdns_dict_get_int(
-        		this_rr, "ttl", &ttl);
+                this_rr, "ttl", &ttl);
         if (this_ret != GETDNS_RETURN_GOOD)  {
-        	error_exit("getdns_dict_get_int failed", this_ret);
+            error_exit("getdns_dict_get_int failed", this_ret);
             return NULL;
         }
 
-    	printf("type %u class %u ttl %u\n", this_type, class, ttl);
+        printf("type %u class %u ttl %u\n", this_type, class, ttl);
 
         /* If it is a valid RR stash the value in PyObject */
         switch (this_type) {
 
         case GETDNS_RRTYPE_A:
         {
-        	if (!process_data(rec_count, rr_count,
-        			          this_type, name, class, ttl,
-        			          "ipv4_address", resultslist,
-        			          this_component, response, component)) {
-        		return 0;
-        	}
-        	break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "ipv4_address", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
         }
         case GETDNS_RRTYPE_AAAA:
        {
-			if (!process_data(rec_count, rr_count,
-					          this_type, name, class, ttl,
-					          "ipv6_address", resultslist,
-					          this_component, response, component)) {
-				return 0;
-			}
-			break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "ipv6_address", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
         }
         case GETDNS_RRTYPE_NS:
        {
-			if (!process_data(rec_count, rr_count,
-					          this_type, name, class, ttl,
-					          "nsdname", resultslist,
-					          this_component, response, component)) {
-				return 0;
-			}
-			break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "nsdname", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
         }
         case GETDNS_RRTYPE_MX:
        {
-    	   //TODO: not working as expected for gmail.com
-			if (!process_data(rec_count, rr_count,
-					          this_type, name, class, ttl,
-					          "preference", resultslist,
-					          this_component, response, component)) {
-				return 0;
-			}
-			break;
-			if (!process_data(rec_count, rr_count,
-					          this_type, name, class, ttl,
-					          "exchange", resultslist,
-					          this_component, response, component)) {
-				return 0;
-			}
-			break;
+           //TODO: not working as expected for gmail.com
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "preference", resultslist,
+                              this_component, response, component)) {
+            }
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "exchange", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
         }
         case GETDNS_RRTYPE_MD:
         case GETDNS_RRTYPE_MF:
         case GETDNS_RRTYPE_MB:
        {
-			if (!process_data(rec_count, rr_count,
-					          this_type, name, class, ttl,
-					          "madname", resultslist,
-					          this_component, response, component)) {
-				return 0;
-			}
-			break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "madname", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
         }
         case GETDNS_RRTYPE_CNAME:
         {
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "cname", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "cname", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
          }
         case GETDNS_RRTYPE_CERT:
         {
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "type", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "key_tag", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "algorithm", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "certificate_or_crl", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "type", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "key_tag", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "algorithm", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "certificate_or_crl", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
 
-			break;
+            break;
          }
         case GETDNS_RRTYPE_TXT:
         {
-        	// txt_strings is a list
-        	// TODO: not returning data as expected
-        	// debug and see what is going on here.
-			if (! process_list_bindata(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "txt_strings", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			break;
+            // txt_strings is a list
+            // TODO: not returning data as expected
+            // debug and see what is going on here.
+            if (! process_list_bindata(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "txt_strings", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
          }
         case GETDNS_RRTYPE_OPT:
          {
-         	// options is a list
-         	// list of value pairs
- 			if (!process_list_dict(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "options", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			break;
+                        printf("Cannot query for OPT records\n");
+             break;
           }
 
         case GETDNS_RRTYPE_APL:
         {
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "address_family", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "address_family", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
          }
 
         case GETDNS_RRTYPE_SOA:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "mname", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "rname", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "mname", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "rname", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
 
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "serial", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "serial", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
 
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "refresh", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "refresh", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
 
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "retry", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "retry", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
 
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "expire", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "expire", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
 
- 			break;
+             break;
           }
 
         case GETDNS_RRTYPE_WKS:
         {
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "address", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "protocol", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "bitmap", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "address", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "protocol", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "bitmap", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
 
-			break;
+            break;
          }
         case GETDNS_RRTYPE_PTR:
         {
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "ptrdname", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "ptrdname", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
          }
 
         case GETDNS_RRTYPE_HINFO:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "cpu", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
-			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "os", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			break;
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "cpu", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+            if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "os", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             break;
           }
         case GETDNS_RRTYPE_MINFO:
         {
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "rmailbox", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			if (!process_data(rec_count, rr_count,
-							  this_type, name, class, ttl,
-							  "emailbox", resultslist,
-							  this_component, response, component)) {
-				return 0;
-			}
-			break;
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "rmailbox", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            if (!process_data(rec_count, rr_count,
+                              this_type, name, class, ttl,
+                              "emailbox", resultslist,
+                              this_component, response, component)) {
+                return 0;
+            }
+            break;
          }
         case GETDNS_RRTYPE_RP:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "mbox_dname", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
-			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "txt_dname", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			break;
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "mbox_dname", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+            if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "txt_dname", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             break;
           }
 
         case GETDNS_RRTYPE_AFSDB:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "subtype", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
-			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "hostname", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			break;
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "subtype", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+            if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "hostname", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             break;
           }
 
         case GETDNS_RRTYPE_X25:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "psdn_address", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			break;
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "psdn_address", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             break;
           }
 
         case GETDNS_RRTYPE_ISDN:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "isdn_address", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			break;
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "isdn_address", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             break;
           }
 
         case GETDNS_RRTYPE_RT:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "preference", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "intermediate_host", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			break;
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "preference", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "intermediate_host", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             break;
           }
 
         case GETDNS_RRTYPE_NSAP:
           {
-  			if (!process_data(rec_count, rr_count,
-  							  this_type, name, class, ttl,
-  							  "nsap", resultslist,
-  							  this_component, response, component)) {
-  				return 0;
-  			}
-  			break;
+              if (!process_data(rec_count, rr_count,
+                                this_type, name, class, ttl,
+                                "nsap", resultslist,
+                                this_component, response, component)) {
+                  return 0;
+              }
+              break;
            }
 
         case GETDNS_RRTYPE_SIG:
           {
-  			if (!process_data(rec_count, rr_count,
-  							  this_type, name, class, ttl,
-  							  "sig_obsolete", resultslist,
-  							  this_component, response, component)) {
-  				return 0;
-  			}
-  			break;
+              if (!process_data(rec_count, rr_count,
+                                this_type, name, class, ttl,
+                                "sig_obsolete", resultslist,
+                                this_component, response, component)) {
+                  return 0;
+              }
+              break;
            }
         case GETDNS_RRTYPE_KEY:
           {
-  			if (!process_data(rec_count, rr_count,
-  							  this_type, name, class, ttl,
-  							  "key_obsolete", resultslist,
-  							  this_component, response, component)) {
-  				return 0;
-  			}
-  			break;
+              if (!process_data(rec_count, rr_count,
+                                this_type, name, class, ttl,
+                                "key_obsolete", resultslist,
+                                this_component, response, component)) {
+                  return 0;
+              }
+              break;
            }
         case GETDNS_RRTYPE_NXT:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "nxt_obsolete", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "nxt_obsolete", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_EID:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "eid_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "eid_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_NIMLOC:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "nimloc_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "nimloc_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_LOC:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "loc_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "loc_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
 
         case GETDNS_RRTYPE_DHCID:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "dhcid_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "dhcid_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_NINFO:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "ninfo_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "ninfo_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_RKEY:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "rkey_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "rkey_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_TALINK:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "talink_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "talink_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_CDS:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "cds_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "cds_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_SPF:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "text", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "text", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_UINFO:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "uinfo_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "uinfo_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_UID:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "uid_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "uid_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_GID:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "gid_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "gid_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_UNSPEC:
             {
-    			if (!process_data(rec_count, rr_count,
-    							  this_type, name, class, ttl,
-    							  "unspec_unknown", resultslist,
-    							  this_component, response, component)) {
-    				return 0;
-    			}
-    			break;
+                if (!process_data(rec_count, rr_count,
+                                  this_type, name, class, ttl,
+                                  "unspec_unknown", resultslist,
+                                  this_component, response, component)) {
+                    return 0;
+                }
+                break;
              }
         case GETDNS_RRTYPE_SINK:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "sink_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "sink_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_TA:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "ta_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "ta_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_MAILA:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "maila_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "maila_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_MAILB:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "mailb_unknown", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "mailb_unknown", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_DNAME:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "target", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "target", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_A6:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "a6_obsolete", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "a6_obsolete", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_MG:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "mgmname", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "mgmname", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_MR:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "newname", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "newname", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
         case GETDNS_RRTYPE_NULL:
            {
-   			if (!process_data(rec_count, rr_count,
-   							  this_type, name, class, ttl,
-   							  "anything", resultslist,
-   							  this_component, response, component)) {
-   				return 0;
-   			}
-   			break;
+               if (!process_data(rec_count, rr_count,
+                                 this_type, name, class, ttl,
+                                 "anything", resultslist,
+                                 this_component, response, component)) {
+                   return 0;
+               }
+               break;
             }
 
          case GETDNS_RRTYPE_DS:
          {
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "digest_type", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "key_tag", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "digest_type", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "key_tag", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
 
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "algorithm", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "algorithm", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
 
- 			if (!process_data(rec_count, rr_count,
- 							  this_type, name, class, ttl,
- 							  "digest", resultslist,
- 							  this_component, response, component)) {
- 				return 0;
- 			}
+             if (!process_data(rec_count, rr_count,
+                               this_type, name, class, ttl,
+                               "digest", resultslist,
+                               this_component, response, component)) {
+                 return 0;
+             }
          }
 
         default:
-        	return 0;
+            return 0;
         }
    }
 
@@ -1615,52 +1605,52 @@ return 1;
  * Pass in "header" to build the relavant sections
  */
 int build_response_header(struct getdns_dict *response,
-		                      PyObject *resultslist,
-		                      struct getdns_dict *this_record)
+                              PyObject *resultslist,
+                              struct getdns_dict *this_record)
 {
     getdns_return_t this_ret;
 
-	PyObject *headeritem = PyDict_New();
-	// Get the header
-	struct getdns_dict *header = NULL;
-	this_ret = getdns_dict_get_dict(
-			this_record, "header", &header);
-	if (this_ret != GETDNS_RETURN_GOOD)  {
-		error_exit("getdns_get_get_dict header failed", this_ret);
-		return 0;
-	}
+    PyObject *headeritem = PyDict_New();
+    // Get the header
+    struct getdns_dict *header = NULL;
+    this_ret = getdns_dict_get_dict(
+            this_record, "header", &header);
+    if (this_ret != GETDNS_RETURN_GOOD)  {
+        error_exit("getdns_get_get_dict header failed", this_ret);
+        return 0;
+    }
 
     // Get the id
      uint32_t id;
      this_ret = getdns_dict_get_int(
-    		 header, "id", &id);
+             header, "id", &id);
      if (this_ret != GETDNS_RETURN_GOOD)  {
-     	error_exit("getdns_dict_get_int failed", this_ret);
+         error_exit("getdns_dict_get_int failed", this_ret);
          return 0;
      }
      printf("header id = %d\n", id);
      // Get the status
       uint32_t status;
       this_ret = getdns_dict_get_int(
-     		 header, "status", &status);
+              header, "status", &status);
       if (this_ret != GETDNS_RETURN_GOOD)  {
-      	  error_exit("getdns_dict_get_int failed", this_ret);
+            error_exit("getdns_dict_get_int failed", this_ret);
           //return 0;
       }
       printf("header status = %d\n", status);
 
     //get the opcode
       uint32_t opcode ;
-  	this_ret = getdns_dict_get_bindata(
-  			header, "opcode", &opcode);
-  	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
-  	{
-  		fprintf(stderr,
-  			"Weird: invalid opcode in header Exiting.\n");
-  		getdns_dict_destroy(response);
-  		return 0;
-  	}
-  	printf("header opcode = %d\n", opcode);
+      this_ret = getdns_dict_get_bindata(
+              header, "opcode", &opcode);
+      if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
+      {
+          fprintf(stderr,
+              "Weird: invalid opcode in header Exiting.\n");
+          getdns_dict_destroy(response);
+          return 0;
+      }
+      printf("header opcode = %d\n", opcode);
 
 return 1;
 }
@@ -1669,52 +1659,52 @@ return 1;
  * Pass in "header" to build the relavant sections
  */
 int build_response_question(struct getdns_dict *response,
-		                      PyObject *resultslist,
-		                      struct getdns_dict *this_record)
+                              PyObject *resultslist,
+                              struct getdns_dict *this_record)
 {
     getdns_return_t this_ret;
 
-	PyObject *headeritem = PyDict_New();
-	// Get the question
-	struct getdns_dict *question = NULL;
-	this_ret = getdns_dict_get_dict(
-			this_record, "question", &question);
-	if (this_ret != GETDNS_RETURN_GOOD)  {
-		error_exit("getdns_get_get_dict header failed", this_ret);
-		return NULL;
-	}
+    PyObject *headeritem = PyDict_New();
+    // Get the question
+    struct getdns_dict *question = NULL;
+    this_ret = getdns_dict_get_dict(
+            this_record, "question", &question);
+    if (this_ret != GETDNS_RETURN_GOOD)  {
+        error_exit("getdns_get_get_dict header failed", this_ret);
+        return NULL;
+    }
 
     // Get the id
      uint32_t qtype;
      this_ret = getdns_dict_get_int(
-    		 question, "qtype", &qtype);
+             question, "qtype", &qtype);
      if (this_ret != GETDNS_RETURN_GOOD)  {
-     	error_exit("getdns_dict_get_int failed", this_ret);
+         error_exit("getdns_dict_get_int failed", this_ret);
          return NULL;
      }
      printf("question qtype = %d\n", qtype);
      // Get the qclass
       uint32_t qclass;
       this_ret = getdns_dict_get_int(
-     		 question, "qclass", &qclass);
+              question, "qclass", &qclass);
       if (this_ret != GETDNS_RETURN_GOOD)  {
-      	error_exit("getdns_dict_get_int failed", this_ret);
+          error_exit("getdns_dict_get_int failed", this_ret);
           return NULL;
       }
       printf("question qclass = %d\n", qclass);
 
       //get the qname
       struct getdns_bindata *qname = NULL;
-  	this_ret = getdns_dict_get_bindata(
-  			question, "qname", &qname);
-  	if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
-  	{
-  		fprintf(stderr,
-  			"Weird: invalid opcode in header Exiting.\n");
-  		getdns_dict_destroy(response);
-  		return 0;
-  	}
-  	printf("question qname = %s\n", getdns_display_ip_address(qname));
+      this_ret = getdns_dict_get_bindata(
+              question, "qname", &qname);
+      if (this_ret == GETDNS_RETURN_NO_SUCH_DICT_NAME)
+      {
+          fprintf(stderr,
+              "Weird: invalid opcode in header Exiting.\n");
+          getdns_dict_destroy(response);
+          return 0;
+      }
+      printf("question qname = %s\n", getdns_display_ip_address(qname));
 
     return 1;
 }
@@ -1749,5 +1739,319 @@ reverse_address(struct getdns_bindata *address_data)
     rev_str = ldns_rdf2str(rev_rdf);
     ldns_rdf_deep_free(rev_rdf);
     return rev_str;
+}
+
+
+// Code to display the entire response.
+// answer_type
+// canonical_name
+// just_address_answers
+// replies_full
+// replies_tree
+
+// Taken from getdns source to do label checking
+static int
+priv_getdns_bindata_is_dname(struct getdns_bindata *bindata)
+{
+    size_t i = 0, n_labels = 0;
+    while (i < bindata->size) {
+        i += ((size_t)bindata->data[i]) + 1;
+        n_labels++;
+    }
+    return i == bindata->size && n_labels > 1 &&
+        bindata->data[bindata->size - 1] == 0;
+}
+
+// Convert bindata into a good representational string or
+// into a buffer. Handles dname, printable, ".",
+// and an ip address if it is under a known key
+char*
+convertBinData(getdns_bindata* data,
+                    const char* key) {
+
+
+    // the root
+    if (data->size == 1 && data->data[0] == 0) {
+        printf(".\n");
+        return ".";
+    }
+    // dname
+    if (priv_getdns_bindata_is_dname(data)) {
+        char* dname = NULL;
+        if (getdns_convert_dns_name_to_fqdn(data, &dname)
+            == GETDNS_RETURN_GOOD) {
+            printf("dname = %s\n", dname);
+            return dname;
+        }
+    // ip address
+    } else if (key != NULL &&
+        (strcmp(key, "ipv4_address") == 0 ||
+         strcmp(key, "ipv6_address") == 0)) {
+        char* ipStr = getdns_display_ip_address(data);
+        if (ipStr) {
+            printf("ipaddress = %s\n", ipStr);
+            return ipStr;
+        }
+    }
+    return (char*)data;
+}
+
+char* 
+getdns_dict_to_ip_string(getdns_dict* dict);
+PyObject* 
+convertToList(struct getdns_list* list);
+
+PyObject*
+convertToDict(struct getdns_dict* dict) {
+    if (!dict) {
+        return 0;
+    }
+
+    PyObject* resultslist1;
+    if ((resultslist1 = PyList_New(0)) == NULL)  {
+        error_exit("Unable to allocate response list", 0);
+        return NULL;
+    }
+
+    // try it as an IP
+    char* ipStr = getdns_dict_to_ip_string(dict);
+    if (ipStr) {
+        printf("IP string = %s\n", ipStr);
+        PyObject* res1 = Py_BuildValue("s", ipStr);
+        PyList_Append(resultslist1, res1);
+        return resultslist1;
+    }
+
+    getdns_list* names;
+    getdns_dict_get_names(dict, &names);
+    size_t len = 0, i = 0;
+    getdns_list_get_length(names, &len);
+    for (i = 0; i < len; ++i) {
+        getdns_bindata* nameBin;
+        getdns_list_get_bindata(names, i, &nameBin);
+        printf("Data = %s\n", (char*) nameBin->data);
+        getdns_data_type type;
+        getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
+        switch (type) {
+            case t_bindata:
+            {
+                getdns_bindata* data = NULL;
+                getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
+                char* res = convertBinData(data, (char*)nameBin->data);
+                printf("Bindata:  %s = %s\n", (char*) nameBin->data, res);
+                PyObject *rl1 = Py_BuildValue("{s:s}", (char*) nameBin->data, res);
+                PyObject *res1 = Py_BuildValue("O", rl1);
+                PyList_Append(resultslist1, res1);
+                break;
+            }
+            case t_int:
+            {
+                uint32_t res = 0;
+                getdns_dict_get_int(dict, (char*)nameBin->data, &res);
+                printf("Int data = %d\n", res);
+                PyObject* rl1 = Py_BuildValue("{s:i}", (char*)nameBin->data, res);
+                PyObject *res1 = Py_BuildValue("O", rl1);
+                PyList_Append(resultslist1, res1);
+                break;
+            }
+            case t_dict:
+            {
+                getdns_dict* subdict = NULL;
+                getdns_dict_get_dict(dict, (char*)nameBin->data, &subdict);
+                PyObject *rl1 = convertToDict(subdict);
+                PyObject *res1 = Py_BuildValue("O", rl1);
+                PyList_Append(resultslist1, res1);
+                break;
+            }
+            case t_list:
+            {
+                getdns_list* list = NULL;
+                getdns_dict_get_list(dict, (char*)nameBin->data, &list);
+                PyObject *rl1 = convertToList(list);
+                PyObject *res1 = Py_BuildValue("O", rl1);
+                PyList_Append(resultslist1, res1);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+    getdns_list_destroy(names);
+    return resultslist1;
+}
+
+
+
+PyObject* 
+convertToList(struct getdns_list* list) {
+
+
+    if (!list) {
+        return 0;
+    }
+
+    PyObject* resultslist1;
+    if ((resultslist1 = PyList_New(0)) == NULL)  {
+        error_exit("Unable to allocate response list", 0);
+        return NULL;
+    }
+
+    size_t len, i;
+    getdns_list_get_length(list, &len);
+    for (i = 0; i < len; ++i) {
+        getdns_data_type type;
+        getdns_list_get_data_type(list, i, &type);
+        switch (type) {
+            case t_bindata:
+            {
+                getdns_bindata* data = NULL;
+                getdns_list_get_bindata(list, i, &data);
+                char* res = convertBinData(data, NULL);
+                printf("Bindata = %s \n", res);
+                if (res) {
+                    PyObject* res1 = Py_BuildValue("s", res);
+                    PyList_Append(resultslist1, res1);
+                } else {
+
+                    PyObject* res1 = Py_BuildValue("s", "empty");
+                    PyList_Append(resultslist1, res1);
+                }
+                break;
+            }
+            case t_int:
+            {
+                uint32_t res = 0;
+                getdns_list_get_int(list, i, &res);
+                printf("Getting Int %d\n", res);
+                PyObject* res1 = Py_BuildValue("i", res); 
+                PyList_Append(resultslist1, res1);
+                break;
+            }
+            case t_dict:
+            {
+                getdns_dict* dict = NULL;
+                getdns_list_get_dict(list, i, &dict);
+                printf("Getting dict1 \n");
+                PyObject *rl1 = convertToDict(dict);
+                PyObject *res1 = Py_BuildValue("O", rl1);
+                PyList_Append(resultslist1, res1);
+                break;
+            }
+            case t_list:
+            {
+                getdns_list* sublist = NULL;
+                getdns_list_get_list(list, i, &sublist);
+                printf("Getting list1 \n");
+                PyObject* rl1 = convertToList(sublist);
+                PyObject *res1 = Py_BuildValue("O", rl1);
+                PyList_Append(resultslist1, res1);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    return resultslist1;
+}
+
+// potential helper to get the ip string of a dict
+char* getdns_dict_to_ip_string(getdns_dict* dict) {
+    if (!dict) {
+        return NULL;
+    }
+    getdns_bindata* data;
+    getdns_return_t r;
+    r = getdns_dict_get_bindata(dict, "address_type", &data);
+    if (r != GETDNS_RETURN_GOOD) {
+        return NULL;
+    }
+    if (data->size == 5 &&
+        (strcmp("IPv4", (char*) data->data) == 0 ||
+         strcmp("IPv6", (char*) data->data) == 0)) {
+        r = getdns_dict_get_bindata(dict, "address_data", &data);
+        if (r != GETDNS_RETURN_GOOD) {
+            return NULL;
+        }
+        return getdns_display_ip_address(data);
+    }
+    return NULL;
+}
+
+PyObject*
+getFullResponse(struct getdns_dict *dict)
+{
+
+    PyObject* resultslist;
+    PyObject* results = PyDict_New();
+    if ((resultslist = PyList_New(0)) == NULL)  {
+        error_exit("Unable to allocate response list", 0);
+        return NULL;
+    }
+
+    getdns_list* names;
+    getdns_dict_get_names(dict, &names);
+    size_t len = 0, i = 0;
+    getdns_list_get_length(names, &len);
+    for (i = 0; i < len; ++i) {
+        getdns_bindata* nameBin;
+        getdns_list_get_bindata(names, i, &nameBin);
+        printf("name = %s\n", (char*) nameBin->data);
+        getdns_data_type type;
+        getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
+        printf("type = %d\n", type);
+        switch (type) {
+            case t_bindata:
+            {
+                getdns_bindata* data = NULL;
+                getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
+                char* res = convertBinData(data, (char*)nameBin->data);
+                printf("Bindata = %s = %s\n", (char*) nameBin->data, res);
+                if (res) {
+                   PyObject* res1 = Py_BuildValue("{s:s}", (char*)nameBin->data, 
+                        convertBinData(data, (char*)nameBin->data));
+                   PyList_Append(resultslist, res1);
+                } else {
+                   PyObject* res1 = Py_BuildValue("{s:s}", (char*)nameBin->data, "empty");
+                   PyList_Append(resultslist, res1);
+                }
+                break;
+            }
+            case t_int:
+            {
+                uint32_t res = 0;
+                getdns_dict_get_int(dict, (char*)nameBin->data, &res);
+                printf("Int = %d\n", res);
+                PyObject* res1 = Py_BuildValue("{s:i}", (char*)nameBin->data, res);
+                PyList_Append(resultslist, res1);
+                break;
+            }
+            case t_dict:
+            {
+                getdns_dict* subdict = NULL;
+                getdns_dict_get_dict(dict, (char*)nameBin->data, &subdict);
+                printf("Getting dict..\n");
+                PyObject* res1 = convertToDict(subdict);
+                break;
+            }
+            case t_list:
+            {
+                getdns_list* list = NULL;
+                printf("Getting list..\n");
+                getdns_dict_get_list(dict, (char*)nameBin->data, &list);
+                PyObject* rl1 = convertToList(list);
+                PyObject *res1 = Py_BuildValue("{s:O}",  (char*)nameBin->data, rl1);
+                PyList_Append(resultslist, res1);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    PyDict_SetItem(results, PyString_FromString("output"), resultslist);
+    getdns_list_destroy(names);
+
+    return results;
 }
 
