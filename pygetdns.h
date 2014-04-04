@@ -30,9 +30,16 @@
  */
 
 
+#define GETDNS_STR_IPV4 "IPv4"
+#define GETDNS_STR_IPV6 "IPv6"
+
 static PyObject *getdns_error;
 struct getdns_dict *extensions_to_getdnsdict(PyDictObject *);
 PyObject *decode_getdns_response(struct getdns_dict *);
+PyObject *decode_getdns_replies_tree_response(struct getdns_dict *response);
+PyObject *getFullResponse(struct getdns_dict *dict);
+char *reverse_address(struct getdns_bindata *address_data);
+
 
 typedef struct pygetdns_libevent_callback_data  {
     char *callback_func;
