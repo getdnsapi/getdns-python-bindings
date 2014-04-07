@@ -90,7 +90,7 @@ destroy_context(PyObject *context_capsule)
     struct getdns_context *context = 0;
 
     context = PyCapsule_GetPointer(context_capsule, "context");
-    free(context);
+    getdns_context_destroy(context);
     Py_DECREF(context_capsule);
 }
 
