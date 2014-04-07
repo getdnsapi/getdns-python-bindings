@@ -367,7 +367,8 @@ extensions_to_getdnsdict(PyDictObject *pydict)
 
         tmp_key = PyString_AsString(PyObject_Str(key));
         if ( (!strncmp(tmp_key, "dnssec_return_status", strlen("dnssec_return_status")))  ||
-             (!strncmp(tmp_key, "return_only_secure", strlen("return_only_secure")))  ||
+             (!strncmp(tmp_key, "dnssec_return_only_secure", strlen("dnssec_return_only_secure")))  ||
+             (!strncmp(tmp_key, "dnssec_return_validation_chain", strlen("dnssec_return_validation_chain")))  ||
              (!strncmp(tmp_key, "return_both_v4_and_v6", strlen("return_both_v4_and_v6")))  ||
              (!strncmp(tmp_key, "dnssec_return_supporting_responses", strlen("dnssec_return_supporting_responses")))  ||
              (!strncmp(tmp_key, "return_api_information", strlen("return_api_information")))  ||
