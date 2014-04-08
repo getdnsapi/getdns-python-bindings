@@ -305,7 +305,7 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
     PyObject *context_capsule;
     char *name;
     uint16_t  request_type;
-    PyDictObject *extensions_obj;
+    PyDictObject *extensions_obj = 0;
     void *userarg;
     long tid = 0;
     char *callback = 0;
@@ -317,9 +317,10 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
         return NULL;
     }
     if ((my_ret = do_query(context_capsule, name, request_type, extensions_obj, userarg,
-                           (long)tid, callback)) == 0)
+                           (long)tid, callback)) == 0)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
+    }
     return my_ret;
 }
 
@@ -341,7 +342,7 @@ service(PyObject *self, PyObject *args, PyObject *keywds)
     PyDictObject *extensions_obj = 0;
     void *userarg;
     long tid;
-    char * callback = 0;
+    char *callback = 0;
     PyObject *my_ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "Os|Osls", kwlist,
