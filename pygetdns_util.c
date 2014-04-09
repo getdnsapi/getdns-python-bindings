@@ -1772,10 +1772,6 @@ convertBinData(getdns_bindata* data,
 
 
     size_t i; 
-    printf("convertBinData %s %d\n", (char*) data->data, data->size);
-    for(i = 0; i < data->size; i++) 
-        printf("%c", data->data[i]);
-    printf("\nDONE");
    
     int printable = 1;
     for (i = 0; i < data->size; ++i) {
@@ -1795,7 +1791,6 @@ convertBinData(getdns_bindata* data,
 
     // the root
     if (data->size == 1 && data->data[0] == 0) {
-        printf(".\n");
         return ".";
     }
     // dname
@@ -1803,7 +1798,6 @@ convertBinData(getdns_bindata* data,
         char* dname = NULL;
         if (getdns_convert_dns_name_to_fqdn(data, &dname)
             == GETDNS_RETURN_GOOD) {
-            printf("dname = %s\n", dname);
             return dname;
         }
     // ip address
@@ -1812,7 +1806,6 @@ convertBinData(getdns_bindata* data,
          strcmp(key, "ipv6_address") == 0)) {
         char* ipStr = getdns_display_ip_address(data);
         if (ipStr) {
-            printf("ipaddress = %s\n", ipStr);
             return ipStr;
         }
     }
@@ -1827,7 +1820,6 @@ convertToList(struct getdns_list* list);
 PyObject*
 convertToDict(struct getdns_dict* dict) {
 
-    printf("convertToDict\n");
     if (!dict) {
         return 0;
     }
@@ -1841,10 +1833,8 @@ convertToDict(struct getdns_dict* dict) {
     // try it as an IP
     char* ipStr = getdns_dict_to_ip_string(dict);
     if (ipStr) {
-        printf("IP string = %s\n", ipStr);
         PyObject* res1 = Py_BuildValue("s", ipStr);
         PyDict_SetItem(resultsdict1, PyString_FromString("IPSTRING"), res1);
-        // PyList_Append(resultslist1, res1);
         return resultsdict1;
     }
 
@@ -1855,7 +1845,6 @@ convertToDict(struct getdns_dict* dict) {
     for (i = 0; i < len; ++i) {
         getdns_bindata* nameBin;
         getdns_list_get_bindata(names, i, &nameBin);
-        printf("Data = %s\n", (char*) nameBin->data);
         getdns_data_type type;
         getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
         switch (type) {
@@ -1864,22 +1853,18 @@ convertToDict(struct getdns_dict* dict) {
                 getdns_bindata* data = NULL;
                 getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
                 char* res = convertBinData(data, (char*)nameBin->data);
-                printf("Bindata:  %s = %s\n", (char*) nameBin->data, res);
                 PyObject *rl1 = Py_BuildValue("s", res);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
-               // PyList_Append(resultslist1, res1);
                 break;
             }
             case t_int:
             {
                 uint32_t res = 0;
                 getdns_dict_get_int(dict, (char*)nameBin->data, &res);
-                printf("Int data = %d\n", res);
                 PyObject* rl1 = Py_BuildValue("i", res);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
-                //PyList_Append(resultslist1, res1);
                 break;
             }
             case t_dict:
@@ -1889,7 +1874,6 @@ convertToDict(struct getdns_dict* dict) {
                 PyObject *rl1 = convertToDict(subdict);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
-                // PyList_Append(resultslist1, res1);
                 break;
             }
             case t_list:
@@ -1899,7 +1883,6 @@ convertToDict(struct getdns_dict* dict) {
                 PyObject *rl1 = convertToList(list);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
-                //PyList_Append(resultslist1, res1);
                 break;
             }
             default:
@@ -1916,7 +1899,6 @@ PyObject*
 convertToList(struct getdns_list* list) {
 
 
-    printf("convertToList\n");
     if (!list) {
         return 0;
     }
@@ -1938,7 +1920,6 @@ convertToList(struct getdns_list* list) {
                 getdns_bindata* data = NULL;
                 getdns_list_get_bindata(list, i, &data);
                 char* res = convertBinData(data, NULL);
-                printf("Bindata = %s \n", res);
                 if (res) {
                     PyObject* res1 = Py_BuildValue("s", res);
                     PyList_Append(resultslist1, res1);
@@ -1953,7 +1934,6 @@ convertToList(struct getdns_list* list) {
             {
                 uint32_t res = 0;
                 getdns_list_get_int(list, i, &res);
-                printf("Getting Int %d\n", res);
                 PyObject* res1 = Py_BuildValue("i", res); 
                 PyList_Append(resultslist1, res1);
                 break;
@@ -1962,7 +1942,6 @@ convertToList(struct getdns_list* list) {
             {
                 getdns_dict* dict = NULL;
                 getdns_list_get_dict(list, i, &dict);
-                printf("Getting dict1 \n");
                 PyObject *rl1 = convertToDict(dict);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyList_Append(resultslist1, res1);
@@ -1972,7 +1951,6 @@ convertToList(struct getdns_list* list) {
             {
                 getdns_list* sublist = NULL;
                 getdns_list_get_list(list, i, &sublist);
-                printf("Getting list1 \n");
                 PyObject* rl1 = convertToList(sublist);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyList_Append(resultslist1, res1);
@@ -2014,7 +1992,6 @@ getFullResponse(struct getdns_dict *dict)
 {
 
     PyObject* resultslist;
-    PyObject* results = PyDict_New();
     if ((resultslist = PyDict_New()) == NULL)  {
         error_exit("Unable to allocate response list", 0);
         return NULL;
@@ -2027,25 +2004,20 @@ getFullResponse(struct getdns_dict *dict)
     for (i = 0; i < len; ++i) {
         getdns_bindata* nameBin;
         getdns_list_get_bindata(names, i, &nameBin);
-        printf("name = %s\n", (char*) nameBin->data);
         getdns_data_type type;
         getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
-        printf("type = %d\n", type);
         switch (type) {
             case t_bindata:
             {
                 getdns_bindata* data = NULL;
                 getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
                 char* res = convertBinData(data, (char*)nameBin->data);
-                printf("Bindata = %s = %s\n", res, (char*) nameBin->data);
                 if (res) {
                    PyObject* res1 = Py_BuildValue("s", convertBinData(data, (char*)nameBin->data));
                    PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-                   //PyList_Append(resultslist, res1);
                 } else {
                    PyObject* res1 = Py_BuildValue("s", "empty");
                    PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-                   //PyList_Append(resultslist, res1);
                 }
                 break;
             }
@@ -2053,32 +2025,26 @@ getFullResponse(struct getdns_dict *dict)
             {
                 uint32_t res = 0;
                 getdns_dict_get_int(dict, (char*)nameBin->data, &res);
-                printf("Int = %d %s\n", res, (char*)nameBin->data);
                 PyObject* res1 = Py_BuildValue("i", res);
                 PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-                //PyList_Append(resultslist, res1);
                 break;
             }
             case t_dict:
             {
                 getdns_dict* subdict = NULL;
                 getdns_dict_get_dict(dict, (char*)nameBin->data, &subdict);
-                printf("Getting dict.. %s\n", (char*)nameBin->data);
                 PyObject* rl1 = convertToDict(subdict);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-               // PyList_Append(resultslist, res1);
                 break;
             }
             case t_list:
             {
                 getdns_list* list = NULL;
-                printf("Getting list..%s\n", (char*)nameBin->data);
                 getdns_dict_get_list(dict, (char*)nameBin->data, &list);
                 PyObject* rl1 = convertToList(list);
                 PyObject *res1 = Py_BuildValue("O", rl1);
                 PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-                //PyList_Append(resultslist, res1);
                 break;
             }
             default:
@@ -2086,9 +2052,8 @@ getFullResponse(struct getdns_dict *dict)
         }
     }
 
-    PyDict_SetItem(results, PyString_FromString("output"), resultslist);
     getdns_list_destroy(names);
 
-    return results;
+    return resultslist;
 }
 
