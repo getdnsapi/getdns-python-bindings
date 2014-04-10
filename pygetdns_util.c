@@ -383,6 +383,7 @@ extensions_to_getdnsdict(PyDictObject *pydict)
                 return NULL;
             }
             tmp_int = (int)PyInt_AsLong(value);
+
             (void)getdns_dict_set_int(newdict, tmp_key, tmp_int);
         } else if (!strncmp(tmp_key, "specify_class", strlen("specify_class")))  { /* takes integer */
             if (!PyInt_Check(value))  {
