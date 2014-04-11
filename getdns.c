@@ -1329,7 +1329,7 @@ initgetdns(void)
 
     PyModule_AddIntConstant(g, "GETDNS_DNSSEC_SECURE", 400);
     PyModule_AddIntConstant(g, "GETDNS_DNSSEC_BOGUS", 401);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_INDETERINATE", 402);
+    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_INDETERMINATE", 402);
     PyModule_AddIntConstant(g, "GETDNS_DNSSEC_INSECURE", 403);
     PyModule_AddIntConstant(g, "GETDNS_DNSSEC_NOT_PERFORMED", 404);
 
