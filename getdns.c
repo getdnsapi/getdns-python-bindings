@@ -1023,6 +1023,188 @@ context_set_edns_do_bit(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 
+static PyObject *
+context_get_api_information(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = {
+        "context",
+        0
+    };
+    PyObject *context_capsule;
+    getdns_context *context;
+    getdns_dict *api_info;
+    PyObject *py_api;
+    getdns_bindata *version_string;
+    getdns_bindata *imp_string;
+    uint32_t resolver_type;
+    getdns_dict *all_context;
+    PyObject *py_all_context;
+    size_t ncontexts;
+    getdns_list *context_names;
+    getdns_bindata *a_name;
+    uint32_t context_value;
+    getdns_return_t ret;
+    int i;
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O", kwlist,
+                                     &context_capsule))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    context = PyCapsule_GetPointer(context_capsule, "context");
+    py_api = PyDict_New();
+    api_info = getdns_context_get_api_information(context);
+    if ((ret = getdns_dict_get_bindata(api_info, "version_string", &version_string)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    if (PyDict_SetItemString(py_api, "version_string", PyString_FromString((char *)version_string->data)))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    if ((ret = getdns_dict_get_bindata(api_info, "implementation_string", &imp_string)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    if (PyDict_SetItemString(py_api, "implementation_string", PyString_FromString((char *)imp_string->data)))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    if ((ret = getdns_dict_get_int(api_info, "resolver_type", &resolver_type)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    if (PyDict_SetItemString(py_api, "resolver_type", PyInt_FromLong((long)resolver_type)))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    if ((ret = getdns_dict_get_dict(api_info, "all_context", &all_context)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    if ((ret = getdns_dict_get_names(all_context, &context_names)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    if ((ret = getdns_list_get_length(context_names, &ncontexts)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    py_all_context = PyDict_New();
+    for ( i = 0 ; i < ncontexts ; i++ )  {
+        if ((ret = getdns_list_get_bindata(context_names, (size_t)i, &a_name)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        if (!strncmp((char *)a_name->data, "namespaces", strlen("namespaces")))  {
+            getdns_list *namespaces = getdns_list_create();
+            PyObject *py_namespaces;
+            size_t n_spaces;
+            uint32_t space;
+            int j;
+
+            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &namespaces)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            (void)getdns_list_get_length(namespaces, &n_spaces);
+            py_namespaces = PyList_New((Py_ssize_t)n_spaces);
+            for ( j = 0 ; j < n_spaces ; j++ )  {
+                (void)getdns_list_get_int(namespaces, j, &space);
+                PyList_SetItem(py_namespaces, (Py_ssize_t)j, PyInt_FromLong((long)space));
+            }
+            PyDict_SetItemString(py_all_context, "namespaces", py_namespaces);
+        } else if (!strncmp((char *)a_name->data, "suffix", strlen("suffix")))  {
+            getdns_list *suffixes = getdns_list_create();
+            PyObject *py_suffixes;
+            size_t n_suffixes;
+            getdns_bindata *suffix;
+            int j;
+
+            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &suffixes)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            (void)getdns_list_get_length(suffixes, &n_suffixes);
+            py_suffixes = PyList_New((Py_ssize_t)n_suffixes);
+            for ( j = 0 ; j < n_suffixes ; j++ )  {
+                (void)getdns_list_get_bindata(suffixes, j, &suffix);
+                PyList_SetItem(py_suffixes, (Py_ssize_t)j, PyString_FromString((char *)suffix->data));
+            }
+            PyDict_SetItemString(py_all_context, "suffix", py_suffixes);
+        } else if (!strncmp((char *)a_name->data, "upstream_recursive_servers", strlen("upstream_recursive_servers")))  {
+            getdns_list *upstream_list;
+            PyObject *py_upstream_list;
+            PyObject *py_upstream;
+            size_t n_upstreams;
+            getdns_dict *upstream;
+            getdns_bindata *upstream_data;
+            getdns_bindata *upstream_type;
+            char *paddr_buf[256];
+            int domain;
+            int j;
+
+            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &upstream_list)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            (void)getdns_list_get_length(upstream_list, &n_upstreams);
+            py_upstream_list = PyList_New((Py_ssize_t)n_upstreams);
+            for ( j = 0 ; j < n_upstreams ; j++ )  {
+                (void)getdns_list_get_dict(upstream_list, j, &upstream);
+                (void)getdns_dict_get_bindata(upstream, "address_data", &upstream_data);
+                (void)getdns_dict_get_bindata(upstream, "address_type", &upstream_type);
+                if (!strncasecmp((char *)upstream_type->data, "IPv4", 4))  
+                    domain = AF_INET;
+                else if (!strncasecmp((char *)upstream_type->data, "IPv6", 6))  
+                    domain = AF_INET6;
+                else  {
+                    PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                    return NULL;
+                }
+                py_upstream = PyDict_New();
+                PyDict_SetItemString(py_upstream, "address_data",
+                                     PyString_FromString(inet_ntop(domain, (void *)upstream_data->data, (char *)paddr_buf, 256)));
+                PyDict_SetItemString(py_upstream, "address_type", PyString_FromString((domain == AF_INET ? "IPv4" : "IPv6")));
+                PyList_SetItem(py_upstream_list, j, py_upstream);
+            }
+            PyDict_SetItemString(py_all_context, (char *)a_name->data, py_upstream_list);
+        }  else  {            
+            if ((ret = getdns_dict_get_int(all_context, (char *)a_name->data, &context_value)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            PyDict_SetItemString(py_all_context, (char *)a_name->data, PyInt_FromLong((long)context_value));
+        }
+        PyDict_SetItemString(py_api, "all_context", py_all_context);
+    }    
+    return(py_api);
+
+}        
+
+
 /*
  * Implements the replies_tree for the getDns API
  * Returns a PyObject with the response.
@@ -1113,6 +1295,7 @@ static struct PyMethodDef getdns_methods[] = {
     { "context_set_edns_extended_rcode", (PyCFunction)context_set_edns_extended_rcode, METH_KEYWORDS },
     { "context_set_edns_version", (PyCFunction)context_set_edns_version, METH_KEYWORDS },
     { "context_set_edns_do_bit", (PyCFunction)context_set_edns_do_bit, METH_KEYWORDS },
+    { "context_get_api_information", (PyCFunction)context_get_api_information, METH_KEYWORDS },
     { 0, 0, 0 }
 };
 
