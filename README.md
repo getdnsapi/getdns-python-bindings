@@ -29,39 +29,40 @@ To build,
 python setup.py build 
 ````
 
-I find it convenient to have a symlink in the current directory
-pointing to the library in the build directory:
+During the development process and before the module is installed, I
+find it convenient to have a symlink in the current directory pointing
+to the library in the build directory:
 
 ```
 getdns.so -> build/lib.linux-i686-2.7/getdns.so
 ```
 
-To install, 
+This is only useful if you're working on the actual bindings code;
+people who are using the bindings should go ahead and install.
+
+ To install,
 
 ```
 python setup.py install
 ````
 
+Known issues
+============
+
+There are several issues in this alpha release which we expect to be resolved
+prior to the TNW hack battle.  These include:
+
+* full module documentation
+* the asynchronous code is not actually asynchronous; it invokes the
+  callback but the calling function blocks until the callback returns
+* getdns exception error strings are not "bubbling up" to the user
+  from deeply nested functions.  You may see an exception thrown with
+  a warning that the error string is not set as a result
+
 Examples
 ========
 
-Brief sample code, synchronous:
-```
-import getdns
-c = getdns.context_create()
-ext = { "return_both_v4_and_v6"  :  getdns.GETDNS_EXTENSION_TRUE, "add_warning_for_bad_dns" : getdns.GETDNS_EXTENSION_TRUE  }
-getdns.general(c, "www.google.com", getdns.GETDNS_RRTYPE_A, ext)
-```
+There are several sample scripts in the examples directory, showing how to 
+issue different kinds of queries, how to verify the answer status and DNSSEC
+status, and so on.
 
-Brief sample code, asynchronous: 
-```
-import getdns
-
-def process_response(c, resp,  str):
-    print 'In callback ... '
-    print resp
-
-c = getdns.context_create()
-ext = { "return_both_v4_and_v6"  :  getdns.GETDNS_EXTENSION_TRUE, "add_warning_for_bad_dns" : getdns.GETDNS_EXTENSION_TRUE  }
-getdns.general(c, "www.google.com", getdns.GETDNS_RRTYPE_A, ext, callback='process_response')
-```
