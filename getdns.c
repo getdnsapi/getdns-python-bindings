@@ -75,7 +75,7 @@ callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict 
     /* Python callback prototype: */
     /* callback(context, callback_type, response, userarg, tid) */
 
-    if ((response = decode_getdns_replies_tree_response(resp)) == 0)  {
+    if ((response = getFullResponse(resp)) == 0)  {
         PyErr_SetString(getdns_error, "Unable to decode response");
         /* need to throw exceptiion XXX */
     }
@@ -252,10 +252,6 @@ do_query(PyObject *context_capsule,
         return NULL;
     }
     return getFullResponse(resp);
-#if 0
-    return decode_getdns_replies_tree_response(resp);
-#endif
-
 }
 
 
@@ -1081,9 +1077,6 @@ replies_tree(PyObject *self, PyObject *args, PyObject *keywds)
         printf("Item %s\n", resp_item->data);
     }
 #endif 
-#if 0
-    return decode_getdns_replies_tree_response(resp);
-#endif
     return getFullResponse(resp);
 
 }
