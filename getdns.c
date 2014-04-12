@@ -418,9 +418,10 @@ hostname(PyObject *self, PyObject *args, PyObject *keywds)
         return NULL; 
     }
     if ((my_ret = do_query(context_capsule, address, GETDNS_RRTYPE_PTR, extensions_obj, userarg,
-                           tid, callback)) == 0)
+                           tid, callback)) == 0)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
+    }
     return my_ret;
 }
 
