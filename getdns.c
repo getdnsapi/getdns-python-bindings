@@ -1290,6 +1290,9 @@ static struct PyMethodDef getdns_methods[] = {
     { "context_set_edns_version", (PyCFunction)context_set_edns_version, METH_KEYWORDS },
     { "context_set_edns_do_bit", (PyCFunction)context_set_edns_do_bit, METH_KEYWORDS },
     { "context_get_api_information", (PyCFunction)context_get_api_information, METH_KEYWORDS },
+    { "context_fd", (PyCFunction)context_fd, METH_KEYWORDS },
+    { "context_get_num_pending_requests", (PyCFunction)context_get_num_pending_requests, METH_KEYWORDS },
+    { "context_process_async", (PyCFunction)context_process_async, METH_KEYWORDS },
     { 0, 0, 0 }
 };
 

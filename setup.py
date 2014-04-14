@@ -15,7 +15,7 @@ module1 = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
                     libraries = [ 'ldns', 'getdns', 'getdns_ext_event' ],
                     library_dirs = [ '/usr/local/lib' ],
-                    sources = [ 'getdns.c', 'pygetdns_util.c' ],
+                    sources = [ 'getdns.c', 'pygetdns_util.c', 'fd_poller.c' ],
                     runtime_library_dirs = [ '/usr/local/lib' ]
                     )
 
