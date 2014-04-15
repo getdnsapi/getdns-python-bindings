@@ -46,13 +46,19 @@ people who are using the bindings should go ahead and install.
 python setup.py install
 ````
 
+Documentation
+=============
+
+Documentation is formatted using the [sphinx](http://sphinx-doc.org/)
+documentation system.  The html-formatted output is under the pygetdns
+source tree in doc/_build/html.
+
 Known issues
 ============
 
 There are several issues in this alpha release which we expect to be resolved
 prior to the TNW hack battle.  These include:
 
-* full module documentation
 * the asynchronous code is not actually asynchronous; it invokes the
   callback but the calling function blocks until the callback returns
 * getdns exception error strings are not "bubbling up" to the user
