@@ -296,7 +296,8 @@ priv_getdns_bindata_is_dname(struct getdns_bindata *bindata)
 // Convert bindata into a good representational string or
 // into a buffer. Handles dname, printable, ".",
 // and an ip address if it is under a known key
-char*
+
+PyObject *
 convertBinData(getdns_bindata* data,
                     const char* key) {
 
@@ -316,30 +317,72 @@ convertBinData(getdns_bindata* data,
     }
     // basic string?
     if (printable == 1) {
-        return (char*) data->data;
+        PyObject *a_string;
+
+        if ((a_string = PyString_FromString((char *)data->data)) == NULL)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+        return(a_string);
     }
 
     // the root
     if (data->size == 1 && data->data[0] == 0) {
-        return ".";
+        PyObject *a_string;
+
+        if ((a_string = PyString_FromString(".")) == NULL)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+        return(a_string);
     }
+
     // dname
     if (priv_getdns_bindata_is_dname(data)) {
         char* dname = NULL;
+        PyObject *dname_string;
+
         if (getdns_convert_dns_name_to_fqdn(data, &dname)
             == GETDNS_RETURN_GOOD) {
-            return dname;
+            if ((dname_string = PyString_FromString(dname)) != NULL)  {
+                return(dname_string);
+            }  else  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+        } else {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
         }
-    // ip address
     } else if (key != NULL &&
         (strcmp(key, "ipv4_address") == 0 ||
          strcmp(key, "ipv6_address") == 0)) {
         char* ipStr = getdns_display_ip_address(data);
         if (ipStr) {
-            return ipStr;
+            PyObject *addr_string;
+            if ((addr_string = PyString_FromString(ipStr)) == NULL)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            return(addr_string);
         }
+    }  else  {                  /* none of the above, treat it like a blob */
+#if 0
+        Py_buffer pybuf;
+#endif
+        uint8_t *blob = (uint8_t *)malloc(data->size);
+
+        memcpy(blob, data->data, data->size);
+        return (PyBuffer_FromMemory(blob, (Py_ssize_t)data->size));
+#if 0
+        if (PyBuffer_FillInfo(&pybuf, 0, blob, data->size, false, PyBUF_CONTIG) < 0)  {
+            PyErr_SetString(getdns_error, "PyBuffer_FillInfo failed\n");
+            return NULL;
+        }
+        return PyMemoryView_FromBuffer(&pybuf);
+#endif
     }
-    return (char*)data->data;
+    return NULL;                /* should never get here .. */
 }
 
 char* 
@@ -382,10 +425,8 @@ convertToDict(struct getdns_dict* dict) {
             {
                 getdns_bindata* data = NULL;
                 getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
-                char* res = convertBinData(data, (char*)nameBin->data);
-                PyObject *rl1 = Py_BuildValue("s", res);
-                PyObject *res1 = Py_BuildValue("O", rl1);
-                PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
+                PyObject* res = convertBinData(data, (char*)nameBin->data);
+                PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res);
                 break;
             }
             case t_int:
@@ -412,7 +453,8 @@ convertToDict(struct getdns_dict* dict) {
                 getdns_dict_get_list(dict, (char*)nameBin->data, &list);
                 PyObject *rl1 = convertToList(list);
                 PyObject *res1 = Py_BuildValue("O", rl1);
-                PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
+                PyObject *key = PyString_FromString((char *)nameBin->data);
+                PyDict_SetItem(resultsdict1, key, res1);
                 break;
             }
             default:
@@ -449,10 +491,9 @@ convertToList(struct getdns_list* list) {
             {
                 getdns_bindata* data = NULL;
                 getdns_list_get_bindata(list, i, &data);
-                char* res = convertBinData(data, NULL);
+                PyObject* res = convertBinData(data, NULL);
                 if (res) {
-                    PyObject* res1 = Py_BuildValue("s", res);
-                    PyList_Append(resultslist1, res1);
+                    PyList_Append(resultslist1, res);
                 } else {
 
                     PyObject* res1 = Py_BuildValue("s", "empty");
@@ -541,10 +582,9 @@ getFullResponse(struct getdns_dict *dict)
             {
                 getdns_bindata* data = NULL;
                 getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
-                char* res = convertBinData(data, (char*)nameBin->data);
+                PyObject *res = convertBinData(data, (char*)nameBin->data);
                 if (res) {
-                   PyObject* res1 = Py_BuildValue("s", convertBinData(data, (char*)nameBin->data));
-                   PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
+                   PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res);
                 } else {
                    PyObject* res1 = Py_BuildValue("s", "empty");
                    PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
