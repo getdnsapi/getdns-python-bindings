@@ -30,10 +30,10 @@ import platform, os
 
 platform_version = list(platform.python_version_tuple())[0:2]
 if platform_version != ['2', '7']:
-    print 'pygetdns requires Python version 2.7.  Exiting ... '
+    print 'getdns requires Python version 2.7.  Exiting ... '
     os._exit(1)
 
-long_description = ( 'pygetdns is a set of wrappers around the getdns'
+long_description = ( 'getdns is a set of wrappers around the getdns'
                      'library (http://www.getdnsapi.net), providing'
                      'Python language bindings for the API')
 
@@ -46,9 +46,10 @@ module1 = Extension('getdns',
                     runtime_library_dirs = [ '/usr/local/lib' ]
                     )
 
-setup(name='pygetdns',
+setup(name='getdns',
       version='0.1.0',
-      description='pygetdns Python bindings for getdns',
+      description='getdns Python bindings for getdns',
       long_description=long_description,
+      license='BSD'
       url='http://www.getdnsapi.net',
       ext_modules = [ module1 ])
