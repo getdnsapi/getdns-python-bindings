@@ -50,6 +50,6 @@ setup(name='getdns',
       version='0.1.0',
       description='getdns Python bindings for getdns',
       long_description=long_description,
-      license='BSD'
+      license='BSD',
       url='http://www.getdnsapi.net',
       ext_modules = [ module1 ])
