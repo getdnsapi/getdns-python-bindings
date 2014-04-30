@@ -49,7 +49,7 @@ Building
 ========
 
 The code repository for getdns is available at:
-``<whatever``>.  If you are building from source you will
+`<https://github.com/getdnsapi/getdns-python-bindings>`_.  If you are building from source you will
 need the Python development package for Python 2.7.  On
 Linux systems this is typically something along the lines of
 "python-dev" or "python2.7-dev", available through your
