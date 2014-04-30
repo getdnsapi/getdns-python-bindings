@@ -1,4 +1,4 @@
-:mod:`pygetdns` function reference
+:mod:`getdns` function reference
 ==================================
 
 .. module:: getdns

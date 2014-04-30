@@ -1,4 +1,4 @@
-:mod:`pygetdns` response data
+:mod:`getdns` response data
 =============================
 
 .. module:: getdns

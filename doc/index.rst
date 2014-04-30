@@ -1,17 +1,17 @@
-.. pygetdns documentation master file, created by
+.. getdns documentation master file, created by
    sphinx-quickstart on Mon Apr  7 17:05:52 2014.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-pygetdns: Python bindings for getdns
+getdns: Python bindings for getdns
 ####################################
 
-"pygetdns" is an implementation of Python language bindings
+"getdns" is an implementation of Python language bindings
 for the `getdns <http://getdnsapi.net/>`_ API.  getdns is a
 modern, asynchronous DNS API that simplifies access to
 advanced DNS features, including DNSSEC.  The API
 `specification <http://www.vpnc.org/getdns-api/>`_ was
-developed by Paul Hoffman.  pygetdns is built on top of the
+developed by Paul Hoffman.  getdns is built on top of the
 getdns implementation developed as a joint project between
 `Verisign Labs
 <http://labs.verisigninc.com/en_US/innovation/verisign-labs/index.xhtml>`_
@@ -25,7 +25,7 @@ Python object design.
 Dependencies
 ============
 
-This version of pygetdns has been built and tested against Python
+This version of getdns has been built and tested against Python
 2.7.  We also expect these other prerequisites to be
 installed:
 
@@ -48,7 +48,7 @@ as follows:
 Building
 ========
 
-The code repository for pygetdns is available at:
+The code repository for getdns is available at:
 ``<whatever``>.  If you are building from source you will
 need the Python development package for Python 2.7.  On
 Linux systems this is typically something along the lines of
@@ -66,13 +66,13 @@ build and install:
   python setup.py install
 
 
-Using pygetdns
+Using getdns
 ==============
 
 Contexts
 --------
 
-All pygetdns queries happen within a *context*, and among
+All getdns queries happen within a *context*, and among
 the first tasks you'll need to do before issuing a query is
 to acquire one using getdns.context_create().  A context is
 an opaque data structure describing the environment within

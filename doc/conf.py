@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pygetdns documentation build configuration file, created by
+# getdns documentation build configuration file, created by
 # sphinx-quickstart on Mon Apr  7 17:05:52 2014.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pygetdns'
+project = u'getdns'
 copyright = u'2014, Verisign Labs, NLnet Labs'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pygetdnsdoc'
+htmlhelp_basename = 'getdnsdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -183,7 +183,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'pygetdns.tex', u'pygetdns Documentation',
+  ('index', 'getdns.tex', u'getdns Documentation',
    u'Melinda Shore, Gowri Visweswaran', 'manual'),
 ]
 
@@ -213,7 +213,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pygetdns', u'pygetdns Documentation',
+    ('index', 'getdns', u'getdns Documentation',
      [u'Melinda Shore, Gowri Visweswaran'], 1)
 ]
 
@@ -227,8 +227,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'pygetdns', u'pygetdns Documentation',
-   u'Melinda Shore, Gowri Visweswaran', 'pygetdns', 'One line description of project.',
+  ('index', 'getdns', u'getdns Documentation',
+   u'Melinda Shore, Gowri Visweswaran', 'getdns', 'One line description of project.',
    'Miscellaneous'),
 ]
 
