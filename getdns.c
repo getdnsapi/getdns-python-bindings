@@ -1019,6 +1019,66 @@ context_set_edns_do_bit(PyObject *self, PyObject *args, PyObject *keywds)
 }        
 
 
+static PyObject *
+context_set_upstream_recursive_servers(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = {
+        "context",
+        "upstream_list",
+        0
+    };
+    PyObject *context_capsule;
+    struct getdns_context *context;
+    PyObject *py_upstream_list;
+    int  len;
+    PyObject *py_upstream;
+    struct getdns_list *upstream_list;
+    int  i;
+    getdns_return_t ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OO", kwlist,
+                                     &context_capsule, &py_upstream_list))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    context = PyCapsule_GetPointer(context_capsule, "context");
+    if (!PyList_Check(py_upstream_list))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if ((len = (int)PyList_Size(py_upstream_list)) == 0)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+        
+    upstream_list = getdns_list_create();
+    for (i = 0 ; i < len ; i++)  {
+        getdns_dict *a_upstream;
+
+        if ((py_upstream = PyList_GetItem(py_upstream_list, (Py_ssize_t)i)) != NULL)  {
+            if ((a_upstream = getdnsify_addressdict(py_upstream)) == NULL)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+                return NULL;
+            }
+            if (getdns_list_set_dict(upstream_list, i, a_upstream) != GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+                return NULL;
+            }
+        }  else  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+    }
+    if ((ret = getdns_context_set_upstream_recursive_servers(context, upstream_list)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    return Py_None;
+
+}
+
 
 static PyObject *
 context_get_api_information(PyObject *self, PyObject *args, PyObject *keywds)
@@ -1292,6 +1352,7 @@ static struct PyMethodDef getdns_methods[] = {
     { "context_get_api_information", (PyCFunction)context_get_api_information, METH_KEYWORDS },
     { "context_fd", (PyCFunction)context_fd, METH_KEYWORDS },
     { "context_get_num_pending_requests", (PyCFunction)context_get_num_pending_requests, METH_KEYWORDS },
+    { "context_set_upstream_recursive_servers", (PyCFunction)context_set_upstream_recursive_servers, METH_KEYWORDS },
     { "context_process_async", (PyCFunction)context_process_async, METH_KEYWORDS },
     { 0, 0, 0 }
 };

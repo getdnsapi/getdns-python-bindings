@@ -42,6 +42,7 @@ char *reverse_address(struct getdns_bindata *address_data);
 PyObject *context_fd(PyObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_get_num_pending_requests(PyObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_process_async(PyObject *self, PyObject *args, PyObject *keywds);
+getdns_dict *getdnsify_addressdict(PyObject *pydict);
 
 typedef struct pygetdns_libevent_callback_data  {
     char *callback_func;

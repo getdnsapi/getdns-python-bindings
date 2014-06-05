@@ -32,6 +32,7 @@
  */
 
 #include <Python.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 #include <getdns/getdns.h>
@@ -183,6 +184,75 @@ extensions_to_getdnsdict(PyDictObject *pydict)
     }
     return newdict;
 }
+
+
+/*
+ * turn a Python address dictionary into a getdns data structure (inc. validation)
+ */
+
+
+getdns_dict *
+getdnsify_addressdict(PyObject *pydict)
+{
+    getdns_dict *addr_dict;
+    getdns_bindata addr_data;
+    getdns_bindata addr_type;
+    PyObject *str;
+    unsigned char buf[sizeof(struct in6_addr)];
+    int domain;
+
+
+    if (!PyDict_Check(pydict))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if (PyDict_Size(pydict) != 2)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    addr_dict = getdns_dict_create();
+    if ((str = PyDict_GetItemString(pydict, "address_type")) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if (!PyString_Check(str))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    addr_type.data = (uint8_t *)strdup(PyString_AsString(str));
+    addr_type.size = strlen((char *)addr_type.data);
+    if (strlen((char *)addr_type.data) != 4)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_WRONG_TYPE_REQUESTED_TEXT);
+        return NULL;
+    }
+    if (!strncasecmp((char *)addr_type.data, "IPv4", 4))
+        domain = AF_INET;
+    else if (!strncasecmp((char *)addr_type.data, "IPv6", 4))
+        domain = AF_INET6;
+    else  {
+        PyErr_SetString(getdns_error,  GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    getdns_dict_set_bindata(addr_dict, "address_type", &addr_type);
+
+    if ((str = PyDict_GetItemString(pydict, "address_data")) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if (!PyString_Check(str))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if (inet_pton(domain, PyString_AsString(str), buf) <= 0)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    addr_data.data = (uint8_t *)buf;
+    addr_data.size = (domain == AF_INET ? 4 : 16);
+    getdns_dict_set_bindata(addr_dict, "address_data", &addr_data);
+    return addr_dict;
+}
+
 
 PyObject *
 decode_getdns_response(struct getdns_dict *response)
