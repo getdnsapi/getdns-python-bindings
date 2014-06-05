@@ -89,7 +89,6 @@ context_get_num_pending_requests(PyObject *self, PyObject *args, PyObject *keywd
     struct getdns_context *context;
     uint64_t timeout = 0;
     struct timeval tv;
-    uint32_t n_requests;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|L", kwlist,
                                      &context_capsule, &timeout))  {
