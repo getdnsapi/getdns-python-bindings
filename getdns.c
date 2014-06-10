@@ -1362,7 +1362,6 @@ initgetdns(void)
 {
     PyObject *g;
 
-    static PyObject *getdns_error;
     if ((g = Py_InitModule("getdns", getdns_methods)) == NULL)
         return;
     getdns_error = PyErr_NewException("getdns.error", NULL, NULL);

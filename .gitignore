@@ -3,3 +3,5 @@ _build/
 *~
 getdns.so
 *.save
+doc/_build/
+doc/_build/*
