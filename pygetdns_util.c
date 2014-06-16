@@ -373,7 +373,19 @@ convertBinData(getdns_bindata* data,
 
 
     size_t i; 
-   
+
+
+    // the root
+    if (data->size == 1 && data->data[0] == 0) {
+        PyObject *a_string;
+
+        if ((a_string = PyString_FromString(".")) == NULL)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+        return(a_string);
+    }
+
     int printable = 1;
     for (i = 0; i < data->size; ++i) {
         if (!isprint(data->data[i])) {
@@ -396,16 +408,6 @@ convertBinData(getdns_bindata* data,
         return(a_string);
     }
 
-    // the root
-    if (data->size == 1 && data->data[0] == 0) {
-        PyObject *a_string;
-
-        if ((a_string = PyString_FromString(".")) == NULL)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
-            return NULL;
-        }
-        return(a_string);
-    }
 
     // dname
     if (priv_getdns_bindata_is_dname(data)) {
