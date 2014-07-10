@@ -9,7 +9,7 @@ def main():
         print "Usage: {0} ipaddress".format(sys.argv[0])
         sys.exit(1)
 
-    ctx = getdns.context_create()
+    ctx = getdns.Context()
     addr["address_data"] = sys.argv[1]
     if string.find(sys.argv[1], ":") != -1:
         addr["address_type"] = "IPv6"
@@ -18,7 +18,7 @@ def main():
     else:
         print "{0}: undiscernable address type".format(sys.argv[1])
         sys.exit(1)
-    results = getdns.hostname(ctx, address=addr)
+    results = ctx.hostname(address=addr)
     if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
         print "Hostnames:"
         for responses in results["replies_tree"]:

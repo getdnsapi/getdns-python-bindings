@@ -255,6 +255,307 @@ getdnsify_addressdict(PyObject *pydict)
 
 
 PyObject *
+pythonify_address_list(getdns_list *list)
+{
+    size_t length;
+    getdns_return_t ret;
+    int i;
+    PyObject *py_list;
+    getdns_data_type type;
+    getdns_dict *a_item;
+    PyObject *py_item;
+    getdns_bindata *a_address_data;
+    getdns_bindata *a_address_type;
+    int domain;
+    char paddr_buf[256];
+
+    if ((ret = getdns_list_get_length(list, &length)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    py_list = PyList_New(0);
+    for ( i = 0 ; i < (int)length ; i++ )  {
+        if ((ret = getdns_list_get_data_type(list, i, &type)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        if (type != t_dict)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+        if ((ret = getdns_list_get_dict(list, (size_t)i, &a_item)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        if ((ret = getdns_dict_get_bindata(a_item, "address_type", &a_address_type)) !=
+            GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        if ((ret = getdns_dict_get_bindata(a_item, "address_data", &a_address_data)) !=
+            GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        if (!strncasecmp((char *)a_address_type->data, "IPv4", 4))
+            domain = AF_INET;
+        else if (!strncasecmp((char *)a_address_type->data, "IPv6", 4))
+            domain = AF_INET6;
+        else  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+        py_item = PyDict_New();
+        PyDict_SetItemString(py_item, "address_data",
+                             PyString_FromString(inet_ntop(domain, (void *)a_address_data->data,
+                                                           (char *)paddr_buf, 256)));
+        PyDict_SetItemString(py_item, "address_type",
+                             PyString_FromString((domain == AF_INET ? "IPv4" : "IPv6")));
+        PyList_Append(py_list, py_item);
+    }
+    return py_list;
+}
+
+
+
+
+PyObject *
+glist_to_plist(struct getdns_list *list)
+{
+    PyObject *py_list;
+    size_t  count;
+    getdns_return_t ret;
+    int  i;
+    getdns_data_type type;
+    struct getdns_dict *dict_item;
+    struct getdns_list *list_item;
+    PyObject *py_dict, *py_locallist, *py_bindata, *py_int;
+    uint32_t localint;
+    getdns_bindata *data;
+
+    if (!list)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+        
+    if ((ret = getdns_list_get_length(list, &count)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    py_list = PyList_New(0);
+    for ( i = 0 ; i < count ; i++ )  {
+        (void)getdns_list_get_data_type(list, i, &type);
+        switch (type)  {
+        case t_dict:
+            if ((ret = getdns_list_get_dict(list, i, &dict_item)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            if ((py_dict = gdict_to_pdict(dict_item)) == NULL)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            if (PyList_Append(py_list, py_dict) == -1)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            break;
+
+        case t_list:
+            if ((ret = getdns_list_get_list(list, i, &list_item)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            if ((py_locallist = glist_to_plist(list_item)) == NULL)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            if (PyList_Append(py_list, py_locallist) == -1)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            break;
+
+        case t_int:
+            if ((ret = getdns_list_get_int(list, i, &localint)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            py_int = PyInt_FromLong((long)localint);
+            if (PyList_Append(py_list, py_int) == -1)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            break;
+
+        case t_bindata:
+            if ((ret = getdns_list_get_bindata(list, i, &data)) != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            if ((py_bindata = convertBinData(data, "")) == 0)  {
+                return NULL;
+            }
+            if (PyList_Append(py_list, py_bindata) == -1)  {
+                return NULL;
+            }
+            break;
+
+        default:
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+    }
+    return py_list;
+}
+
+
+PyObject *
+gdict_to_pdict(struct getdns_dict *dict)
+{
+    PyObject *py_dict;
+    getdns_list *keys;
+    size_t n_keys;
+    getdns_return_t ret;
+    int i;
+    getdns_bindata *key_name;
+    getdns_data_type type;
+    getdns_list *list_item;
+    getdns_dict *dict_item;
+    uint32_t int_item;
+    getdns_bindata *bindata_item;
+    PyObject *py_localdict;
+    PyObject *py_locallist;
+    PyObject *py_localint;
+    PyObject *py_localbindata;
+
+    if ((ret = getdns_dict_get_names(dict, &keys)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    py_dict = PyDict_New();
+    (void)getdns_list_get_length(keys, &n_keys);
+    for (i = 0 ; i < (int)n_keys ; i++ )  {
+        if ((ret = getdns_list_get_bindata(keys, (size_t)i, &key_name)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        if (strnlen((char *)key_name->data, 256) == 256)  { /* too long, something's wrong */
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+        if ((ret = getdns_dict_get_data_type(dict, (char *)key_name->data, &type)) !=
+            GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        switch (type)  {
+        case t_dict:
+            if ((ret = getdns_dict_get_dict(dict, (char *)key_name->data, &dict_item)) !=
+                GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            if ((py_localdict = gdict_to_pdict(dict_item)) == NULL)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            if (PyDict_SetItemString(py_dict, (char *)key_name->data, py_localdict) != 0)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            break;
+
+        case t_list:
+            if ((ret = getdns_dict_get_list(dict, (char *)key_name->data, &list_item)) !=
+                GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            if ((py_locallist = glist_to_plist(list_item)) == NULL)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            if (PyDict_SetItemString(py_dict, (char *)key_name->data, py_locallist) != 0)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            break;
+
+        case t_int:
+            if ((ret = getdns_dict_get_int(dict, (char *)key_name->data, &int_item)) !=
+                GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            py_localint = PyInt_FromLong((long)int_item);
+            if (PyDict_SetItemString(py_dict, (char *)key_name->data, py_localint) == -1)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+            break;
+
+        case t_bindata:
+            if ((ret = getdns_dict_get_bindata(dict, (char *)key_name->data, &bindata_item))
+                != GETDNS_RETURN_GOOD)  {
+                char err_buf[256];
+                getdns_strerror(ret, err_buf, sizeof err_buf);
+                PyErr_SetString(getdns_error, err_buf);
+                return NULL;
+            }
+            if ((py_localbindata = convertBinData(bindata_item, "")) == 0)  {
+                return NULL;
+            }
+            if (PyDict_SetItemString(py_dict, (char *)key_name->data, py_localbindata) == -1)  {
+                return NULL;
+            }
+            break;
+
+        default:
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+    }
+    return py_dict;
+}
+
+#if 0
+
+PyObject *
 decode_getdns_response(struct getdns_dict *response)
 {
     uint32_t error;
@@ -294,7 +595,7 @@ decode_getdns_response(struct getdns_dict *response)
     return results;
 }
 
-
+#endif
 /*
  * Error checking helper
  */

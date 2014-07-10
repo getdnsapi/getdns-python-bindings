@@ -38,18 +38,18 @@ long_description = ( 'getdns is a set of wrappers around the getdns'
                      'Python language bindings for the API')
 
 CFLAGS = [ '-g' ]
-module1 = Extension('getdns',
+getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
                     libraries = [ 'ldns', 'getdns', 'getdns_ext_event' ],
                     library_dirs = [ '/usr/local/lib' ],
-                    sources = [ 'getdns.c', 'pygetdns_util.c', 'fd_poller.c' ],
+                    sources = [ 'getdns.c', 'pygetdns_util.c', 'fd_poller.c', 'context.c' ],
                     runtime_library_dirs = [ '/usr/local/lib' ]
                     )
 
 setup(name='getdns',
-      version='0.1.0',
+      version='0.2.0',
       description='getdns Python bindings for getdns',
       long_description=long_description,
       license='BSD',
       url='http://www.getdnsapi.net',
-      ext_modules = [ module1 ])
+      ext_modules = [ getdns_module ])

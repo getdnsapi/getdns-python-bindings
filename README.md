@@ -10,8 +10,8 @@ Built and tested against Python 2.7.  You will need to install
 the Python headers and libraries - this is usually a package
 called "python-dev"
 
-Currently building against the getdns "develop" branch (to be released
-as 0.1.1).  getdns external dependencies include:
+Currently building against the getdns 0.1.3 release.
+getdns external dependencies include:
 
 * [libldns from NLnet Labs](https://www.nlnetlabs.nl/projects/ldns/) version 1.6.11 or later (ldns requires ope
 nssl headers and libraries)
@@ -20,6 +20,9 @@ nssl headers and libraries)
 * [libidn from the FSF](http://www.gnu.org/software/libidn/) version 1.
 * [libevent](http://libevent.org) version 2.0.21 stable, sometimes called libevent2 (only needed if you plan to
  use it for asynchronous handling)
+
+Note that getdns **MUST** be built with the --with-libevent flag to
+configure.
 
 Building
 ========
@@ -51,19 +54,24 @@ Documentation
 
 Documentation is formatted using the [sphinx](http://sphinx-doc.org/)
 documentation system.  The html-formatted output is under the pygetdns
-source tree in doc/_build/html.
+source tree in doc/_build/html.  It is also available online at [readthedogs.org]
+(https://getdns.readthedocs.org/)
 
-Known issues
-============
+Changes from the earlier release
+================================
 
-There are several issues in this alpha release which we expect to be resolved
-prior to the TNW hack battle.  These include:
+We've introduced a Context object with attributes and methods, with
+queries being Context methods.  Attributes can be assigned and read
+directly without using the getdns setters and getters.  For example,
 
-* the asynchronous code is not actually asynchronous; it invokes the
-  callback but the calling function blocks until the callback returns
-* getdns exception error strings are not "bubbling up" to the user
-  from deeply nested functions.  You may see an exception thrown with
-  a warning that the error string is not set as a result
+```python
+import getdns.context
+my_context = getdns.Context()
+my_context.timeout = 1000
+print my_context.timeout
+```
+
+Please see the documentation for details on attributes and methods.
 
 Examples
 ========

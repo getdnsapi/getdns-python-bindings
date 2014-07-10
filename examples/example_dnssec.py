@@ -21,10 +21,10 @@ def main():
         print "Usage: {0} hostname".format(sys.argv[0])
         sys.exit(1)
 
-    ctx = getdns.context_create()
+    ctx = getdns.Context()
     extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE,
                    "dnssec_return_status" : getdns.GETDNS_EXTENSION_TRUE }
-    results = getdns.address(ctx, name=sys.argv[1], extensions=extensions)
+    results = ctx.address(name=sys.argv[1], extensions=extensions)
     if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
         sys.stdout.write("Addresses: ")
         for addr in results["just_address_answers"]:

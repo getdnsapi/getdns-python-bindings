@@ -36,6 +36,7 @@
 
 
 #include <Python.h>
+#include <structmember.h>
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
@@ -44,7 +45,99 @@
 #include <event2/event.h>
 #include "pygetdns.h"
 
-#define UNUSED_PARAM(x) ((void)(x))
+
+
+PyMethodDef Context_methods[] = {
+    { "get_api_information", (PyCFunction)context_get_api_information,
+      METH_NOARGS, "Return context settings" },
+    { "general", (PyCFunction)context_general, METH_VARARGS|METH_KEYWORDS,
+      "method for looking up any type of DNS record" },
+    { "address", (PyCFunction)context_address, METH_VARARGS|METH_KEYWORDS,
+      "method for looking up an address given a host name" },
+    { "hostname", (PyCFunction)context_hostname, METH_VARARGS|METH_KEYWORDS,
+      "method for looking up a host name given an IP address" },
+    { "service", (PyCFunction)context_service, METH_VARARGS|METH_KEYWORDS,
+      "method for looking up relevant SRV record for a name" },
+    { NULL }
+};
+
+PyMemberDef Context_members[] = {
+    { "timeout", T_INT, offsetof(getdns_ContextObject, timeout), 0, "timeout in milliseconds" },
+    { "resolution_type", T_INT, offsetof(getdns_ContextObject, resolution_type), 0,
+      "lookup as recursive or stub resolver" },
+    { "dns_transport", T_INT, offsetof(getdns_ContextObject, dns_transport),
+      0, "dns transport" },
+    { "limit_outstanding_queries", T_INT, offsetof(getdns_ContextObject, limit_outstanding_queries),
+      0, "limit on the number of unanswered queries" },
+    { "follow_redirects", T_INT, offsetof(getdns_ContextObject, follow_redirects),
+      0, "follow redirects" },
+    { "append_name", T_INT, offsetof(getdns_ContextObject, append_name),
+      0, "append a suffix to the query string before resolving name" },
+    { "dnssec_allowed_skew", T_INT, offsetof(getdns_ContextObject, dnssec_allowed_skew), 0,
+      "number of seconds of skew allowed when checking RRSIG Expiration and Inception fields" },
+    { "edns_maximum_udp_payload_size", T_INT, offsetof(getdns_ContextObject, edns_maximum_udp_payload_size),
+      0, "edns maximum udp payload size" },
+    { "edns_extended_rcode", T_INT, offsetof(getdns_ContextObject, edns_extended_rcode),
+      0, "edns extended rcode" },
+    { "edns_version", T_INT, offsetof(getdns_ContextObject, edns_version), 0, "edns version" },
+    { "namespaces", T_OBJECT, offsetof(getdns_ContextObject, namespaces), 0,
+      "ordered list of namespaces to be queried" },
+    { "dns_root_servers", T_OBJECT, offsetof(getdns_ContextObject, dns_root_servers), 0,
+      "list of dictionaries of root servers" },
+    { "dnssec_trust_anchors", T_OBJECT, offsetof(getdns_ContextObject, dnssec_trust_anchors), 0,
+      "list of trust anchors" },
+    { "upstream_recursive_servers", T_OBJECT, offsetof(getdns_ContextObject,
+                                                       upstream_recursive_servers), 0,
+      "list of dictionaries defining where a stub resolver will send queries" },
+    { NULL }
+};
+
+PyGetSetDef Context_getseters[] = {
+    { "timeout", (getter)NULL, (setter)context_set_timeout, "set timeout", NULL },
+    { "resolution_type", (getter)NULL, (setter)context_set_resolution_type, "set resolution type", NULL },
+    { NULL }
+};
+
+PyTypeObject getdns_ContextType = {
+    PyObject_HEAD_INIT(NULL)
+    0,
+    "getdns.Context",
+    sizeof(getdns_ContextObject),
+    0,                         /*tp_itemsize*/
+    (destructor)context_dealloc, /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /* tp_getattr */
+    0,                         /* tp_setattr */
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    context_getattro,          /*tp_getattro*/
+    context_setattro,          /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT,        /*tp_flags*/
+    "Context object",          /* tp_doc */
+    0,                         /* tp_traverse       */
+    0,                         /* tp_clear          */
+    0,                         /* tp_richcompare    */
+    0,                         /* tp_weaklistoffset */
+    0,                         /* tp_iter           */
+    0,                         /* tp_iternext       */
+    Context_methods,           /* tp_methods        */
+    Context_members,           /* tp_members        */
+    Context_getseters,         /* tp_getset         */
+    0,                         /* tp_base           */
+    0,                         /* tp_dict           */
+    0,                         /* tp_descr_get      */
+    0,                         /* tp_descr_set      */
+    0,                         /* tp_dictoffset     */
+    (initproc)context_init,    /* tp_init           */
+};
+
 
 /*
  *  A shim to sit between the event callback function
@@ -252,6 +345,7 @@ do_query(PyObject *context_capsule,
         return NULL;
     }
     return getFullResponse(resp);
+    
 }
 
 
@@ -426,7 +520,7 @@ hostname(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 static PyObject *
-context_set_resolution_type(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_resolution_type(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -459,7 +553,7 @@ context_set_resolution_type(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static PyObject *
-context_set_namespaces(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_namespaces(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -507,7 +601,7 @@ context_set_namespaces(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static PyObject *
-context_set_dns_transport(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_dns_transport(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -542,7 +636,7 @@ context_set_dns_transport(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static PyObject *
-context_set_limit_outstanding_queries(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_limit_outstanding_queries(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -570,7 +664,7 @@ context_set_limit_outstanding_queries(PyObject *self, PyObject *args, PyObject *
 }        
 
 static PyObject *
-context_set_timeout(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_timeout(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -599,7 +693,7 @@ context_set_timeout(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 PyObject *
-context_set_follow_redirects(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_follow_redirects(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -627,7 +721,7 @@ context_set_follow_redirects(PyObject *self, PyObject *args, PyObject *keywds)
 }        
 
 static PyObject *
-context_set_dns_root_servers(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_dns_root_servers(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -722,7 +816,7 @@ context_set_dns_root_servers(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 PyObject *
-context_set_append_name(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_append_name(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -806,7 +900,7 @@ context_set_suffix(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 static PyObject *
-context_set_dnssec_trust_anchors(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_dnssec_trust_anchors(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -857,7 +951,7 @@ context_set_dnssec_trust_anchors(PyObject *self, PyObject *args, PyObject *keywd
 
 
 static PyObject *
-context_set_dnssec_allowed_skew(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_dnssec_allowed_skew(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -887,7 +981,7 @@ context_set_dnssec_allowed_skew(PyObject *self, PyObject *args, PyObject *keywds
 
 
 static PyObject *
-context_set_edns_maximum_udp_payload_size(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_edns_maximum_udp_payload_size(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -921,7 +1015,7 @@ context_set_edns_maximum_udp_payload_size(PyObject *self, PyObject *args, PyObje
 
 
 static PyObject *
-context_set_edns_extended_rcode(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_edns_extended_rcode(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -954,7 +1048,7 @@ context_set_edns_extended_rcode(PyObject *self, PyObject *args, PyObject *keywds
 
 
 static PyObject *
-context_set_edns_version(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_edns_version(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -987,7 +1081,7 @@ context_set_edns_version(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static PyObject *
-context_set_edns_do_bit(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_edns_do_bit(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -1020,7 +1114,7 @@ context_set_edns_do_bit(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static PyObject *
-context_set_upstream_recursive_servers(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_upstream_recursive_servers(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -1081,7 +1175,7 @@ context_set_upstream_recursive_servers(PyObject *self, PyObject *args, PyObject 
 
 
 static PyObject *
-context_get_api_information(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_get_api_information(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -1309,19 +1403,7 @@ replies_tree(PyObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, err_buf);
         return NULL;
     }
-#if 0 
-    int list_len;
-    (void)getdns_list_get_length(resp, &list_len);
-    printf("%d answers\n", list_len);
-    int i = 0;
-    struct getdns_bindata *resp_item;
-    for ( i = 0 ; i < list_len ; i++ )  {
-        getdns_list_get_bindata(resp, i, &resp_item);
-        printf("Item %s\n", resp_item->data);
-    }
-#endif 
     return getFullResponse(resp);
-
 }
 
 
@@ -1334,28 +1416,32 @@ static struct PyMethodDef getdns_methods[] = {
     { "hostname", (PyCFunction)hostname, METH_KEYWORDS },
     { "replies_tree", (PyCFunction)replies_tree, METH_KEYWORDS },
     { "cancel_callback", (PyCFunction)cancel_callback, METH_KEYWORDS },
-    { "context_set_namespaces", (PyCFunction)context_set_namespaces, METH_KEYWORDS },
-    { "context_set_resolution_type", (PyCFunction)context_set_resolution_type, METH_KEYWORDS },
-    { "context_set_dns_transport", (PyCFunction)context_set_dns_transport, METH_KEYWORDS },
-    { "context_set_limit_outstanding_queries", (PyCFunction)context_set_limit_outstanding_queries, METH_KEYWORDS },
-    { "context_set_timeout", (PyCFunction)context_set_timeout, METH_KEYWORDS },
-    { "context_set_follow_redirects", (PyCFunction)context_set_follow_redirects, METH_KEYWORDS },
-    { "context_set_dns_root_servers", (PyCFunction)context_set_dns_root_servers, METH_KEYWORDS },
-    { "context_set_append_name", (PyCFunction)context_set_append_name, METH_KEYWORDS },
+    { "context_set_namespaces", (PyCFunction)ctx_set_namespaces, METH_KEYWORDS },
+    { "context_set_resolution_type", (PyCFunction)ctx_set_resolution_type, METH_KEYWORDS },
+    { "context_set_dns_transport", (PyCFunction)ctx_set_dns_transport, METH_KEYWORDS },
+    { "context_set_limit_outstanding_queries", (PyCFunction)ctx_set_limit_outstanding_queries, METH_KEYWORDS },
+    { "context_set_timeout", (PyCFunction)ctx_set_timeout, METH_KEYWORDS },
+    { "context_set_follow_redirects", (PyCFunction)ctx_set_follow_redirects, METH_KEYWORDS },
+    { "context_set_dns_root_servers", (PyCFunction)ctx_set_dns_root_servers, METH_KEYWORDS },
+    { "context_set_append_name", (PyCFunction)ctx_set_append_name, METH_KEYWORDS },
     { "context_set_suffix", (PyCFunction)context_set_suffix, METH_KEYWORDS },
-    { "context_set_dnssec_trust_anchors", (PyCFunction)context_set_dnssec_trust_anchors, METH_KEYWORDS },
-    { "context_set_dnssec_allowed_skew", (PyCFunction)context_set_dnssec_allowed_skew, METH_KEYWORDS },
-    { "context_set_edns_maximum_udp_payload_size", (PyCFunction)context_set_edns_maximum_udp_payload_size, METH_KEYWORDS },
-    { "context_set_edns_extended_rcode", (PyCFunction)context_set_edns_extended_rcode, METH_KEYWORDS },
-    { "context_set_edns_version", (PyCFunction)context_set_edns_version, METH_KEYWORDS },
-    { "context_set_edns_do_bit", (PyCFunction)context_set_edns_do_bit, METH_KEYWORDS },
-    { "context_get_api_information", (PyCFunction)context_get_api_information, METH_KEYWORDS },
+    { "context_set_dnssec_trust_anchors", (PyCFunction)ctx_set_dnssec_trust_anchors, METH_KEYWORDS },
+    { "context_set_dnssec_allowed_skew", (PyCFunction)ctx_set_dnssec_allowed_skew, METH_KEYWORDS },
+    { "context_set_edns_maximum_udp_payload_size", (PyCFunction)ctx_set_edns_maximum_udp_payload_size, METH_KEYWORDS },
+    { "context_set_edns_extended_rcode", (PyCFunction)ctx_set_edns_extended_rcode, METH_KEYWORDS },
+    { "context_set_edns_version", (PyCFunction)ctx_set_edns_version, METH_KEYWORDS },
+    { "context_set_edns_do_bit", (PyCFunction)ctx_set_edns_do_bit, METH_KEYWORDS },
+    { "context_get_api_information", (PyCFunction)ctx_get_api_information, METH_KEYWORDS },
     { "context_fd", (PyCFunction)context_fd, METH_KEYWORDS },
     { "context_get_num_pending_requests", (PyCFunction)context_get_num_pending_requests, METH_KEYWORDS },
-    { "context_set_upstream_recursive_servers", (PyCFunction)context_set_upstream_recursive_servers, METH_KEYWORDS },
+    { "context_set_upstream_recursive_servers", (PyCFunction)ctx_set_upstream_recursive_servers, METH_KEYWORDS },
     { "context_process_async", (PyCFunction)context_process_async, METH_KEYWORDS },
     { 0, 0, 0 }
 };
+
+
+
+
 
 PyMODINIT_FUNC
 initgetdns(void)
@@ -1367,7 +1453,11 @@ initgetdns(void)
     getdns_error = PyErr_NewException("getdns.error", NULL, NULL);
     Py_INCREF(getdns_error);
     PyModule_AddObject(g, "error", getdns_error);
-
+    getdns_ContextType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&getdns_ContextType) < 0)
+        return;
+    Py_INCREF(&getdns_ContextType);
+    PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
 /*
  * return value constants
  */
@@ -1419,7 +1509,7 @@ initgetdns(void)
  */
 
     PyModule_AddIntConstant(g, "GETDNS_REDIRECTS_FOLLOW", 530);
-    PyModule_AddIntConstant(g, "GETDNS_REDIRECTS_DO_NOTFOLLOW", 531);
+    PyModule_AddIntConstant(g, "GETDNS_REDIRECTS_DO_NOT_FOLLOW", 531);
 
 /*
  * transport arrangements
