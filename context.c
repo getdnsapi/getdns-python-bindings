@@ -88,7 +88,7 @@ context_set_timeout(getdns_context *context, PyObject *py_value)
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -112,7 +112,7 @@ context_set_resolution_type(getdns_context *context, PyObject *py_value)
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -140,7 +140,7 @@ context_set_dns_transport(getdns_context *context, PyObject *py_value)
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -195,7 +195,7 @@ context_set_follow_redirects(getdns_context *context, PyObject *py_value)
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -224,7 +224,7 @@ context_set_append_name(getdns_context *context, PyObject *py_value)
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -256,7 +256,7 @@ context_set_dnssec_allowed_skew(getdns_context *context, PyObject *py_value)
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -280,7 +280,7 @@ context_set_edns_maximum_udp_payload_size(getdns_context *context, PyObject *py_
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
