@@ -9,18 +9,16 @@
 Response data from queries
 --------------------------
 
-The callback function takes a parameter for the response
-object. A response object is always a dict. The response
-object always contains at least three names: ``replies_full`` (a
+A response object is always a dict containing at 
+least three names: ``replies_full`` (a
 list) ``replies_tree`` (a list), and ``status`` (an
 integer constant). ``replies_full`` is a list of DNS replies 
 as they appear on the wire. ``replies_tree`` is a list
 of DNS replies (each is a dictionary) with the various part of the
 reply parsed out. ``status`` is a status code for the query.
 
-
 Because the API might be extended in the future, a ``response``
-object might also contain names other than ``replies_full``,
+object could also contain names other than ``replies_full``,
 ``replies_tree``, and ``status``. Similarly, any of the dicts
 described here might be extended in later versions of the
 API. Thus, an application using the API must not assume that
@@ -55,17 +53,17 @@ following names: ``canonical_name``,
 ``answer_ipv6_address``, and ``answer_type``
 (an integer constant.).
 
-   * The value of canonical_name is the name that the API used for its lookup. It is in FQDN presentation format.
-   * The values in the intermediate_aliases list are domain
-     names from any CNAME or unsynthesized DNAME found when
-     resolving the original query. The list might have zero
-     entries if there were no CNAMEs in the path. These may
-     be useful, for example, for name comparisons when
-     following the rules in RFC 6125.
-   * The value of answer_ipv4_address and
-     answer_ipv6_address are the addresses of the server
-     from which the answer was received.
-   * The value of answer_type is the type of name service that generated the response. The values are:
+* The value of ``canonical_name`` is the name that the API used for its lookup. It is in FQDN presentation format.
+* The values in the ``intermediate_aliases`` list are domain
+  names from any CNAME or unsynthesized DNAME found when
+  resolving the original query. The list might have zero
+  entries if there were no CNAMEs in the path. These may
+  be useful, for example, for name comparisons when
+  following the rules in RFC 6125.
+* The value of ``answer_ipv4_address`` and
+  ``answer_ipv6_address`` are the addresses of the server
+  from which the answer was received.
+* The value of ``answer_type`` is the type of name service that generated the response. The values are:
 
 .. py:data:: GETDNS_NAMETYPE_DNS
 
@@ -75,7 +73,7 @@ following names: ``canonical_name``,
 
   The WINS name service (some reference needed)
 
-If the call was ``getdns.address(), the
+If the call was :meth:`address`, the
 top level of ``replies_tree`` has an additional name,
 ``just_address_answers`` (a list). The value of
 ``just_address_answers`` is a list that contains all of the A
@@ -91,7 +89,7 @@ later versions of the DNS return other address types, those
 types will appear in this list as well.
 
 The API can make service discovery through SRV records
-easier. If the call was ``getdns_service``, the top level of ``replies_tree has`` an
+easier. If the call was :meth:`service`, the top level of ``replies_tree has`` an
 additional name, ``srv_addresses`` (a list). The list is ordered
 by priority and weight based on the weighting algorithm in
 :rfc:`2782`, lowest priority value first. Each element of the

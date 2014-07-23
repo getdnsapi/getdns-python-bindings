@@ -18,8 +18,8 @@ getdns implementation developed as a joint project between
 and `NLnet Labs <http://nlnetlabs.nl/>`_.
 
 We have tried to keep this interface as Pythonic as we can
-while staying true to the getdns architecture.  We have
-plans for a future version that is more consistent with
+while staying true to the getdns architecture.  With this 
+release we are moving towards a design that is more consistent with
 Python object design.
 
 Dependencies
@@ -29,7 +29,7 @@ This version of getdns has been built and tested against Python
 2.7.  We also expect these other prerequisites to be
 installed:
 
-* `libgetdns <http://getdnsapi.net/>`_, version 0.1.1
+* `libgetdns <http://getdnsapi.net/>`_, version 0.1.2 or later
 * `libldns <https://www.nlnetlabs.nl/projects/ldns/>`_,
   version 1.6.11 or later
 * `libunbound
@@ -72,15 +72,16 @@ Using getdns
 Contexts
 --------
 
-All getdns queries happen within a *context*, and among
+All getdns queries happen within a resolution *context*, and among
 the first tasks you'll need to do before issuing a query is
-to acquire one using getdns.context_create().  A context is
-an opaque data structure describing the environment within
+to acquire a Context object.  A context is
+an opaque object with attributes describing the environment within
 which the query and replies will take place, including
 elements such as DNSSEC validation, whether the resolution
 should be performed as a recursive resolver or a stub
-resolver, and so on.  The state of a given context can be
-queried with getdns.context_get_api_information().
+resolver, and so on.  Individual Context attributes may be
+examined directly, and the overall state of a given context can be
+queried with the Context.get_api_information() method.
 
 See section 8 of the `API
 specification <http://www.vpnc.org/getdns-api/>`_
@@ -94,78 +95,81 @@ results to the screen:
 
 .. code-block:: python
 
-  import getdns, pprint, sys
+    import getdns, pprint, sys
+    
+    def main():
+        if len(sys.argv) != 2:
+            print "Usage: {0} hostname".format(sys.argv[0])
+            sys.exit(1)
+    
+        ctx = getdns.Context()
+        extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE }
+        results = ctx.address(name=sys.argv[1], extensions=extensions)
+        if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
+            sys.stdout.write("Addresses: ")
+            
+            for addr in results["just_address_answers"]:
+                print " {0}".format(addr["IPSTRING"])
+            sys.stdout.write("\n\n")
+            print "Entire results tree: "
+            pprint.pprint(results)
+        if results["status"] == getdns.GETDNS_RESPSTATUS_NO_NAME:
+            print "{0} not found".format(sys.argv[1])
+    
+    
+    if __name__ == "__main__":
+        main()
 
-  def main():
-    if len(sys.argv) != 2:
-        print "Usage: {0} hostname".format(sys.argv[0])
-        sys.exit(1)
-
-    ctx = getdns.context_create()
-    extensions = { "return_both_v4_and_v6": getdns.GETDNS_EXTENSION_TRUE }
-    results = getdns.address(ctx, name=sys.argv[1], extensions=extensions)
-    if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
-        sys.stdout.write("Addresses: ")
-        
-        for addr in results["just_address_answers"]:
-            print " {0}".format(addr["IPSTRING"])
-        sys.stdout.write("\n\n")
-        print "Entire results tree: "
-        pprint.pprint(results)
-    if results["status"] ==  getdns.GETDNS_RESPSTATUS_NO_NAME:
-        print "{0} not found".format(sys.argv[1])
-
-  if __name__ == "__main__":
-      main()
 
 In this example, we do a DNSSEC query and check the response:
 
 .. code-block:: python
 
-   import getdns, pprint, sys
-   
-   dnssec_status = {
-       "GETDNS_DNSSEC_SECURE" : 400,
-       "GETDNS_DNSSEC_BOGUS" : 401,
-       "GETDNS_DNSSEC_INDETERINATE" : 402,
-       "GETDNS_DNSSEC_INSECURE" : 403,
-       "GETDNS_DNSSEC_NOT_PERFORMED" : 404
-   }
-   
-   
-   def dnssec_message(value):
-       for message in dnssec_status.keys():
-           if dnssec_status[message] == value:
-               return message
-   
-   def main():
-       if len(sys.argv) != 2:
-           print "Usage: {0} hostname".format(sys.argv[0])
-           sys.exit(1)
-   
-       ctx = getdns.context_create()
-       extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE,
-                      "dnssec_return_status" : getdns.GETDNS_EXTENSION_TRUE }
-       results = getdns.address(ctx, name=sys.argv[1], extensions=extensions)
-       if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
-           sys.stdout.write("Addresses: ")
-           for addr in results["just_address_answers"]:
-               print " {0}".format(addr["IPSTRING"])
-           sys.stdout.write("\n")
-   
-           for result in results["replies_tree"]:
-               if "dnssec_status" in result.keys():
-                   print "{0}: dnssec_status: {1}".format(result["canonical_name"],
-                                                          dnssec_message(result["dnssec_status"]))
-   
-       if results["status"] == getdns.GETDNS_RESPSTATUS_NO_NAME:
-           print "{0} not found".format(sys.argv[1])
-   
-   
-   if __name__ == "__main__":
-       main()
-
-
+    import getdns, sys
+    
+    dnssec_status = {
+        "GETDNS_DNSSEC_SECURE" : 400,
+        "GETDNS_DNSSEC_BOGUS" : 401,
+        "GETDNS_DNSSEC_INDETERINATE" : 402,
+        "GETDNS_DNSSEC_INSECURE" : 403,
+        "GETDNS_DNSSEC_NOT_PERFORMED" : 404
+    }
+    
+    
+    def dnssec_message(value):
+        for message in dnssec_status.keys():
+            if dnssec_status[message] == value:
+                return message
+    
+    def main():
+        if len(sys.argv) != 2:
+            print "Usage: {0} hostname".format(sys.argv[0])
+            sys.exit(1)
+    
+        ctx = getdns.Context()
+        extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE,
+                       "dnssec_return_status" : getdns.GETDNS_EXTENSION_TRUE }
+        results = ctx.address(name=sys.argv[1], extensions=extensions)
+        if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
+            sys.stdout.write("Addresses: ")
+            for addr in results["just_address_answers"]:
+                print " {0}".format(addr["IPSTRING"])
+            sys.stdout.write("\n")
+    
+            for result in results["replies_tree"]:
+                if "dnssec_status" in result.keys():
+                    print "{0}: dnssec_status: {1}".format(result["canonical_name"],
+                                                           dnssec_message(result["dnssec_status"]))
+    
+        if results["status"] == getdns.GETDNS_RESPSTATUS_NO_NAME:
+            print "{0} not found".format(sys.argv[1])
+    
+    
+    if __name__ == "__main__":
+        main()
+    
+    
+    
 Contents:
 
 .. toctree::
