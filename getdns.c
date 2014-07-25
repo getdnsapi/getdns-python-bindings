@@ -79,6 +79,8 @@ PyMemberDef Context_members[] = {
       0, "edns maximum udp payload size" },
     { "edns_extended_rcode", T_INT, offsetof(getdns_ContextObject, edns_extended_rcode),
       0, "edns extended rcode" },
+    { "edns_do_bit", T_INT, offsetof(getdns_ContextObject, edns_do_bit),
+      0, "edns do bit" },
     { "edns_version", T_INT, offsetof(getdns_ContextObject, edns_version), 0, "edns version" },
     { "namespaces", T_OBJECT, offsetof(getdns_ContextObject, namespaces), 0,
       "ordered list of namespaces to be queried" },
@@ -86,9 +88,16 @@ PyMemberDef Context_members[] = {
       "list of dictionaries of root servers" },
     { "dnssec_trust_anchors", T_OBJECT, offsetof(getdns_ContextObject, dnssec_trust_anchors), 0,
       "list of trust anchors" },
+    { "suffix", T_OBJECT, offsetof(getdns_ContextObject, suffix), 0, "list of strings to be appended to search strings" },
     { "upstream_recursive_servers", T_OBJECT, offsetof(getdns_ContextObject,
                                                        upstream_recursive_servers), 0,
       "list of dictionaries defining where a stub resolver will send queries" },
+    { "implementation_string", T_STRING|READONLY, offsetof(getdns_ContextObject, implementation_string), 0,
+      "string set by the implementer" },
+    { "version_string", T_STRING|READONLY, offsetof(getdns_ContextObject, version_string), 0,
+      "string set by the implementer" },
+    { "resolver_type", T_INT|READONLY, offsetof(getdns_ContextObject, resolver_type), 0,
+      "the type of resolver the API is acting as in this context" },
     { NULL }
 };
 
@@ -849,7 +858,7 @@ ctx_set_append_name(PyObject *self, PyObject *args, PyObject *keywds)
 
 
 static PyObject *
-context_set_suffix(PyObject *self, PyObject *args, PyObject *keywds)
+ctx_set_suffix(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
         "context",
@@ -898,6 +907,7 @@ context_set_suffix(PyObject *self, PyObject *args, PyObject *keywds)
     }
     return Py_None;
 }
+
 
 static PyObject *
 ctx_set_dnssec_trust_anchors(PyObject *self, PyObject *args, PyObject *keywds)
@@ -1424,7 +1434,7 @@ static struct PyMethodDef getdns_methods[] = {
     { "context_set_follow_redirects", (PyCFunction)ctx_set_follow_redirects, METH_KEYWORDS },
     { "context_set_dns_root_servers", (PyCFunction)ctx_set_dns_root_servers, METH_KEYWORDS },
     { "context_set_append_name", (PyCFunction)ctx_set_append_name, METH_KEYWORDS },
-    { "context_set_suffix", (PyCFunction)context_set_suffix, METH_KEYWORDS },
+    { "context_set_suffix", (PyCFunction)ctx_set_suffix, METH_KEYWORDS },
     { "context_set_dnssec_trust_anchors", (PyCFunction)ctx_set_dnssec_trust_anchors, METH_KEYWORDS },
     { "context_set_dnssec_allowed_skew", (PyCFunction)ctx_set_dnssec_allowed_skew, METH_KEYWORDS },
     { "context_set_edns_maximum_udp_payload_size", (PyCFunction)ctx_set_edns_maximum_udp_payload_size, METH_KEYWORDS },

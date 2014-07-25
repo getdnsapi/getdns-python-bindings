@@ -37,7 +37,7 @@
 # define UNUSED_PARAM(x) ((void)(x))
 #endif
 
-static PyObject *getdns_error;
+PyObject *getdns_error;
 
 typedef struct pygetdns_libevent_callback_data  {
     char *callback_func;
@@ -54,14 +54,19 @@ typedef struct {
     uint16_t limit_outstanding_queries;
     getdns_redirects_t follow_redirects;
     getdns_append_name_t append_name;
+    getdns_list *suffix;
     uint32_t dnssec_allowed_skew;
     uint16_t edns_maximum_udp_payload_size;
     uint8_t edns_extended_rcode;
+    uint8_t edns_do_bit;
     uint8_t edns_version;
     getdns_namespace_t *namespaces;
     getdns_list *dns_root_servers;
     getdns_list *dnssec_trust_anchors;
     getdns_list *upstream_recursive_servers;
+    char *implementation_string;
+    char *version_string;
+    uint32_t resolver_type;
 } getdns_ContextObject;
 
 
@@ -74,6 +79,7 @@ int context_set_dns_transport(getdns_context *context, PyObject *py_value);
 int context_set_limit_outstanding_queries(getdns_context *context, PyObject *py_value);
 int context_set_follow_redirects(getdns_context *context, PyObject *py_value);
 int context_set_append_name(getdns_context *context, PyObject *py_value);
+int context_set_suffix(getdns_context *context, PyObject *py_value);
 int context_set_dnssec_allowed_skew(getdns_context *context, PyObject *py_value);
 int context_set_edns_maximum_udp_payload_size(getdns_context *context, PyObject *py_value);
 int context_set_edns_extended_rcode(getdns_context *context, PyObject *py_value);
@@ -82,6 +88,7 @@ int context_set_namespaces(getdns_context *context, PyObject *py_value);
 int context_set_dns_root_servers(getdns_context *context, PyObject *py_value);
 int context_set_dnssec_trust_anchors(getdns_context *context, PyObject *py_value);
 int context_set_upstream_recursive_servers(getdns_context *context, PyObject *py_value);
+int context_set_edns_do_bit(getdns_context *context, PyObject *py_value);
 
 PyObject *context_get_api_information(getdns_ContextObject *self, PyObject *unused);
 PyObject *context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
