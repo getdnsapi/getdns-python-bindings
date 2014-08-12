@@ -96,8 +96,6 @@ PyMemberDef Context_members[] = {
       "string set by the implementer" },
     { "version_string", T_STRING|READONLY, offsetof(getdns_ContextObject, version_string), 0,
       "string set by the implementer" },
-    { "resolver_type", T_INT|READONLY, offsetof(getdns_ContextObject, resolver_type), 0,
-      "the type of resolver the API is acting as in this context" },
     { NULL }
 };
 

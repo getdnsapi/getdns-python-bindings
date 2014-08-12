@@ -66,7 +66,6 @@ typedef struct {
     getdns_list *upstream_recursive_servers;
     char *implementation_string;
     char *version_string;
-    uint32_t resolver_type;
 } getdns_ContextObject;
 
 

@@ -194,8 +194,6 @@ as its methods and attributes.
    *request_type* argument:
 
    * In ``getdns.address()``, the name argument can only take a host name.
-   * You do not need to include a ``return_both_v4_and_v6`` extension with the call in ``getdns.address()``; it will
-     always return both IPv4 and IPv6 addresses.
    * ``Context.address()`` always uses all of namespaces from the
      context (to better emulate getaddrinfo()), while ``Context.general()`` only uses the DNS namespace.
 
