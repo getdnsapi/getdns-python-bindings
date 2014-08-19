@@ -43,6 +43,7 @@
 #include <getdns/getdns.h>
 #include <getdns/getdns_ext_libevent.h>
 #include <event2/event.h>
+#include <pthread.h>
 #include "pygetdns.h"
 
 
@@ -156,31 +157,30 @@ void
 callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict *resp,
   void *u, getdns_transaction_t tid)
 {
-    PyObject *main_module;
-    PyObject *main_dict;
-    PyObject *getdns_runner;
     pygetdns_libevent_callback_data *callback_data;
     PyObject *response;
+    PyObject *getdns_runner;
+    PyGILState_STATE state;
 
-    if ((main_module = PyImport_AddModule("__main__")) == 0)  {
-        PyErr_SetString(getdns_error, "No __main__");
-        /* need to throw an error here */
-    }
     callback_data = (pygetdns_libevent_callback_data *)u;
-    main_dict = PyModule_GetDict(main_module);
-    if ((getdns_runner = PyDict_GetItemString(main_dict, callback_data->callback_func)) == 0)  {
-        PyErr_SetString(getdns_error, "callback not found");
-        /* need to throw an error here XXX */
+    getdns_runner = callback_data->callback_func;
+    if (!PyCallable_Check(getdns_runner))  { /* XXX */
+        printf("callback not runnable\n");
+        return;
     }
-    /* Python callback prototype: */
-    /* callback(context, callback_type, response, userarg, tid) */
-
     if ((response = getFullResponse(resp)) == 0)  {
         PyErr_SetString(getdns_error, "Unable to decode response");
+        return;
         /* need to throw exceptiion XXX */
     }
+    
+    /* Python callback prototype: */
+    /* callback(context, callback_type, response, userarg, tid) */
+    state = PyGILState_Ensure();
     PyObject_CallFunction(getdns_runner, "OHOsl", context, type, response,
                           callback_data->userarg, tid);
+    PyObject_CallFunction(getdns_runner, "s", "asdfasdf");
+    PyGILState_Release(state);
 }
 
 
@@ -229,8 +229,29 @@ context_create(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 
+/*
+ * called from pthread_create.  Pull out the query arguments,
+ * get the Python callback function from the dictionary for
+ * __main__
+ */
+
+void
+marshall_query(pygetdns_async_args_blob *blob)
+{
+    PyObject *ret;
+
+    if ((ret = dispatch_query(blob->context_capsule, blob->name,
+                              blob->type, blob->extensions, blob->userarg, blob->tid,
+                              blob->callback)) == 0)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        pthread_exit(0);
+    }
+}
+                              
+
+
 PyObject *
-do_query(PyObject *context_capsule,
+dispatch_query(PyObject *context_capsule,
          void *name,
          uint16_t request_type,
          PyDictObject *extensions_obj,
@@ -319,22 +340,21 @@ do_query(PyObject *context_capsule,
     if (callback)  {
         struct event_base *gen_event_base;
         int dispatch_ret;
-        pygetdns_libevent_callback_data callback_data;
+        pygetdns_libevent_callback_data *callback_data = userarg;
 
         if ((gen_event_base = event_base_new()) == NULL)  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
         }
         
-        callback_data.callback_func = callback;
-        callback_data.userarg = userarg;
+        callback_data->userarg = userarg;
         if ((ret = getdns_extension_set_libevent_base(context, gen_event_base)) != GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
         }
 
         if ((ret = getdns_general(context, query_name, request_type,
-                                  extensions_dict, (void *)&callback_data,
+                                  extensions_dict, (void *)callback_data,
                                   (getdns_transaction_t *)&tid, callback_shim)) != GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             event_base_free(gen_event_base);
@@ -353,6 +373,73 @@ do_query(PyObject *context_capsule,
     }
     return getFullResponse(resp);
     
+}
+
+
+/*
+ * there's not many people doing this so it probably
+ * bears some explanation.  If there's a callback argument
+ * we need to spin off a thread to handle the callback,
+ * and do it in a way that doesn't make the Python thread
+ * scheduler barf.  Additionally, in order to avoid making
+ * getdns barf, we need to move data off the stack and onto
+ * the heap for it to be available to the new thread.  This includes
+ * a pointer to the PyObject representing the user-defined
+ * callback function.
+ * So basically we're encapsulating the data so that the
+ * new thread can use it to recreate the calling environment
+ */
+
+
+PyObject *
+do_query(PyObject *context_capsule,
+         void *name,
+         uint16_t request_type,
+         PyDictObject *extensions_obj,
+         void *userarg,
+         long tid,
+         char *callback)
+
+{
+    if (!callback)  {
+        return dispatch_query(context_capsule, name, request_type, extensions_obj,
+                       userarg, tid, callback);
+    }  else  {
+        PyObject *main_module;
+        PyObject *main_dict;
+        PyObject *getdns_runner;
+        pthread_t runner_thread;
+        pygetdns_async_args_blob *async_blob;
+
+        if ((main_module = PyImport_AddModule("__main__")) == 0)  {
+            PyErr_SetString(getdns_error, "No __main__");
+            /* need to throw an error here */
+        }
+        main_dict = PyModule_GetDict(main_module);
+        if ((getdns_runner = PyDict_GetItemString(main_dict, callback)) == 0)  {
+            PyErr_SetString(getdns_error, "callback not found");
+            return NULL;
+        }
+
+        async_blob = (pygetdns_async_args_blob *)malloc(sizeof(pygetdns_async_args_blob));
+        async_blob->context_capsule = context_capsule;
+        async_blob->name = malloc(256); /* XXX magic number */
+        strncpy(async_blob->name, name, strlen(name));
+        async_blob->type = request_type;
+        async_blob->extensions = extensions_obj;
+        async_blob->userarg = userarg;
+        async_blob->tid = tid;
+        async_blob->callback = malloc(256); /* XXX magic number */
+        strncpy(async_blob->callback, callback, strlen(callback));
+        async_blob->runner = getdns_runner;
+        async_blob->userarg->callback_func = getdns_runner;
+        
+        Py_BEGIN_ALLOW_THREADS;
+        pthread_create(&runner_thread, NULL, (void *)marshall_query, (void *)async_blob);
+        pthread_detach(runner_thread);
+        Py_END_ALLOW_THREADS;
+        return Py_None;
+    }
 }
 
 
@@ -1456,6 +1543,8 @@ initgetdns(void)
 {
     PyObject *g;
 
+    Py_Initialize();
+    PyEval_InitThreads();
     if ((g = Py_InitModule("getdns", getdns_methods)) == NULL)
         return;
     getdns_error = PyErr_NewException("getdns.error", NULL, NULL);

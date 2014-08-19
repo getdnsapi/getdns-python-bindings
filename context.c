@@ -989,7 +989,7 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     PyDictObject *extensions_obj = 0;
     void *userarg;
     long tid;
-    char * callback = 0;
+    char *callback = 0;
     PyObject *resp;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
