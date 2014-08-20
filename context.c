@@ -669,18 +669,6 @@ context_getattro(PyObject *self, PyObject *nameobj)
         }
         return PyString_FromString((char *)version_string->data);
     }
-#if 0
-    if (!strncmp(attrname, "resolver_type", strlen("resolver_type")))  {
-        uint32_t resolver_type;
-        if ((ret = getdns_dict_get_int(api_info, "resolver_type", &resolver_type)) != GETDNS_RETURN_GOOD)  {
-            char err_buf[256];
-            getdns_strerror(ret, err_buf, sizeof err_buf);
-            PyErr_SetString(getdns_error, err_buf);
-            return NULL;
-        }
-        return PyInt_FromLong(resolver_type);
-    }
-#endif
         
     if (!strncmp(attrname, "timeout", strlen("timeout")))  {
         uint32_t timeout;

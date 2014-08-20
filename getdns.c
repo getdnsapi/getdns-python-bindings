@@ -179,7 +179,6 @@ callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict 
     state = PyGILState_Ensure();
     PyObject_CallFunction(getdns_runner, "OHOsl", context, type, response,
                           callback_data->userarg, tid);
-    PyObject_CallFunction(getdns_runner, "s", "asdfasdf");
     PyGILState_Release(state);
 }
 
@@ -1451,56 +1450,6 @@ ctx_get_api_information(PyObject *self, PyObject *args, PyObject *keywds)
 }        
 
 
-/*
- * Implements the replies_tree for the getDns API
- * Returns a PyObject with the response.
- */
-static PyObject *
-replies_tree(PyObject *self, PyObject *args, PyObject *keywds)
-{
-    static char *kwlist[] = {
-        "context",
-        "name",
-        "request_type",
-        "extensions",
-        "callback",
-        0
-    };
-
-    PyObject *context_capsule;
-    struct getdns_context *context;
-    char *name;
-    uint16_t  request_type;
-    PyDictObject *extensions_obj;
-    struct getdns_dict *extensions_dict;
-    int callback = 0;
-    getdns_return_t ret;
-    struct getdns_dict *resp = 0;
-
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsH|OO" , kwlist,
-                                     &context_capsule, &name, &request_type,
-                                     &extensions_obj, &callback))  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-        return NULL;
-    }
-    context = PyCapsule_GetPointer(context_capsule, "context");
-    if ((extensions_dict = extensions_to_getdnsdict(extensions_obj)) == 0)  {
-        PyErr_SetString(getdns_error, "Dictionary parse failure");
-        return NULL;
-    }
-    if ((ret = getdns_general_sync(context, name, request_type,
-                                   extensions_dict, &resp))
-    		                       != GETDNS_RETURN_GOOD)  {
-    	//TODO: refine error handling consistently thru the app, a error handler
-    	// with helpful messages.
-    	char err_buf[255];
-        getdns_strerror(ret, err_buf, sizeof err_buf);
-        PyErr_SetString(getdns_error, err_buf);
-        return NULL;
-    }
-    return getFullResponse(resp);
-}
-
 
 
 static struct PyMethodDef getdns_methods[] = {
@@ -1509,7 +1458,6 @@ static struct PyMethodDef getdns_methods[] = {
     { "address", (PyCFunction)address, METH_KEYWORDS },
     { "service", (PyCFunction)service, METH_KEYWORDS },
     { "hostname", (PyCFunction)hostname, METH_KEYWORDS },
-    { "replies_tree", (PyCFunction)replies_tree, METH_KEYWORDS },
     { "cancel_callback", (PyCFunction)cancel_callback, METH_KEYWORDS },
     { "context_set_namespaces", (PyCFunction)ctx_set_namespaces, METH_KEYWORDS },
     { "context_set_resolution_type", (PyCFunction)ctx_set_resolution_type, METH_KEYWORDS },
@@ -1533,9 +1481,6 @@ static struct PyMethodDef getdns_methods[] = {
     { "context_process_async", (PyCFunction)context_process_async, METH_KEYWORDS },
     { 0, 0, 0 }
 };
-
-
-
 
 
 PyMODINIT_FUNC
