@@ -168,7 +168,18 @@ In this example, we do a DNSSEC query and check the response:
     if __name__ == "__main__":
         main()
     
-    
+
+Known issues
+============
+
+* "userarg" currently only accepts a string.  This will be
+  changed in a future release, to take arbitrary data types
+
+* the "dns_transport" attribute is settable and readable but
+  has no effect, as the underlying library does not
+  currently support TCP
+
+
     
 Contents:
 
