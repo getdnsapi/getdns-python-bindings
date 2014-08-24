@@ -29,6 +29,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef PYGETDNS_H
+#define PYGETDNS_H
 
 #define GETDNS_STR_IPV4 "IPv4"
 #define GETDNS_STR_IPV6 "IPv6"
@@ -130,3 +132,5 @@ PyObject *dispatch_query(PyObject *context_capsule, void *name, uint16_t request
 PyObject *dispatch_query(PyObject *context_capsule, void *name, uint16_t request_type,
                          PyDictObject *extensions_obj, void *userarg, long tid, char *callback);
 #endif
+
+#endif /* PYGETDNS_H */
