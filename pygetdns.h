@@ -45,6 +45,18 @@ typedef struct pygetdns_libevent_callback_data  {
 } pygetdns_libevent_callback_data;
 
 
+typedef struct pygetdns_async_args_blob  {
+    PyObject *context_capsule;
+    PyObject *runner;
+    uint16_t type;
+    PyDictObject *extensions;
+    getdns_transaction_t tid;
+    char *callback;
+    pygetdns_libevent_callback_data *userarg;
+    char *name;
+} pygetdns_async_args_blob;
+
+
 typedef struct {
     PyObject_HEAD
     PyObject *py_context;       /* Python capsule containing getdns_context */
@@ -67,17 +79,6 @@ typedef struct {
     char *implementation_string;
     char *version_string;
 } getdns_ContextObject;
-
-typedef struct pygetdns_async_args_blob  {
-    PyObject *context_capsule;
-    PyObject *runner;
-    char *name;
-    uint16_t type;
-    PyDictObject *extensions;
-    pygetdns_libevent_callback_data *userarg;
-    getdns_transaction_t tid;
-    char *callback;
-} pygetdns_async_args_blob;
 
 
 int context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
@@ -124,5 +125,8 @@ getdns_dict *getdnsify_addressdict(PyObject *pydict);
 void context_dealloc(getdns_ContextObject *self);
 void marshall_query(pygetdns_async_args_blob *blog);
 PyObject *dispatch_query(PyObject *context_capsule, void *name, uint16_t request_type,
+                         PyDictObject *extensions_obj, void *userarg, int tid, char *callback);
+#if 0
+PyObject *dispatch_query(PyObject *context_capsule, void *name, uint16_t request_type,
                          PyDictObject *extensions_obj, void *userarg, long tid, char *callback);
-
+#endif
