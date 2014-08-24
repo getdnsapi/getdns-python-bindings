@@ -54,7 +54,7 @@ Documentation
 
 Documentation is formatted using the [sphinx](http://sphinx-doc.org/)
 documentation system.  The html-formatted output is under the pygetdns
-source tree in doc/_build/html.  It is also available online at [readthedogs.org]
+source tree in doc/_build/html.  It is also available online at [readthedocs.org]
 (https://getdns.readthedocs.org/)
 
 Changes from the earlier release
