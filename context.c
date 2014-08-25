@@ -106,13 +106,13 @@ int
 context_set_resolution_type(getdns_context *context, PyObject *py_value)
 {
     getdns_return_t ret;
-    uint64_t value;
+    getdns_resolution_t value;
     
     if (!PyInt_Check(py_value))  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long long)(value = (getdns_resolution_t)PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -134,13 +134,13 @@ int
 context_set_dns_transport(getdns_context *context, PyObject *py_value)
 {
     getdns_return_t ret;
-    uint64_t value;
+    getdns_transport_t value;
     
     if (!PyInt_Check(py_value))  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long long)(value = (getdns_transport_t)PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -296,7 +296,7 @@ context_set_dnssec_allowed_skew(getdns_context *context, PyObject *py_value)
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+    if ((long)(value = (uint32_t)PyInt_AsLong(py_value)) < 0)  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -314,7 +314,7 @@ int
 context_set_edns_maximum_udp_payload_size(getdns_context *context, PyObject *py_value)
 {
     getdns_return_t ret;
-    uint32_t value;
+    uint16_t value;
     
     if (!PyInt_Check(py_value))  {
         PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -937,7 +937,7 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     uint16_t  request_type;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid = 0;
+    getdns_transaction_t tid = 0;
     char *callback = 0;
     PyObject *resp;
 
@@ -945,13 +945,13 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sH|Osls", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sH|OsLs", kwlist,
                                      &name, &request_type,
                                      &extensions_obj, &userarg, &tid, &callback))  {
         return NULL;
     }
     if ((resp = do_query(self->py_context, name, request_type, extensions_obj, userarg,
-                           (long)tid, callback)) == 0)  {
+                           tid, callback)) == 0)  {
         PyObject *err_type, *err_value, *err_traceback;
         PyErr_Fetch(&err_type, &err_value, &err_traceback);
         PyErr_Restore(err_type, err_value, err_traceback);
@@ -976,7 +976,7 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     char *name;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid;
+    getdns_transaction_t tid;
     char *callback = 0;
     PyObject *resp;
 
@@ -984,7 +984,7 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsHs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
                                      &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1014,7 +1014,7 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     void *address;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid;
+    getdns_transaction_t tid;
     char * callback = 0;
     PyObject *resp;
     getdns_context *context;
@@ -1023,7 +1023,7 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|Osls", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|OsLs", kwlist,
                                      &address, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1054,7 +1054,7 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     char *name;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid;
+    getdns_transaction_t tid;
     char *callback = 0;
     PyObject *resp;
     getdns_context *context;
@@ -1063,7 +1063,7 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|Osls", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
                                      &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);

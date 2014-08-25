@@ -143,7 +143,7 @@ extensions_to_getdnsdict(PyDictObject *pydict)
                     }
                     optionslist = getdns_list_create();
 
-                    optionlistsize = PyList_Size(opt_value);
+                    optionlistsize = (int)PyList_Size(opt_value);
 
                     for ( i = 0 ; i < optionlistsize ; i++)  {
                         tmpoptions_list_dict = getdns_dict_create();

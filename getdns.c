@@ -178,8 +178,8 @@ callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict 
     /* Python callback prototype: */
     /* callback(context, callback_type, response, userarg, tid) */
     state = PyGILState_Ensure();
-    PyObject_CallFunction(getdns_runner, "OHOsi", context, type, response,
-                          callback_data->userarg, (int)tid);
+    PyObject_CallFunction(getdns_runner, "OHOsL", context, type, response,
+                          callback_data->userarg, tid);
     PyGILState_Release(state);
 }
 
@@ -256,7 +256,7 @@ dispatch_query(PyObject *context_capsule,
          uint16_t request_type,
          PyDictObject *extensions_obj,
          void *userarg,
-         int tid,
+         getdns_transaction_t tid,
          char *callback)
 
 {
@@ -396,7 +396,7 @@ do_query(PyObject *context_capsule,
          uint16_t request_type,
          PyDictObject *extensions_obj,
          void *userarg,
-         long tid,
+         getdns_transaction_t tid,
          char *callback)
 
 {
@@ -456,9 +456,9 @@ cancel_callback(PyObject *self, PyObject *args, PyObject *keywds)
     PyObject *context_capsule;
     struct getdns_context *context;
     getdns_return_t ret;
-    long tid;
+    getdns_transaction_t tid;
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Ol", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OL", kwlist,
                                      &context_capsule, &tid))  {
         return NULL;
     }
@@ -493,17 +493,17 @@ general(PyObject *self, PyObject *args, PyObject *keywds)
     uint16_t  request_type;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid = 0;
+    getdns_transaction_t tid = 0;
     char *callback = 0;
     PyObject *my_ret;
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsH|Osls", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsH|OsLs", kwlist,
                                      &context_capsule, &name, &request_type,
                                      &extensions_obj, &userarg, &tid, &callback))  {
         return NULL;
     }
     if ((my_ret = do_query(context_capsule, name, request_type, extensions_obj, userarg,
-                           (long)tid, callback)) == 0)  {
+                           tid, callback)) == 0)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
@@ -527,7 +527,7 @@ service(PyObject *self, PyObject *args, PyObject *keywds)
     char *name;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid;
+    getdns_transaction_t tid;
     char *callback = 0;
     PyObject *my_ret;
 
@@ -564,11 +564,11 @@ address(PyObject *self, PyObject *args, PyObject *keywds)
     char *name;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid;
+    getdns_transaction_t tid;
     char * callback = 0;
     PyObject *my_ret;
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Os|OsHs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "Os|OsLs", kwlist,
                                      &context_capsule, &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -597,7 +597,7 @@ hostname(PyObject *self, PyObject *args, PyObject *keywds)
     void *address;
     PyDictObject *extensions_obj = 0;
     void *userarg;
-    long tid;
+    getdns_transaction_t tid;
     char * callback = 0;
     PyObject *my_ret;
 

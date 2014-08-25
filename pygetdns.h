@@ -110,7 +110,7 @@ PyObject *context_hostname(getdns_ContextObject *self, PyObject *args, PyObject 
 PyObject *context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 
 PyObject *do_query(PyObject *context_capsule, void *name, uint16_t request_type,
-                   PyDictObject *extensions_obj, void *userarg, long tid, char *callback);
+                   PyDictObject *extensions_obj, void *userarg, getdns_transaction_t tid, char *callback);
 PyObject *pythonify_address_list(getdns_list *list);
 PyObject *glist_to_plist(struct getdns_list *list);
 PyObject *gdict_to_pdict(struct getdns_dict *dict);
@@ -127,10 +127,6 @@ getdns_dict *getdnsify_addressdict(PyObject *pydict);
 void context_dealloc(getdns_ContextObject *self);
 void marshall_query(pygetdns_async_args_blob *blog);
 PyObject *dispatch_query(PyObject *context_capsule, void *name, uint16_t request_type,
-                         PyDictObject *extensions_obj, void *userarg, int tid, char *callback);
-#if 0
-PyObject *dispatch_query(PyObject *context_capsule, void *name, uint16_t request_type,
-                         PyDictObject *extensions_obj, void *userarg, long tid, char *callback);
-#endif
+                         PyDictObject *extensions_obj, void *userarg, getdns_transaction_t tid, char *callback);
 
 #endif /* PYGETDNS_H */
