@@ -47,6 +47,8 @@
 #include "pygetdns.h"
 
 
+PyObject *getdns_error;
+
 
 PyMethodDef Context_methods[] = {
     { "get_api_information", (PyCFunction)context_get_api_information,
