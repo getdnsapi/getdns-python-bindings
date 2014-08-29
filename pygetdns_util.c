@@ -553,49 +553,7 @@ gdict_to_pdict(struct getdns_dict *dict)
     return py_dict;
 }
 
-#if 0
 
-PyObject *
-decode_getdns_response(struct getdns_dict *response)
-{
-    uint32_t error;
-    char error_str[512];
-    struct getdns_list *addr_list;
-    size_t n_addrs;
-    getdns_return_t ret;
-    size_t i;
-    struct getdns_dict *addr_dict;
-    struct getdns_bindata *addr;
-    char *addr_str;
-    PyObject *results;
-
-    (void)getdns_dict_get_int(response, "status", &error);
-    if (error != GETDNS_RESPSTATUS_GOOD)  {
-        sprintf(error_str, "No answers, return value %d", error);
-        PyErr_SetString(getdns_error, error_str);
-        return NULL;
-    }
-    if ((ret = getdns_dict_get_list(response, "just_address_answers",
-                                    &addr_list)) != GETDNS_RETURN_GOOD)  {
-        sprintf(error_str, "Extracting answers failed: %d", ret);
-        PyErr_SetString(getdns_error, error_str);
-        return NULL;
-    }
-    if ((results = PyList_New(0)) == NULL)  {
-        PyErr_SetString(getdns_error, "Unable to allocate response list");
-        return NULL;
-    }
-    (void)getdns_list_get_length(addr_list, &n_addrs);
-    for ( i = 0 ; i < n_addrs ; i++ )  {
-        (void)getdns_list_get_dict(addr_list, i, &addr_dict);
-        (void)getdns_dict_get_bindata(addr_dict, "address_data", &addr);
-        addr_str = getdns_display_ip_address(addr);
-        PyList_Append(results, PyString_FromString(addr_str));
-    }
-    return results;
-}
-
-#endif
 /*
  * Error checking helper
  */
@@ -740,20 +698,10 @@ convertBinData(getdns_bindata* data,
             return(addr_string);
         }
     }  else  {                  /* none of the above, treat it like a blob */
-#if 0
-        Py_buffer pybuf;
-#endif
         uint8_t *blob = (uint8_t *)malloc(data->size);
 
         memcpy(blob, data->data, data->size);
         return (PyBuffer_FromMemory(blob, (Py_ssize_t)data->size));
-#if 0
-        if (PyBuffer_FillInfo(&pybuf, 0, blob, data->size, false, PyBUF_CONTIG) < 0)  {
-            PyErr_SetString(getdns_error, "PyBuffer_FillInfo failed\n");
-            return NULL;
-        }
-        return PyMemoryView_FromBuffer(&pybuf);
-#endif
     }
     return NULL;                /* should never get here .. */
 }
