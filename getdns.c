@@ -592,6 +592,7 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "GETDNS_RRTYPE_RKEY", 57);
     PyModule_AddIntConstant(g, "GETDNS_RRTYPE_TALINK", 58);
     PyModule_AddIntConstant(g, "GETDNS_RRTYPE_CDS", 59);
+    PyModule_AddIntConstant(g, "GETDNS_RRTYPE_CDNSKEY", 60);
     PyModule_AddIntConstant(g, "GETDNS_RRTYPE_OPENPGPKEY", 61);
     PyModule_AddIntConstant(g, "GETDNS_RRTYPE_SPF", 99);
     PyModule_AddIntConstant(g, "GETDNS_RRTYPE_UINFO", 100);
