@@ -635,7 +635,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
     api_info = getdns_context_get_api_information(context);
     if (!strncmp(attrname, "resolution_type", strlen("resolution_type")))  {
         uint32_t resolution_type;
-        if ((ret = getdns_dict_get_int(api_info, "resolver_type", &resolution_type)) != GETDNS_RETURN_GOOD)  {
+        if ((ret = getdns_dict_get_int(api_info, "resolution_type", &resolution_type)) != GETDNS_RETURN_GOOD)  {
             char err_buf[256];
             getdns_strerror(ret, err_buf, sizeof err_buf);
             PyErr_SetString(getdns_error, err_buf);
@@ -1088,7 +1088,7 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
     PyObject *py_api;
     getdns_bindata *version_string;
     getdns_bindata *imp_string;
-    uint32_t resolver_type;
+    uint32_t resolution_type;
     getdns_dict *all_context;
     PyObject *py_all_context;
     size_t ncontexts;
@@ -1126,13 +1126,13 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
-    if ((ret = getdns_dict_get_int(api_info, "resolver_type", &resolver_type)) != GETDNS_RETURN_GOOD)  {
+    if ((ret = getdns_dict_get_int(api_info, "resolution_type", &resolution_type)) != GETDNS_RETURN_GOOD)  {
         char err_buf[256];
         getdns_strerror(ret, err_buf, sizeof err_buf);
         PyErr_SetString(getdns_error, err_buf);
         return NULL;
     }
-    if (PyDict_SetItemString(py_api, "resolver_type", PyInt_FromLong((long)resolver_type)))  {
+    if (PyDict_SetItemString(py_api, "resolution_type", PyInt_FromLong((long)resolution_type)))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
