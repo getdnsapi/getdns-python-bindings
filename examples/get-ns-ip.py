@@ -2,13 +2,21 @@
 #
 
 """
-Lookup an MX record and printout all the MX preference, target, and
-associated IP addresses of the targets.
+Lookup an NS record and printout all the hostnames and associated IP
+addresses of the listed nameservers.
 """
 
 import getdns, pprint, sys
 
 extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE }
+
+
+def usage():
+    print """Usage: get-ns-ip.py <zone>
+
+where <zone> is a DNS zone (domain).
+"""
+    sys.exit(1)
 
 
 def get_ip(ctx, qname):
@@ -24,10 +32,13 @@ def get_ip(ctx, qname):
 
 if __name__ == '__main__':
 
+    if len(sys.argv) != 2:
+        usage()
+
     qname = sys.argv[1]
 
     ctx = getdns.Context()
-    results = ctx.general(name=qname, request_type=getdns.GETDNS_RRTYPE_MX)
+    results = ctx.general(name=qname, request_type=getdns.GETDNS_RRTYPE_NS)
     status = results['status']
 
     hostlist = []
@@ -35,17 +46,17 @@ if __name__ == '__main__':
         for reply in results['replies_tree']:
             answers = reply['answer']
             for answer in answers:
-                if answer['type'] == getdns.GETDNS_RRTYPE_MX:
-                    iplist = get_ip(ctx, answer['rdata']['exchange'])
+                if answer['type'] == getdns.GETDNS_RRTYPE_NS:
+                    iplist = get_ip(ctx, answer['rdata']['nsdname'])
                     for ip in iplist:
-                        hostlist.append( (answer['rdata']['preference'], \
-                                          answer['rdata']['exchange'], ip) )
+                        hostlist.append( (answer['rdata']['nsdname'], ip) )
     elif status == getdns.GETDNS_RESPSTATUS_NO_NAME:
-        print "%s, %s: no such name" % (qname, qtype)
+        print "%s: no such DNS zone" % qname
     elif status == getdns.GETDNS_RESPSTATUS_ALL_TIMEOUT:
-        print "%s, %s: query timed out" % (qname, qtype)
+        print "%s, NS: query timed out" % qname
     else:
         print "%s, %s: unknown return code: %d" % results["status"]
 
-    for (pref, mx, addr) in sorted(hostlist):
-        print pref, mx, addr
+    # Print out each NS server name and IP address
+    for (nsdname, addr) in sorted(hostlist):
+        print nsdname, addr
