@@ -1,12 +1,20 @@
 #!/usr/bin/env python
 #
+# Validate a TLS certificate with DANE-EE usage.
 # Get a TLS certificate from a HTTP server and verify it with
-# DANE/DNSSEC. Only supports TLSA usage type 3 (DANE-EE).
+# DANE/DNSSEC. Only supports TLSA usage=3 (DANE-EE)
 # 
 
-import sys, socket, hashlib
+import os.path, sys, socket, hashlib
 from M2Crypto import SSL, X509
 import getdns
+
+
+def usage():
+    print """\
+Usage: %s [hostname] [port]\
+""" % os.path.basename(sys.argv[0])
+    sys.exit(1)
 
 
 def compute_hash(func, string):
@@ -16,7 +24,26 @@ def compute_hash(func, string):
     return h.hexdigest()
 
 
-def get_tlsa_rdata_set(replies):
+def get_addresses(hostname):
+
+    extensions = {
+        "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE
+    }
+    ctx = getdns.Context()
+    results = ctx.address(name=hostname, extensions=extensions)
+    status = results['status']
+
+    address_list = []
+    if status == getdns.GETDNS_RESPSTATUS_GOOD:
+        for addr in results['just_address_answers']:
+            address_list.append((addr['address_type'], addr['address_data']))
+    else:
+        print "getdns.address(): failed, return code: %d" % status
+
+    return address_list
+
+
+def get_tlsa_rdata_set(replies, requested_usage=None):
     tlsa_rdata_set = []
     for reply in replies:
         for rr in reply['answer']:
@@ -27,33 +54,32 @@ def get_tlsa_rdata_set(replies):
                 matching_type = rdata['matching_type']
                 cadata = rdata['certificate_association_data']
                 cadata = str(cadata).encode('hex')
-                tlsa_rdata_set.append(
-                    (usage, selector, matching_type, cadata) )
+                if usage == requested_usage:
+                    tlsa_rdata_set.append(
+                        (usage, selector, matching_type, cadata) )
     return tlsa_rdata_set
 
 
 def get_tlsa(port, proto, hostname):
 
+    extensions = {
+        "dnssec_return_only_secure" : getdns.GETDNS_EXTENSION_TRUE,
+    }
     qname = "_%d._%s.%s" % (port, proto, hostname)
     ctx = getdns.Context()
-    extensions = { "dnssec_return_only_secure": getdns.GETDNS_EXTENSION_TRUE }
     results = ctx.general(name=qname,
                           request_type=getdns.GETDNS_RRTYPE_TLSA,
                           extensions=extensions)
     status = results['status']
 
     if status == getdns.GETDNS_RESPSTATUS_GOOD:
-        return get_tlsa_rdata_set(results['replies_tree'])
+        return get_tlsa_rdata_set(results['replies_tree'], requested_usage=3)
     else:
-        print "getdns: failed looking up TLSA record, code: %d" % status
+        print "getdns.general(): failed, return code: %d" % status
         return None
 
 
 def verify_tlsa(cert, usage, selector, matchtype, hexdata1):
-
-    if usage != 3:
-        print "Only TLSA usage type 3 is currently supported"
-        return
 
     if selector == 0:
         certdata = cert.as_der()
@@ -79,35 +105,62 @@ def verify_tlsa(cert, usage, selector, matchtype, hexdata1):
 
 if __name__ == '__main__':
 
-    hostname, port = sys.argv[1:]
-    port = int(port)
+    try:
+        hostname, port = sys.argv[1:]
+        port = int(port)
+    except:
+        usage()
+
     tlsa_rdata_set = get_tlsa(port, "tcp", hostname)
 
-    ctx = SSL.Context()
+    for (iptype, ipaddr) in get_addresses(hostname):
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        print "Connecting to %s at address %s ..." % (hostname, ipaddr)
+        ctx = SSL.Context()
 
-    connection = SSL.Connection(ctx, sock=sock)
-    connection.connect((hostname, port))
-
-    chain = connection.get_peer_cert_chain()
-    # Get the first certificate from the chain (which will be the EE cert)
-    cert = chain[0]
-
-    # find a matching TLSA record entry for the certificate
-    tlsa_match = False
-    for (usage, selector, matchtype, hexdata) in tlsa_rdata_set:
-        if verify_tlsa(cert, usage, selector, matchtype, hexdata):
-            tlsa_match = True
-            print "Certificate matched TLSA record %d %d %d %s" % \
-                (usage, selector, matchtype, hexdata)
+        if iptype == "IPv4":
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        elif iptype == "IPv6":
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         else:
-            print "Certificate did not match TLSA record %d %d %d %s"% \
-                (usage, selector, matchtype, hexdata)
-    if tlsa_match:
-        print "Found at least one matching TLSA record"
+            raise ValueError, "Unknown address type: %s" % iptype
 
-    connection.close()
-    ctx.close()
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        connection = SSL.Connection(ctx, sock=sock)
+
+        # set TLS SNI extension if available in M2Crypto on this platform
+        # Note: the official M2Crypto release does not yet (as of late 2014)
+        # have support for SNI, sigh, but patches exist.
+        try:
+            connection.set_tlsext_host_name(hostname)
+        except AttributeError:
+            pass
+
+        # Per https://tools.ietf.org/html/draft-ietf-dane-ops, for DANE-EE
+        # usage, certificate identity checks are based solely on the TLSA 
+        # record, so we ignore name mismatch conditions in the certificate.
+        try:
+            connection.connect((ipaddr, port))
+        except SSL.Checker.WrongHost:
+            pass
+
+        chain = connection.get_peer_cert_chain()
+        cert = chain[0]
+
+        # find a matching TLSA record entry for the certificate
+        tlsa_match = False
+        for (usage, selector, matchtype, hexdata) in tlsa_rdata_set:
+            if verify_tlsa(cert, usage, selector, matchtype, hexdata):
+                tlsa_match = True
+                print "Matched TLSA record %d %d %d %s" % \
+                    (usage, selector, matchtype, hexdata)
+            else:
+                print "Didn't match TLSA record %d %d %d %s"% \
+                    (usage, selector, matchtype, hexdata)
+
+        if not tlsa_match:
+            print "No Matching DANE-EE TLSA record found."
+
+        connection.close()
+        ctx.close()
 
