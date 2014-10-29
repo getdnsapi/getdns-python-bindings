@@ -42,7 +42,7 @@ getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
                     libraries = [ 'ldns', 'getdns', 'getdns_ext_event' ],
                     library_dirs = [ '/usr/local/lib' ],
-                    sources = [ 'getdns.c', 'pygetdns_util.c', 'fd_poller.c', 'context.c' ],
+                    sources = [ 'getdns.c', 'pygetdns_util.c', 'context.c' ],
                     runtime_library_dirs = [ '/usr/local/lib' ]
                     )
 
