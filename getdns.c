@@ -527,6 +527,7 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_NO_NAME", 901);
     PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_ALL_TIMEOUT", 902);
     PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_NO_SECURE_ANSWERS", 903);
+    PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_ALL_BOGUS_ANSWERS", 904);
 
     PyModule_AddIntConstant(g, "GETDNS_BAD_DNS_CNAME_IN_TARGET", 1100);
     PyModule_AddIntConstant(g, "GETDNS_BAD_DNS_ALL_NUMERIC_LABEL", 1101);
