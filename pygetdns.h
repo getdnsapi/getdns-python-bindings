@@ -32,6 +32,8 @@
 #ifndef PYGETDNS_H
 #define PYGETDNS_H
 
+#define PYGETDNS_VERSION "0.2.1"
+
 #define GETDNS_STR_IPV4 "IPv4"
 #define GETDNS_STR_IPV6 "IPv6"
 

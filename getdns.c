@@ -223,68 +223,6 @@ dispatch_query(PyObject *context_capsule,
             return NULL;
         }
     }
-    if (request_type == GETDNS_RRTYPE_PTR)  {
-        PyObject *address = (PyObject *)name;
-        getdns_dict *addr_dict;
-        getdns_bindata addr_data;
-        getdns_bindata addr_type;
-        PyObject *str;
-        int domain;
-        unsigned char buf[sizeof(struct in6_addr)];
-
-        if (!PyDict_Check(address))  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;    
-        }
-        if (PyDict_Size(address) != 2)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;    
-        }
-        addr_dict = getdns_dict_create();
-        if ((str = PyDict_GetItemString(address, "address_type")) == NULL)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;    
-        }
-        if (!PyString_Check(str))  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-        addr_type.data = (uint8_t *)strdup(PyString_AsString(str));
-        addr_type.size = strlen((char *)addr_type.data);
-        if (strlen((char *)addr_type.data) != 4)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_WRONG_TYPE_REQUESTED_TEXT);
-            return NULL;
-        }
-        if (!strncasecmp((char *)addr_type.data, "IPv4", 4))
-            domain = AF_INET;
-        else if (!strncasecmp((char *)addr_type.data, "IPv6", 4))
-            domain = AF_INET6;
-        else  {
-            PyErr_SetString(getdns_error,  GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-        getdns_dict_set_bindata(addr_dict, "address_type", &addr_type);
-
-        if ((str = PyDict_GetItemString(address, "address_data")) == NULL)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;            
-        }
-        if (!PyString_Check(str))  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-        if (inet_pton(domain, PyString_AsString(str), buf) <= 0)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-        addr_data.data = (uint8_t *)buf;
-        addr_data.size = (domain == AF_INET ? 4 : 16);
-        getdns_dict_set_bindata(addr_dict, "address_data", &addr_data);
-        if ((query_name = reverse_address(&addr_data)) == NULL)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-    }  else
         query_name = (char *)name;
 
     if (callback)  {
@@ -302,12 +240,44 @@ dispatch_query(PyObject *context_capsule,
             return NULL;
         }
 
-        if ((ret = getdns_general(context, query_name, request_type,
-                                  extensions_dict, (void *)callback_data,
-                                  (getdns_transaction_t *)&tid, callback_shim)) != GETDNS_RETURN_GOOD)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
-            event_base_free(gen_event_base);
-            return NULL;
+        if ((request_type == GETDNS_RRTYPE_A) || (request_type == GETDNS_RRTYPE_AAAA))  {
+            if ((ret = getdns_address(context, query_name, extensions_dict, (void *)callback_data,
+                                      (getdns_transaction_t *)&tid, callback_shim)) != GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                event_base_free(gen_event_base);
+                return NULL;
+            }
+        } else if (request_type == GETDNS_RRTYPE_SRV)  {
+            if ((ret = getdns_service(context, query_name, extensions_dict, (void *)callback_data,
+                                      (getdns_transaction_t *)&tid, callback_shim)) != GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                event_base_free(gen_event_base);
+                return NULL;
+            }
+        }  else if (request_type == GETDNS_RRTYPE_PTR)  {
+            getdns_dict *addr_dict;
+            int resp;
+            if ((addr_dict = getdnsify_addressdict((PyObject *)name)) == NULL)  {
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            if ((resp = getdns_hostname(context, addr_dict, extensions_dict,
+                                       (void *)callback_data, (getdns_transaction_t *)&tid,
+                                       callback_shim)) != GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                event_base_free(gen_event_base);
+                return NULL;
+            }
+        } else {
+            if ((ret = getdns_general(context, query_name, request_type,
+                                      extensions_dict, (void *)callback_data,
+                                      (getdns_transaction_t *)&tid, callback_shim)) != GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                event_base_free(gen_event_base);
+                return NULL;
+            }
         }
         dispatch_ret = event_base_dispatch(gen_event_base);
         UNUSED_PARAM(dispatch_ret);
@@ -315,13 +285,38 @@ dispatch_query(PyObject *context_capsule,
         event_base_free(gen_event_base);
         return Py_None;
     }
-    if ((ret = getdns_general_sync(context, query_name, request_type,
-                                   extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
-        return NULL;
+    if ((request_type == GETDNS_RRTYPE_A) || (request_type == GETDNS_RRTYPE_AAAA))  {
+        if ((ret = getdns_address_sync(context, query_name, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+    }  else if (request_type == GETDNS_RRTYPE_SRV)  {
+        if ((ret = getdns_service_sync(context, query_name, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+    }  else if (request_type == GETDNS_RRTYPE_PTR)  {
+            getdns_dict *addr_dict;
+            int ret;
+            if ((addr_dict = getdnsify_addressdict((PyObject *)name)) == NULL)  {
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            if ((ret = getdns_hostname_sync(context, addr_dict, 
+                                        extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
+    } else {
+        if ((ret = getdns_general_sync(context, query_name, request_type,
+                                       extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            return NULL;
+        }
     }
     return getFullResponse(resp);
-    
 }
 
 
@@ -416,6 +411,7 @@ initgetdns(void)
         return;
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
+    PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
 /*
  * return value constants
  */
