@@ -164,6 +164,12 @@ as its methods and attributes.
    tsig_algorithm (a bindata) that is the name of the TSIG hash
    algorithm, and tsig_secret (a bindata) that is the TSIG key.
 
+  The :class:`Context` class has the following public read-only attribute:
+
+  .. py:attribute:: __version__
+
+   Specifies the version string for the getdns python module
+                    
   The :class:`Context` class includes public methods to execute a DNS query, as well as a
   method to return the entire set of context attributes as a Python dictionary.  :class:`Context`
   methods are described below:

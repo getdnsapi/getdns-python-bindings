@@ -45,6 +45,8 @@ as follows:
 
   ./configure --with-libevent
 
+This release has been tested against libgetdns 0.1.5.
+
 Building
 ========
 
@@ -109,7 +111,7 @@ results to the screen:
             sys.stdout.write("Addresses: ")
             
             for addr in results["just_address_answers"]:
-                print " {0}".format(addr["IPSTRING"])
+                print " {0}".format(addr["address_data"])
             sys.stdout.write("\n\n")
             print "Entire results tree: "
             pprint.pprint(results)
@@ -153,7 +155,7 @@ In this example, we do a DNSSEC query and check the response:
         if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
             sys.stdout.write("Addresses: ")
             for addr in results["just_address_answers"]:
-                print " {0}".format(addr["IPSTRING"])
+                print " {0}".format(addr["address_data"])
             sys.stdout.write("\n")
     
             for result in results["replies_tree"]:
@@ -174,10 +176,6 @@ Known issues
 
 * "userarg" currently only accepts a string.  This will be
   changed in a future release, to take arbitrary data types
-
-* the "dns_transport" attribute is settable and readable but
-  has no effect, as the underlying library does not
-  currently support TCP
 
 
     
