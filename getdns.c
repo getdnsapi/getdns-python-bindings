@@ -143,6 +143,8 @@ PyTypeObject getdns_ContextType = {
     (initproc)context_init,    /* tp_init           */
 };
 
+pthread_t runner_thread;
+
 
 /*
  *  A shim to sit between the event callback function
@@ -161,7 +163,7 @@ callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict 
 
     callback_data = (pygetdns_libevent_callback_data *)u;
     getdns_runner = callback_data->callback_func;
-    if (!PyCallable_Check(getdns_runner))  { /* XXX */
+    if (!PyCallable_Check(getdns_runner))  { 
         printf("callback not runnable\n");
         return;
     }
@@ -185,9 +187,10 @@ callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict 
  * __main__
  */
 
-void
-marshall_query(pygetdns_async_args_blob *blob)
+void *
+marshall_query(void *void_blob)
 {
+    pygetdns_async_args_blob *blob = (pygetdns_async_args_blob *)void_blob;
     PyObject *ret;
 
     if ((ret = dispatch_query(blob->context_capsule, blob->name,
@@ -196,6 +199,7 @@ marshall_query(pygetdns_async_args_blob *blob)
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         pthread_exit(0);
     }
+    return 0;
 }
                               
 
@@ -352,7 +356,6 @@ do_query(PyObject *context_capsule,
         PyObject *main_module;
         PyObject *main_dict;
         PyObject *getdns_runner;
-        pthread_t runner_thread;
         pygetdns_async_args_blob *async_blob;
         char *u;
 
@@ -373,8 +376,11 @@ do_query(PyObject *context_capsule,
         async_blob->type = request_type;
         async_blob->extensions = extensions_obj;
         async_blob->userarg = (pygetdns_libevent_callback_data *)malloc(sizeof(pygetdns_libevent_callback_data));
-        u = malloc(1024);
-        strncpy(u, userarg, strlen(userarg)+1);
+        if (userarg)  {
+            u = malloc(1024);
+            strncpy(u, userarg, strlen(userarg)+1);
+        }  else
+            u = 0;
         async_blob->userarg->userarg = u;
         async_blob->tid = tid;
         async_blob->callback = malloc(256); /* XXX magic number */
@@ -392,6 +398,12 @@ do_query(PyObject *context_capsule,
 static struct PyMethodDef getdns_methods[] = {
     { 0, 0, 0 }
 };
+
+static void
+cleanup(void)
+{
+    pthread_join(runner_thread, NULL);
+}
 
 
 PyMODINIT_FUNC
@@ -412,6 +424,7 @@ initgetdns(void)
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
     PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
+    Py_AtExit(cleanup);
 /*
  * return value constants
  */
