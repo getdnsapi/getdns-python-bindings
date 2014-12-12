@@ -39,6 +39,70 @@
 #include <ldns/ldns.h>
 #include "pygetdns.h"
 
+
+
+int
+get_status(struct getdns_dict *result_dict)
+{
+    uint32_t status;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_int(result_dict, "status", &status)) != GETDNS_RETURN_GOOD)
+        return 0;
+    return (int)status;
+}
+        
+
+int
+get_answer_type(struct getdns_dict *result_dict)
+{
+    uint32_t answer_type;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_int(result_dict, "answer_type", &answer_type)) != GETDNS_RETURN_GOOD)
+        return 0;
+    return (int)answer_type;
+}
+
+
+char *
+get_canonical_name(struct getdns_dict *result_dict)
+{
+    getdns_bindata *canonical_name;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_bindata(result_dict, "canonical_name", &canonical_name)) != GETDNS_RETURN_GOOD)
+        return 0;
+    return (char *)canonical_name->data;
+}
+        
+
+PyObject *
+get_just_address_answers(struct getdns_dict *result_dict)
+{
+    struct getdns_list *just_address_answers;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_list(result_dict, "just_address_answers", &just_address_answers)) !=
+        GETDNS_RETURN_GOOD)
+        return NULL;
+    return pythonify_address_list(just_address_answers);
+}
+
+
+PyObject *
+get_replies_tree(struct getdns_dict *result_dict)
+{
+    struct getdns_list *replies_tree;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_list(result_dict, "replies_tree", &replies_tree)) !=
+        GETDNS_RETURN_GOOD)
+        return NULL;
+    return glist_to_plist(replies_tree);
+}
+
+
 struct getdns_dict *
 extensions_to_getdnsdict(PyDictObject *pydict)
 {

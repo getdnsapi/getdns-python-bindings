@@ -49,6 +49,67 @@
 
 PyObject *getdns_error;
 
+PyMemberDef Result_members[] = {
+    { "just_address_answers", T_OBJECT_EX, offsetof(getdns_ResultObject, just_address_answers),
+      0, "Only the query answers" },
+    { "replies_tree", T_OBJECT_EX, offsetof(getdns_ResultObject, replies_tree),
+      0, "The replies tree dictionary" },
+    { "replies_full", T_OBJECT_EX, offsetof(getdns_ResultObject, replies_full),
+      0, "The entire replies structure returned by getdns" },
+    { "status", T_OBJECT_EX, offsetof(getdns_ResultObject, status), 0, "Response status" },
+    { "answer_type", T_OBJECT_EX, offsetof(getdns_ResultObject, answer_type), 0, "Answer type" },
+    { "canonical_name", T_OBJECT_EX, offsetof(getdns_ResultObject, canonical_name), 0,
+      "Canonical name" },
+    { NULL },
+};
+
+static PyMethodDef Result_methods[] = {
+    { NULL },
+};
+
+
+PyTypeObject getdns_ResultType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "getdns.Result",           /*tp_name*/
+    sizeof(getdns_ResultObject), /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)result_dealloc, /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "Result objects",          /* tp_doc */
+    0,               /* tp_traverse */
+    0,               /* tp_clear */
+    0,               /* tp_richcompare */
+    0,               /* tp_weaklistoffset */
+    0,               /* tp_iter */
+    0,               /* tp_iternext */
+    Result_methods,             /* tp_methods */
+    Result_members,             /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)result_init,      /* tp_init */
+    0,                         /* tp_alloc */
+    PyType_GenericNew,                 /* tp_new */
+};
+
 
 PyMethodDef Context_methods[] = {
     { "get_api_information", (PyCFunction)context_get_api_information,
@@ -143,6 +204,12 @@ PyTypeObject getdns_ContextType = {
     (initproc)context_init,    /* tp_init           */
 };
 
+#if 0
+PyMethodDef Result_methods[] = {
+    { NULL },
+};
+#endif
+
 pthread_t runner_thread;
 
 
@@ -219,6 +286,9 @@ dispatch_query(PyObject *context_capsule,
     struct getdns_dict *resp = 0;
     getdns_return_t ret;
     char *query_name;
+    PyObject *result_capsule;
+    PyObject *args;
+    PyObject *reslt;
 
     context = PyCapsule_GetPointer(context_capsule, "context");
     if (extensions_obj)  {
@@ -227,7 +297,7 @@ dispatch_query(PyObject *context_capsule,
             return NULL;
         }
     }
-        query_name = (char *)name;
+    query_name = (char *)name;
 
     if (callback)  {
         struct event_base *gen_event_base;
@@ -287,7 +357,7 @@ dispatch_query(PyObject *context_capsule,
         UNUSED_PARAM(dispatch_ret);
 
         event_base_free(gen_event_base);
-        return Py_None;
+        Py_RETURN_NONE;
     }
     if ((request_type == GETDNS_RRTYPE_A) || (request_type == GETDNS_RRTYPE_AAAA))  {
         if ((ret = getdns_address_sync(context, query_name, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
@@ -320,7 +390,14 @@ dispatch_query(PyObject *context_capsule,
             return NULL;
         }
     }
+    result_capsule = PyCapsule_New(resp, "result", 0);
+    args = Py_BuildValue("(O)", result_capsule);
+    reslt = PyObject_CallObject((PyObject *)&getdns_ResultType, args);
+    return reslt;
+#if 0
+    return py_result(result_capsule);
     return getFullResponse(resp);
+#endif
 }
 
 
@@ -391,7 +468,7 @@ do_query(PyObject *context_capsule,
         pthread_create(&runner_thread, NULL, (void *)marshall_query, (void *)async_blob);
         pthread_detach(runner_thread);
         Py_END_ALLOW_THREADS;
-        return Py_None;
+        Py_RETURN_NONE;
     }
 }
 
@@ -413,12 +490,17 @@ initgetdns(void)
 
     Py_Initialize();
     PyEval_InitThreads();
-    if ((g = Py_InitModule("getdns", getdns_methods)) == NULL)
+    if ((g = Py_InitModule3("getdns", getdns_methods, GETDNS_DOCSTRING)) == NULL)
         return;
     getdns_error = PyErr_NewException("getdns.error", NULL, NULL);
     Py_INCREF(getdns_error);
     PyModule_AddObject(g, "error", getdns_error);
     getdns_ContextType.tp_new = PyType_GenericNew;
+    getdns_ResultType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&getdns_ResultType) < 0)  
+        return;
+    Py_INCREF(&getdns_ResultType);
+    PyModule_AddObject(g, "Result", (PyObject *)&getdns_ResultType);
     if (PyType_Ready(&getdns_ContextType) < 0)
         return;
     Py_INCREF(&getdns_ContextType);
