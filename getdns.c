@@ -51,14 +51,15 @@ PyObject *getdns_error;
 
 PyMemberDef Result_members[] = {
     { "just_address_answers", T_OBJECT_EX, offsetof(getdns_ResultObject, just_address_answers),
-      0, "Only the query answers" },
+      READONLY, "Only the query answers" },
     { "replies_tree", T_OBJECT_EX, offsetof(getdns_ResultObject, replies_tree),
-      0, "The replies tree dictionary" },
+      READONLY, "The replies tree dictionary" },
     { "replies_full", T_OBJECT_EX, offsetof(getdns_ResultObject, replies_full),
-      0, "The entire replies structure returned by getdns" },
-    { "status", T_OBJECT_EX, offsetof(getdns_ResultObject, status), 0, "Response status" },
-    { "answer_type", T_OBJECT_EX, offsetof(getdns_ResultObject, answer_type), 0, "Answer type" },
-    { "canonical_name", T_OBJECT_EX, offsetof(getdns_ResultObject, canonical_name), 0,
+      READONLY, "The entire replies structure returned by getdns" },
+    { "status", T_OBJECT_EX, offsetof(getdns_ResultObject, status), READONLY,
+      "Response status" },
+    { "answer_type", T_OBJECT_EX, offsetof(getdns_ResultObject, answer_type), READONLY, "Answer type" },
+    { "canonical_name", T_OBJECT_EX, offsetof(getdns_ResultObject, canonical_name), READONLY,
       "Canonical name" },
     { NULL },
 };
