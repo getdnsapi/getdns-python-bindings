@@ -9,239 +9,271 @@
 Response data from queries
 --------------------------
 
-A response object is always a dict containing at 
-least three names: ``replies_full`` (a
-list) ``replies_tree`` (a list), and ``status`` (an
-integer constant). ``replies_full`` is a list of DNS replies 
-as they appear on the wire. ``replies_tree`` is a list
-of DNS replies (each is a dictionary) with the various part of the
-reply parsed out. ``status`` is a status code for the query.
+.. py:class:: Result()
 
-Because the API might be extended in the future, a ``response``
-object could also contain names other than ``replies_full``,
-``replies_tree``, and ``status``. Similarly, any of the dicts
-described here might be extended in later versions of the
-API. Thus, an application using the API must not assume that
-it knows all possible names in a dict.
+   A getdns query (``Context.address()``, ``Context.hostname()``,
+   ``Context.service()``, and ``Context.general()``) returns a
+   Result object.  A Result object is only returned from a
+   query and may not be instantiated by the programmer.  It
+   is a read-only object.  Contents may not be overwritten
+   or deleted.
 
-The following lists the status codes for response
-objects. Note that, if the status is that there are no
-responses for the query, the lists in ``replies_full`` and
-``replies_tree`` will have zero length.
+  It has no methods but includes the following attributes:
 
-.. py:data:: GETDNS_RESPSTATUS_GOOD
+  .. py:attribute:: status
 
-  At least one response was returned
+   The ``status`` attribute contains the status code returned
+   by the query.  Note that it may be the case that the
+   query can be successful but there are no data matching
+   the query parameters.  Programmers using this API will
+   need to first check to see if the query itself was
+   successful, then check for the records returned.
 
-.. py:data:: GETDNS_RESPSTATUS_NO_NAME
+   The ``status`` attribute may have the following values:
 
-  Queries for the name yielded all negative responses
+   .. py:data:: getdns.RESPSTATUS_GOOD
 
-.. py:data:: GETDNS_RESPSTATUS_ALL_TIMEOUT
+    At least one response was returned
 
-  All queries for the name timed out
+   .. py:data:: getdns.RESPSTATUS_NO_NAME
 
-.. py:data:: GETDNS_RESPSTATUS_NO_SECURE_ANSWERS
+    Queries for the name yielded all negative responses
 
-  The context setting for getting only secure responses was
-  specified, and at least one DNS response was received, but
-  no DNS response was determined to be secure through DNSSEC.
+   .. py:data:: getdns.RESPSTATUS_ALL_TIMEOUT
 
-The top level of ``replies_tree`` can optionally have the
-following names: ``canonical_name``,
-``intermediate_aliases`` (a list), ``answer_ipv4_address``
-``answer_ipv6_address``, and ``answer_type``
-(an integer constant.).
+    All queries for the name timed out
 
-* The value of ``canonical_name`` is the name that the API used for its lookup. It is in FQDN presentation format.
-* The values in the ``intermediate_aliases`` list are domain
-  names from any CNAME or unsynthesized DNAME found when
-  resolving the original query. The list might have zero
-  entries if there were no CNAMEs in the path. These may
-  be useful, for example, for name comparisons when
-  following the rules in RFC 6125.
-* The value of ``answer_ipv4_address`` and
-  ``answer_ipv6_address`` are the addresses of the server
-  from which the answer was received.
-* The value of ``answer_type`` is the type of name service that generated the response. The values are:
+   .. py:data:: getdns.RESPSTATUS_NO_SECURE_ANSWERS
 
-.. py:data:: GETDNS_NAMETYPE_DNS
+    The context setting for getting only secure responses was
+    specified, and at least one DNS response was received, but
+    no DNS response was determined to be secure through DNSSEC.
 
-  Normal DNS (:rfc:`1035`)
+  .. py:attribute:: answer_type
 
-.. py:data:: GETDNS_NAMETYPE_WINS
+   The ``answer_type`` attribute contains the type of data
+   that are returned (i.e., the namespace).  The
+   ``answer_type`` attribute may have the following values:
+   
+   .. py:data:: getdns.NAMETYPE_DNS
 
-  The WINS name service (some reference needed)
+    Normal DNS (:rfc:`1035`)
 
-If the call was :meth:`address`, the
-top level of ``replies_tree`` has an additional name,
-``just_address_answers`` (a list). The value of
-``just_address_answers`` is a list that contains all of the A
-and AAAA records from the ``answer`` sections of any of the
-replies, in the order they appear in the replies. Each item
-in the list is a dict with at least two names: ``address_type``
-(a string whose value is either "IPv4" or
-"IPv6") and ``address_data`` (whose value is a string representation of 
-an IP address). Note
-that the ``dnssec_return_only_secure`` extension affects what
-will appear in the just_address_answers list. Also note if
-later versions of the DNS return other address types, those
-types will appear in this list as well.
+   .. py:data:: getdns.NAMETYPE_WINS
 
-The API can make service discovery through SRV records
-easier. If the call was :meth:`service`, the top level of ``replies_tree has`` an
-additional name, ``srv_addresses`` (a list). The list is ordered
-by priority and weight based on the weighting algorithm in
-:rfc:`2782`, lowest priority value first. Each element of the
-list is a dictionary that has at least two names: ``port`` and
-``domain_name``. If the API was able to determine the address of
-the target domain name (such as from its cache or from the
-Additional section of responses), the dict for an element
-will also contain ``address_type`` (whose value 
-is currently either "IPv4" or "IPv6") and ``address_data``
-(whose value is a string representation of an IP address). Note that the
-``dnssec_return_only_secure`` extension affects what will appear
-in the ``srv_addresses`` list.
+    The WINS name service (some reference needed)
 
-Structure of DNS ``replies_tree``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  .. py:attribute:: canonical_name
 
-The names in each entry in the the ``replies_tree`` list for DNS
-responses include ``header`` (a dict), ``question`` (a dict), ``answer``
-(a list), ``authority`` (a list), and ``additional`` (a list),
-corresponding to the sections in the DNS message format. The
-``answer``, ``authority``, and ``additional`` lists each contain zero or
-more dicts, with each dict in each list representing a
-resource record.
+   The value of ``canonical_name`` is the name that the API used for its lookup. It is in FQDN presentation format.
 
-The names in the ``header`` dict are all the fields from 
-:rfc:`1035#section-4.1.1`.
-They are: ``id``, ``qr``, ``opcode``, ``aa``, ``tc``, ``rd``,
-``ra``, ``z``, ``rcode``, ``qdcount``, ``ancount``, ``nscount``, and ``arcount``. All
-are integers.
+  .. py:attribute:: just_address_answers
 
-The names in the ``question`` dict are the three fields from
-:rfc:`1035#section-4.1.2`: ``qname``, ``qtype``, and ``qclass``.
+   If the call was :meth:`address`, the
+   attribute 
+   ``just_address_answers`` (a list) is non-null. The value of
+   ``just_address_answers`` is a list that contains all of the A
+   and AAAA records from the ``answer`` sections of any of the
+   replies, in the order they appear in the replies. Each item
+   in the list is a dict with at least two names: ``address_type``
+   (a string whose value is either "IPv4" or
+   "IPv6") and ``address_data`` (whose value is a string representation of 
+   an IP address). Note
+   that the ``dnssec_return_only_secure`` extension affects what
+   will appear in the just_address_answers list. Also note if
+   later versions of the DNS return other address types, those
+   types will appear in this list as well.
 
-Resource records are a bit different than headers and
-question sections in that the RDATA portion often has its
-own structure. The other names in the resource record dictionaries
-are ``name``, ``type``, ``class``, ``ttl``,
-and ``rdata`` (which is a dict); there is no name equivalent to the
-RDLENGTH field. The OPT resource record does not have the
-``class`` and the ``ttl`` name, but instead provides
-``udp_payload_size``, ``extended_rcode``, ``version``,
-``do``, and ``z``.
+  .. py:attribute:: replies_full
 
-The ``rdata`` dictionary has different names for each response
-type. There is a complete list of the types defined in the
-API. For names that end in "-obsolete" or "-unknown", the
-data are the entire RDATA field. For example, the ``rdata``
-for an A record has a name ``ipv4_address``; the
-rdata for an SRV record has the names ``priority``,
-``weight``, ``port``, and ``target``.
+   The ``replies_full`` attribute is a Python dictionary
+   containing the entire set of records returned by the
+   query.  
 
-Each rdata dict also has a ``rdata_raw`` element. This
-is useful for types not defined in this version of the
-API. It also might be of value if a later version of the API
-allows for additional parsers. Thus, doing a query for types
-not known by the API still will return a result: an ``rdata``
-with just a ``rdata_raw``.
+   The following lists the status codes for response
+   objects. Note that, if the status is that there are no
+   responses for the query, the lists in ``replies_full`` and
+   ``replies_tree`` will have zero length.
 
-It is expected that later extensions to the API will give
-some DNS types different names. It is also possible that
-later extensions will change the names for some of the DNS
-types listed above.
+   The top level of ``replies_tree`` can optionally have the
+   following names: ``canonical_name``,
+   ``intermediate_aliases`` (a list), ``answer_ipv4_address``
+   ``answer_ipv6_address``, and ``answer_type``
+   (an integer constant.).
 
-For example, a response to a getdns_address() call for
-www.example.com would look something like this::
+   * The value of ``canonical_name`` is the name that the API used for its lookup. It is in FQDN presentation format.
+   * The values in the ``intermediate_aliases`` list are domain
+     names from any CNAME or unsynthesized DNAME found when
+     resolving the original query. The list might have zero
+     entries if there were no CNAMEs in the path. These may
+     be useful, for example, for name comparisons when
+     following the rules in RFC 6125.
+   * The value of ``answer_ipv4_address`` and
+     ``answer_ipv6_address`` are the addresses of the server
+     from which the answer was received.
+   * The value of ``answer_type`` is the type of name service that generated the response. The values are:
+
+   If the call was :meth:`address`, the
+   top level of ``replies_tree`` has an additional name,
+   ``just_address_answers`` (a list). The value of
+   ``just_address_answers`` is a list that contains all of the A
+   and AAAA records from the ``answer`` sections of any of the
+   replies, in the order they appear in the replies. Each item
+   in the list is a dict with at least two names: ``address_type``
+   (a string whose value is either "IPv4" or
+   "IPv6") and ``address_data`` (whose value is a string representation of 
+   an IP address). Note
+   that the ``dnssec_return_only_secure`` extension affects what
+   will appear in the just_address_answers list. Also note if
+   later versions of the DNS return other address types, those
+   types will appear in this list as well.
+
+   The API can make service discovery through SRV records
+   easier. If the call was :meth:`service`, the top level of ``replies_tree has`` an
+   additional name, ``srv_addresses`` (a list). The list is ordered
+   by priority and weight based on the weighting algorithm in
+   :rfc:`2782`, lowest priority value first. Each element of the
+   list is a dictionary that has at least two names: ``port`` and
+   ``domain_name``. If the API was able to determine the address of
+   the target domain name (such as from its cache or from the
+   Additional section of responses), the dict for an element
+   will also contain ``address_type`` (whose value 
+   is currently either "IPv4" or "IPv6") and ``address_data``
+   (whose value is a string representation of an IP address). Note that the
+   ``dnssec_return_only_secure`` extension affects what will appear
+   in the ``srv_addresses`` list.
+
+  .. py:attribute:: replies_tree
+
+   The names in each entry in the the ``replies_tree`` list for DNS
+   responses include ``header`` (a dict), ``question`` (a dict), ``answer``
+   (a list), ``authority`` (a list), and ``additional`` (a list),
+   corresponding to the sections in the DNS message format. The
+   ``answer``, ``authority``, and ``additional`` lists each contain zero or
+   more dicts, with each dict in each list representing a
+   resource record.
+
+   The names in the ``header`` dict are all the fields from 
+   :rfc:`1035#section-4.1.1`.
+   They are: ``id``, ``qr``, ``opcode``, ``aa``, ``tc``, ``rd``,
+   ``ra``, ``z``, ``rcode``, ``qdcount``, ``ancount``, ``nscount``, and ``arcount``. All
+   are integers.
+
+   The names in the ``question`` dict are the three fields from
+   :rfc:`1035#section-4.1.2`: ``qname``, ``qtype``, and ``qclass``.
+
+   Resource records are a bit different than headers and
+   question sections in that the RDATA portion often has its
+   own structure. The other names in the resource record dictionaries
+   are ``name``, ``type``, ``class``, ``ttl``,
+   and ``rdata`` (which is a dict); there is no name equivalent to the
+   RDLENGTH field. The OPT resource record does not have the
+   ``class`` and the ``ttl`` name, but instead provides
+   ``udp_payload_size``, ``extended_rcode``, ``version``,
+   ``do``, and ``z``.
+
+   The ``rdata`` dictionary has different names for each response
+   type. There is a complete list of the types defined in the
+   API. For names that end in "-obsolete" or "-unknown", the
+   data are the entire RDATA field. For example, the ``rdata``
+   for an A record has a name ``ipv4_address``; the
+   rdata for an SRV record has the names ``priority``,
+   ``weight``, ``port``, and ``target``.
+
+   Each rdata dict also has a ``rdata_raw`` element. This
+   is useful for types not defined in this version of the
+   API. It also might be of value if a later version of the API
+   allows for additional parsers. Thus, doing a query for types
+   not known by the API still will return a result: an ``rdata``
+   with just a ``rdata_raw``.
+
+   It is expected that later extensions to the API will give
+   some DNS types different names. It is also possible that
+   later extensions will change the names for some of the DNS
+   types listed above.
+
+   For example, a response to a Context.address() call for
+   www.example.com would look something like this:
+
+::
+
+ {     # This is the response object
+  "replies_full": [ <bindata of the first response>, <bindata of the second response> ],
+  "just_address_answers":
+  [
+    {
+      "address_type": <bindata of "IPv4">,
+      "address_data": <bindata of 0x0a0b0c01>,
+    },
+    {
+      "address_type": <bindata of "IPv6">,
+      "address_data": <bindata of 0x33445566334455663344556633445566>
+    }
+  ],
+  "canonical_name": <bindata of "www.example.com">,
+  "answer_type": GETDNS_NAMETYPE_DNS,
+  "intermediate_aliases": [],
+  "replies_tree":
+  [
+    {     # This is the first reply
+      "header": { "id": 23456, "qr": 1, "opcode": 0, ... },
+      "question": { "qname": <bindata of "www.example.com">, "qtype": 1, "qclass": 1 },
+      "answer":
+      [
+        {
+          "name": <bindata of "www.example.com">,
+          "type": 1,
+          "class": 1,
+          "ttl": 33000,
+          "rdata":
+          {
+            "ipv4_address": <bindata of 0x0a0b0c01>
+            "rdata_raw": <bindata of 0x0a0b0c01>
+          }
+        }
+      ],
+      "authority":
+      [
+        {
+          "name": <bindata of "ns1.example.com">,
+          "type": 1,
+          "class": 1,
+          "ttl": 600,
+          "rdata":
+          {
+            "ipv4_address": <bindata of 0x65439876>
+            "rdata_raw": <bindata of 0x65439876>
+          }
+        }
+      ]
+      "additional": [],
+      "canonical_name": <bindata of "www.example.com">,
+      "answer_type": GETDNS_NAMETYPE_DNS
+    },
+    {     # This is the second reply
+      "header": { "id": 47809, "qr": 1, "opcode": 0, ... },
+      "question": { "qname": <bindata of "www.example.com">, "qtype": 28, "qclass": 1 },
+      "answer":
+      [
+        {
+          "name": <bindata of "www.example.com">,
+          "type": 28,
+          "class": 1,
+          "ttl": 1000,
+          "rdata":
+          {
+            "ipv6_address": <bindata of 0x33445566334455663344556633445566>
+            "rdata_raw": <bindata of 0x33445566334455663344556633445566>
+          }
+       }
+      ],
+      "authority": [  # Same as for other record... ]
+      "additional": [],
+    },
+  ]
+ }
 
 
-|{     # This is the response object
-|  "replies_full": [ <bindata of the first response>, <bindata of the second response> ],
-|  "just_address_answers":
-|  [
-|    {
-|      "address_type": <bindata of "IPv4">,
-|      "address_data": <bindata of 0x0a0b0c01>,
-|    },
-|    {
-|      "address_type": <bindata of "IPv6">,
-|      "address_data": <bindata of 0x33445566334455663344556633445566>
-|    }
-|  ],
-|  "canonical_name": <bindata of "www.example.com">,
-|  "answer_type": GETDNS_NAMETYPE_DNS,
-|  "intermediate_aliases": [],
-|  "replies_tree":
-|  [
-|    {     # This is the first reply
-|      "header": { "id": 23456, "qr": 1, "opcode": 0, ... },
-|      "question": { "qname": <bindata of "www.example.com">, "qtype": 1, "qclass": 1 },
-|      "answer":
-|      [
-|        {
-|          "name": <bindata of "www.example.com">,
-|          "type": 1,
-|          "class": 1,
-|          "ttl": 33000,
-|          "rdata":
-|          {
-|            "ipv4_address": <bindata of 0x0a0b0c01>
-|            "rdata_raw": <bindata of 0x0a0b0c01>
-|          }
-|        }
-|      ],
-|      "authority":
-|      [
-|        {
-|          "name": <bindata of "ns1.example.com">,
-|          "type": 1,
-|          "class": 1,
-|          "ttl": 600,
-|          "rdata":
-|          {
-|            "ipv4_address": <bindata of 0x65439876>
-|            "rdata_raw": <bindata of 0x65439876>
-|          }
-|        }
-|      ]
-|      "additional": [],
-|      "canonical_name": <bindata of "www.example.com">,
-|      "answer_type": GETDNS_NAMETYPE_DNS
-|    },
-|    {     # This is the second reply
-|      "header": { "id": 47809, "qr": 1, "opcode": 0, ... },
-|      "question": { "qname": <bindata of "www.example.com">, "qtype": 28, "qclass": 1 },
-|      "answer":
-|      [
-|        {
-|          "name": <bindata of "www.example.com">,
-|          "type": 28,
-|          "class": 1,
-|          "ttl": 1000,
-|          "rdata":
-|          {
-|            "ipv6_address": <bindata of 0x33445566334455663344556633445566>
-|            "rdata_raw": <bindata of 0x33445566334455663344556633445566>
-|          }
-|       }
-|      ],
-|      "authority": [  # Same as for other record... ]
-|      "additional": [],
-|    },
-|  ]
-|}
-
-In DNS responses, domain names are treated special. :rfc:`1035`
-describes a form of name compression that requires that the
-entire record be available for analysis. The API deals with
-this by converting compressed names into full names when
-returning names in the ``replies_tree``. This conversion happens
-for ``qname`` in ``question``; ``name`` in the ``answer``, ``authority``, and
-``additional``; and in domain names in the data in ``names`` under
-``rdata`` where the response type is AFSDB, CNAME, MX, NS, PTR,
-RP, RT, or SOA.
 
 Return Codes
 ------------
