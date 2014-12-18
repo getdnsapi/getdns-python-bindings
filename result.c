@@ -81,3 +81,18 @@ result_getattro(PyObject *self, PyObject *nameobj)
 }
 
 
+/*
+ * package up a getdns response dict and use it to
+ * build a new Python result object
+ */
+
+PyObject *
+result_create(struct getdns_dict *resp)
+{
+    PyObject *result_capsule;
+    PyObject *args;
+
+    result_capsule = PyCapsule_New(resp, "result", 0);
+    args = Py_BuildValue("(O)", result_capsule);
+    return PyObject_CallObject((PyObject *)&getdns_ResultType, args);
+}
