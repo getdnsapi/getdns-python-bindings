@@ -118,7 +118,7 @@ extensions_to_getdnsdict(PyDictObject *pydict)
     struct getdns_bindata *option_data;
     struct getdns_dict *tmpoptions_list_dict; /* a dict to hold add_opt_parameters[options] stuff */
 
-    if (!PyDict_Check(pydict))  {
+    if ((!pydict) || (!PyDict_Check(pydict)))  {
         PyErr_SetString(getdns_error, "Expected dict, didn't get one");
         return NULL;
     }
@@ -631,39 +631,6 @@ void error_exit(char* msg, getdns_return_t ret)
     }
 }
 
-
-
-/**
- * reverse an IP address for PTR lookup
- * @param address_data IP address to reverse
- * @return NULL on allocation failure
- * @return reversed string on success, caller must free storage via call to free()
- */
-char *
-reverse_address(struct getdns_bindata *address_data)
-{
-    ldns_rdf *addr_rdf;
-    ldns_rdf *rev_rdf;
-    char *rev_str;
-
-    if (address_data->size == 4)
-        addr_rdf = ldns_rdf_new(LDNS_RDF_TYPE_A, 4, address_data->data);
-    else if (address_data->size == 16)
-        addr_rdf = ldns_rdf_new(LDNS_RDF_TYPE_AAAA, 16, address_data->data);
-    else
-        return NULL;
-    if (!addr_rdf)
-        return NULL;
-
-    rev_rdf = ldns_rdf_address_reverse(addr_rdf);
-    ldns_rdf_free(addr_rdf);
-    if (!rev_rdf)
-        return NULL;
-
-    rev_str = ldns_rdf2str(rev_rdf);
-    ldns_rdf_deep_free(rev_rdf);
-    return rev_str;
-}
 
 
 // Code to display the entire response.

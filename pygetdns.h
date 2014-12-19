@@ -149,9 +149,6 @@ struct getdns_dict *extensions_to_getdnsdict(PyDictObject *);
 PyObject *decode_getdns_response(struct getdns_dict *);
 PyObject *decode_getdns_replies_tree_response(struct getdns_dict *response);
 PyObject *getFullResponse(struct getdns_dict *dict);
-char *reverse_address(struct getdns_bindata *address_data);
-PyObject *context_fd(PyObject *self, PyObject *args, PyObject *keywds);
-PyObject *context_get_num_pending_requests(PyObject *self, PyObject *args, PyObject *keywds);
-PyObject *context_process_async(PyObject *self, PyObject *args, PyObject *keywds);
 getdns_dict *getdnsify_addressdict(PyObject *pydict);
+
 #endif /* PYGETDNS_H */
