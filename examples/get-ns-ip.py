@@ -21,7 +21,12 @@ where <zone> is a DNS zone (domain).
 
 def get_ip(ctx, qname):
     iplist = []
-    results = ctx.address(name=qname, extensions=extensions)
+    try:
+        results = ctx.address(name=qname, extensions=extensions)
+    except getdns.error, e:
+        print(str(e))
+        sys.exit(1)
+
     if results['status'] == getdns.GETDNS_RESPSTATUS_GOOD:
         for addr in results['just_address_answers']:
             iplist.append(addr['address_data'])

@@ -10,7 +10,11 @@ ctx.resolution_type = getdns.GETDNS_RESOLUTION_STUB
 extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE }
 ctx.resolver_type = getdns.GETDNS_RESOLUTION_STUB
 
-results = ctx.address(name=hostname, extensions=extensions)
+try:
+    results = ctx.address(name=hostname, extensions=extensions)
+except getdns.error, e:
+    print(str(e))
+    sys.exit(1)
 
 if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
     for addr in results["just_address_answers"]:

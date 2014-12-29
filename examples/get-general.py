@@ -29,8 +29,13 @@ if __name__ == '__main__':
     rrtype = get_rrtype(qtype)
 
     ctx = getdns.Context()
-    results = ctx.general(name=qname, request_type=rrtype,
-                          extensions=extensions)
+    try:
+        results = ctx.general(name=qname, request_type=rrtype,
+                              extensions=extensions)
+    except getdns.error, e:
+        print(str(e))
+        sys.exit(1)
+
     status = results['status']
 
     if status == getdns.GETDNS_RESPSTATUS_GOOD:
