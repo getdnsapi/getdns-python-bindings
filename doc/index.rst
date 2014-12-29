@@ -191,7 +191,7 @@ Contents:
 
    functions
    response
-
+   exceptions
 
 
 Indices and tables
