@@ -27,8 +27,8 @@ def get_ip(ctx, qname):
         print(str(e))
         sys.exit(1)
 
-    if results['status'] == getdns.GETDNS_RESPSTATUS_GOOD:
-        for addr in results['just_address_answers']:
+    if results.status == getdns.GETDNS_RESPSTATUS_GOOD:
+        for addr in results.just_address_answers:
             iplist.append(addr['address_data'])
     else:
         print "getdns.address() returned an error: %d" % results['status']
@@ -43,12 +43,16 @@ if __name__ == '__main__':
     qname = sys.argv[1]
 
     ctx = getdns.Context()
-    results = ctx.general(name=qname, request_type=getdns.GETDNS_RRTYPE_NS)
-    status = results['status']
+    try:
+        results = ctx.general(name=qname, request_type=getdns.GETDNS_RRTYPE_NS)
+    except getdns.error, e:
+        print(str(e))
+        sys.exit(1)
+    status = results.status
 
     hostlist = []
     if status == getdns.GETDNS_RESPSTATUS_GOOD:
-        for reply in results['replies_tree']:
+        for reply in results.replies_tree:
             answers = reply['answer']
             for answer in answers:
                 if answer['type'] == getdns.GETDNS_RRTYPE_NS:

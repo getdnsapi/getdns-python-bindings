@@ -17,8 +17,8 @@ except getdns.error, e:
     print(str(e))
     sys.exit(1)
 
-if results["status"] == getdns.GETDNS_RESPSTATUS_GOOD:
-    for reply in results["replies_tree"]:
+if results.status == getdns.GETDNS_RESPSTATUS_GOOD:
+    for reply in results.replies_tree:
         for a in reply["answer"]:
             rrname  = a["name"]
             rrtype  = a["type"]

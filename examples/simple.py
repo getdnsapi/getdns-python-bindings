@@ -2,7 +2,7 @@
 #
 
 """
-simply.py
+simple.py
 
 A simple example to query a domain name and print out addresses
 associated with it.
@@ -21,10 +21,10 @@ except getdns.error, e:
     print(str(e))
     sys.exit(1)
 
-status = results['status']
+status = results.status
 
 if status == getdns.GETDNS_RESPSTATUS_GOOD:
-    for addr in results['just_address_answers']:
+    for addr in results.just_address_answers:
         print addr['address_data']
 else:
     print "%s: getdns.address() returned error: %d" % (hostname, status)
