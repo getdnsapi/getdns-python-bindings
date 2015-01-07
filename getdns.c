@@ -61,6 +61,8 @@ PyMemberDef Result_members[] = {
     { "answer_type", T_OBJECT_EX, offsetof(getdns_ResultObject, answer_type), READONLY, "Answer type" },
     { "canonical_name", T_OBJECT_EX, offsetof(getdns_ResultObject, canonical_name), READONLY,
       "Canonical name" },
+    { "validation_chain", T_OBJECT_EX, offsetof(getdns_ResultObject, validation_chain),
+      READONLY, "DNSSEC certificate chain" },
     { NULL },
 };
 
@@ -205,54 +207,6 @@ PyTypeObject getdns_ContextType = {
     (initproc)context_init,    /* tp_init           */
 };
 
-#if 0
-PyMethodDef Result_methods[] = {
-    { NULL },
-};
-#endif
-
-
-
-/*
- *  A shim to sit between the event callback function
- *  and the python callback.  This is a wee bit hacky
- */
-
-
-void
-callback_shim(getdns_context *context, getdns_callback_type_t type, getdns_dict *resp,
-  void *u, getdns_transaction_t tid)
-{
-    pygetdns_libevent_callback_data *callback_data;
-    PyObject *response;
-    PyObject *getdns_runner;
-    PyGILState_STATE state;
-
-    callback_data = (pygetdns_libevent_callback_data *)u;
-    getdns_runner = callback_data->callback_func;
-    if (!PyCallable_Check(getdns_runner))  {
-        printf("callback not runnable\n");
-        return;
-    }
-    if ((response = getFullResponse(resp)) == 0)  {
-        PyErr_SetString(getdns_error, "Unable to decode response");
-        return;
-        /* need to throw exceptiion XXX */
-    }
-    /* Python callback prototype: */
-    /* callback(context, callback_type, response, userarg, tid) */
-    state = PyGILState_Ensure();
-    PyObject_CallFunction(getdns_runner, "OHOsL", context, type, response,
-                          callback_data->userarg, tid);
-    PyGILState_Release(state);
-}
-
-
-/*
- * called from pthread_create.  Pull out the query arguments,
- * get the Python callback function from the dictionary for
- * __main__
- */
 
 
 static struct PyMethodDef getdns_methods[] = {

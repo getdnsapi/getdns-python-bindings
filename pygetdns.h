@@ -70,6 +70,7 @@ typedef struct  {
     PyObject *replies_tree;
     PyObject *canonical_name;
     PyObject *replies_full;
+    PyObject *validation_chain;
 } getdns_ResultObject;
 
 
@@ -108,6 +109,7 @@ int get_answer_type(struct getdns_dict *result_dict);
 char *get_canonical_name(struct getdns_dict *result_dict);
 PyObject *get_just_address_answers(struct getdns_dict *result_dict);
 PyObject *get_replies_tree(struct getdns_dict *result_dict);
+PyObject *get_validation_chain(struct getdns_dict *result_dict);
 
 int context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_getattro(PyObject *self, PyObject *nameobj);

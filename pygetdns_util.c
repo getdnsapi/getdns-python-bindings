@@ -103,6 +103,20 @@ get_replies_tree(struct getdns_dict *result_dict)
 }
 
 
+PyObject *
+get_validation_chain(struct getdns_dict *result_dict)
+{
+    struct getdns_list *validation_chain;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_list(result_dict, "validation_chain", &validation_chain)) !=
+        GETDNS_RETURN_GOOD)
+        Py_RETURN_NONE;
+    else
+        return glist_to_plist(validation_chain);
+}
+
+
 struct getdns_dict *
 extensions_to_getdnsdict(PyDictObject *pydict)
 {

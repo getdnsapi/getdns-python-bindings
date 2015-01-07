@@ -56,7 +56,10 @@ result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
         Py_DECREF(self);
         return -1;
     }
-    
+    if ((self->validation_chain = get_validation_chain(result_dict)) == NULL)  {
+        Py_DECREF(self);
+        return -1;
+    }
     return 0;
 }
 
