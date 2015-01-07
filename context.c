@@ -984,7 +984,7 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     getdns_return_t ret;
     getdns_context *context;
     char *name;
-    PyDictObject *extensions_obj;
+    PyDictObject *extensions_obj = 0;
     struct getdns_dict *extensions_dict = 0;
     void *userarg;
     getdns_transaction_t tid;
