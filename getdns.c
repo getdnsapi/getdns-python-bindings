@@ -399,12 +399,6 @@ static struct PyMethodDef getdns_methods[] = {
     { 0, 0, 0 }
 };
 
-static void
-cleanup(void)
-{
-    pthread_join(runner_thread, NULL);
-}
-
 
 PyMODINIT_FUNC
 initgetdns(void)
@@ -424,7 +418,6 @@ initgetdns(void)
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
     PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
-    Py_AtExit(cleanup);
 /*
  * return value constants
  */
