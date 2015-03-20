@@ -143,6 +143,17 @@ Response data from queries
    ``dnssec_return_only_secure`` extension affects what will appear
    in the ``srv_addresses`` list.
 
+  .. py:attribute:: validation_chain
+
+   The ``validation_chain`` attribute is a Python list
+   containing the set of DNSSEC-related records needed for
+   validation of a particular response.   This set comes as
+   validation_chain (a list) at the top level of the
+   response object. This list includes all resource record
+   dicts for all the resource records (DS, DNSKEY and their
+   RRSIGs) that are needed to perform the validation from
+   the root up.                    
+
   .. py:attribute:: replies_tree
 
    The names in each entry in the the ``replies_tree`` list for DNS
@@ -272,6 +283,7 @@ Response data from queries
     },
   ]
  }
+
 
 
 
