@@ -50,18 +50,6 @@ typedef struct pygetdns_libevent_callback_data  {
 } pygetdns_libevent_callback_data;
 
 
-typedef struct pygetdns_async_args_blob  {
-    PyObject *context_capsule;
-    PyObject *runner;
-    uint16_t type;
-    PyDictObject *extensions;
-    getdns_transaction_t tid;
-    char *callback;
-    pygetdns_libevent_callback_data *userarg;
-    char *name;
-} pygetdns_async_args_blob;
-
-
 typedef struct  {
     PyObject_HEAD
     PyObject *just_address_answers;
@@ -72,6 +60,13 @@ typedef struct  {
     PyObject *replies_full;
     PyObject *validation_chain;
 } getdns_ResultObject;
+
+
+typedef struct  {
+    PyObject *callback_func;
+    char userarg[BUFSIZ];
+} userarg_blob;
+
 
 
 typedef struct {
@@ -93,6 +88,7 @@ typedef struct {
     getdns_list *dns_root_servers;
     getdns_list *dnssec_trust_anchors;
     getdns_list *upstream_recursive_servers;
+    struct event_base *event_base;
     char *implementation_string;
     char *version_string;
 } getdns_ContextObject;
@@ -136,8 +132,13 @@ PyObject *context_general(getdns_ContextObject *self, PyObject *args, PyObject *
 PyObject *context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
+PyObject *context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
+PyObject *context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 
 void context_dealloc(getdns_ContextObject *self);
+PyObject *get_callback(char *py_main, char *callback);
+void callback_shim(struct getdns_context *context, getdns_callback_type_t type,
+                   struct getdns_dict *response, void *userarg, getdns_transaction_t tid);
 
 int result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds);
 PyObject *result_getattro(PyObject *self, PyObject *nameobj);
@@ -152,5 +153,6 @@ PyObject *decode_getdns_response(struct getdns_dict *);
 PyObject *decode_getdns_replies_tree_response(struct getdns_dict *response);
 PyObject *getFullResponse(struct getdns_dict *dict);
 getdns_dict *getdnsify_addressdict(PyObject *pydict);
+
 
 #endif /* PYGETDNS_H */
