@@ -125,6 +125,10 @@ PyMethodDef Context_methods[] = {
       "method for looking up a host name given an IP address" },
     { "service", (PyCFunction)context_service, METH_VARARGS|METH_KEYWORDS,
       "method for looking up relevant SRV record for a name" },
+    { "run", (PyCFunction)context_run, METH_VARARGS|METH_KEYWORDS,
+      "run unprocessed events" },
+    { "cancel_callback", (PyCFunction)context_cancel_callback, METH_VARARGS|METH_KEYWORDS,
+      "cancel outstanding callbacks" },
     { NULL }
 };
 
