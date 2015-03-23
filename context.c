@@ -955,7 +955,6 @@ context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *ke
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
-    printf("XXX tid = %ld\n", tid); /* XXX */
     if ((ret = getdns_cancel_callback(context, tid)) != GETDNS_RETURN_GOOD)  {
         char err_buf[256];
         getdns_strerror(ret, err_buf, sizeof err_buf);
