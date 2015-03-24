@@ -1023,7 +1023,8 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
             PyErr_SetString(getdns_error, "Memory allocation failed");
             return NULL;
         }
-        strncpy(blob->userarg, userarg, BUFSIZ-1);
+        if (userarg)  
+            strncpy(blob->userarg, userarg, BUFSIZ-1);
         if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
             PyObject *err_type, *err_value, *err_traceback;
             PyErr_Fetch(&err_type, &err_value, &err_traceback);
