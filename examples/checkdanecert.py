@@ -30,12 +30,17 @@ def get_addresses(hostname):
         "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE
     }
     ctx = getdns.Context()
-    results = ctx.address(name=hostname, extensions=extensions)
-    status = results['status']
+    try:
+        results = ctx.address(name=hostname, extensions=extensions)
+    except getdns.error, e:
+        print(str(e))
+        sys.exit(1)
+
+    status = results.status
 
     address_list = []
     if status == getdns.GETDNS_RESPSTATUS_GOOD:
-        for addr in results['just_address_answers']:
+        for addr in results.just_address_answers:
             address_list.append((addr['address_type'], addr['address_data']))
     else:
         print "getdns.address(): failed, return code: %d" % status
@@ -67,13 +72,18 @@ def get_tlsa(port, proto, hostname):
     }
     qname = "_%d._%s.%s" % (port, proto, hostname)
     ctx = getdns.Context()
-    results = ctx.general(name=qname,
-                          request_type=getdns.GETDNS_RRTYPE_TLSA,
-                          extensions=extensions)
-    status = results['status']
+    try:
+        results = ctx.general(name=qname,
+                              request_type=getdns.GETDNS_RRTYPE_TLSA,
+                              extensions=extensions)
+    except getdns.error, e:
+        print(str(e))
+        sys.exit(1)
+
+    status = results.status'
 
     if status == getdns.GETDNS_RESPSTATUS_GOOD:
-        return get_tlsa_rdata_set(results['replies_tree'], requested_usage=3)
+        return get_tlsa_rdata_set(results.replies_tree, requested_usage=3)
     else:
         print "getdns.general(): failed, return code: %d" % status
         return None

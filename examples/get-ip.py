@@ -51,10 +51,14 @@ for (opt, optval) in options:
 ctx = getdns.Context()
 
 for hostname in args:
-    results = ctx.address(name=hostname, extensions=extensions)
-    status = results['status']
+    try:
+        results = ctx.address(name=hostname, extensions=extensions)
+    except getdns.error, e:
+        print(str(e))
+        break
+    status = results.status
     if status == getdns.GETDNS_RESPSTATUS_GOOD:
-        for addr in results['just_address_answers']:
+        for addr in results.just_address_answers:
             addr_type = addr['address_type']
             addr_data = addr['address_data']
             if (desired_addr_type == None) or (addr_type == desired_addr_type):

@@ -415,3 +415,81 @@ call to the API. Each member has the following names:
    * ``end_time`` is the time the query was received in milliseconds since the epoch, represented as an integer
    * ``entire_reply`` is the entire response received
    * ``dnssec_result`` is the DNSSEC status, or ``getdns.GETDNS_DNSSEC_NOT_PERFORMED`` if DNSSEC validation was not performed
+
+
+Asynchronous queries
+^^^^^^^^^^^^^^^^^^^^
+
+The getdns Python bindings support asynchronous queries, in
+which a query returns immediately and a callback function is
+invoked when the response data are returned.  The query
+method interfaces are fundamentally the same, with a few
+differences:
+
+   * The query returns a transaction id.  That transaction
+     id may be used to cancel future callbacks
+   * The query invocation includes the name of a callback
+     function.  For example, if you'd like to call the
+     function "my_callback" when the query returns, an
+     address lookup could look like
+
+   >>> c = getdns.Context()
+   >>> tid = c.address('www.example.org', callback='my_callback')
+
+   * We've introduced a new ``Context`` method, called
+     ``run``.  When your program is ready to check to see
+     whether or not the query has returned, invoke the run()
+     method on your context.  Note that we use the libevent
+     asynchronous event library and an event_base is
+     associated with a context.  So, if you have multiple
+     outstanding events associated with a particular
+     context, ``run`` will invoke all of those that are
+     waiting and ready.
+
+The callback script takes four arguments: ``type``,
+``result``, ``userarg``, and ``transaction_id.  The ``type``
+argument contains the callback type, which may have one of
+the following values:
+
+   * ``getdns.CALLBACK_COMPLETE``: The query was successful
+     and the results are contained in the ``result``
+     argument
+   * ``getdns.CALLBACK_CANCEL``: The callback was cancelled
+     before the results were processed
+   * ``getdns.CALLBACK_TIMEOUT``: The query timed out before
+     the results were processed
+   * ``getdns.CALLBACK_ERROR``: An unspecified error
+     occurred
+
+The ``result`` argument contains a result object, with the
+query response
+
+The ``userarg`` argument contains the optional user argument
+that was passed to the query at the time it was invoked.
+
+The ``transaction_id`` argument contains the transaction_id
+associated with a particular query; this is the same
+transaction id that was returned when the query was invoked.
+
+This is an example callback function:
+
+.. code-block:: python
+
+    def cbk(type, result, userarg, tid):
+        if type == getdns.CALLBACK_COMPLETE:
+            status = result.status
+            if status == getdns.GETDNS_RESPSTATUS_GOOD:
+                for addr in result.just_address_answers:
+                    addr_type = addr['address_type']
+                    addr_data = addr['address_data']
+                    print '{0}: {1} {2}'.format(userarg, addr_type, addr_data)
+            elif status == getdns.GETDNS_RESPSTATUS_NO_SECURE_ANSWERS:
+                print "{0}: No DNSSEC secured responses found".format(hostname)
+            else:
+                print "{0}: getdns.address() returned error: {1}".format(hostname, status)
+        elif type == getdns.CALLBACK_CANCEL:
+            print 'Callback cancelled'
+        elif type == getdns.CALLBACK_TIMEOUT:
+            print 'Query timed out'
+        else:
+            print 'Unknown error'

@@ -28,6 +28,8 @@
 #include <Python.h>
 #include <getdns/getdns.h>
 #include <arpa/inet.h>
+#include <event2/event.h>
+#include <getdns/getdns_ext_libevent.h>
 #include "pygetdns.h"
 
 int
@@ -45,11 +47,11 @@ context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "|i", kwlist,
                                      &set_from_os))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((set_from_os > 1) || (set_from_os < 0))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_create(&context, set_from_os)) != GETDNS_RETURN_GOOD)  {
@@ -85,11 +87,11 @@ context_set_timeout(getdns_context *context, PyObject *py_value)
     uint64_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_timeout(context, value)) != GETDNS_RETURN_GOOD)  {
@@ -109,15 +111,15 @@ context_set_resolution_type(getdns_context *context, PyObject *py_value)
     getdns_resolution_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((long long)(value = (getdns_resolution_t)PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if (!((value == GETDNS_RESOLUTION_RECURSING) || (value == GETDNS_RESOLUTION_STUB)))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_resolution_type(context, value)) != GETDNS_RETURN_GOOD)  {
@@ -137,16 +139,16 @@ context_set_dns_transport(getdns_context *context, PyObject *py_value)
     getdns_transport_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((long long)(value = (getdns_transport_t)PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((value < GETDNS_TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP) ||
         (value > GETDNS_TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_dns_transport(context, value)) != GETDNS_RETURN_GOOD)  {
@@ -166,11 +168,11 @@ context_set_limit_outstanding_queries(getdns_context *context, PyObject *py_valu
     uint16_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((value = PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_limit_outstanding_queries(context, value)) != GETDNS_RETURN_GOOD)  {
@@ -190,15 +192,15 @@ context_set_follow_redirects(getdns_context *context, PyObject *py_value)
     uint64_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if (!((value == GETDNS_REDIRECTS_FOLLOW) || (value == GETDNS_REDIRECTS_DO_NOT_FOLLOW)))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_follow_redirects(context, (getdns_redirects_t)value)) !=
@@ -219,18 +221,18 @@ context_set_append_name(getdns_context *context, PyObject *py_value)
     uint64_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if (!((value == GETDNS_APPEND_NAME_ALWAYS) ||
           (value == GETDNS_APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE) ||
           (value == GETDNS_APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE) ||
           (value == GETDNS_APPEND_NAME_NEVER)))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_append_name(context, (getdns_append_name_t)value)) !=
@@ -293,11 +295,11 @@ context_set_dnssec_allowed_skew(getdns_context *context, PyObject *py_value)
     uint32_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((long)(value = (uint32_t)PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_dnssec_allowed_skew(context, (uint32_t)value)) != GETDNS_RETURN_GOOD)  {
@@ -317,11 +319,11 @@ context_set_edns_maximum_udp_payload_size(getdns_context *context, PyObject *py_
     uint16_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_edns_maximum_udp_payload_size(context, (uint16_t)value))
@@ -342,11 +344,11 @@ context_set_edns_extended_rcode(getdns_context *context, PyObject *py_value)
     uint8_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((value = (uint8_t)PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_edns_extended_rcode(context, (uint8_t)value))
@@ -367,11 +369,11 @@ context_set_edns_version(getdns_context *context, PyObject *py_value)
     uint8_t value;
     
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((value = (uint8_t)PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_edns_version(context, (uint8_t)value))
@@ -392,15 +394,15 @@ context_set_edns_do_bit(getdns_context *context, PyObject *py_value)
     uint8_t value;
 
     if (!PyInt_Check(py_value))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((value = (uint8_t)PyInt_AsLong(py_value)) < 0)  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if (!((value == 0) || (value == 1)))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_edns_do_bit(context, (uint8_t)value))
@@ -798,7 +800,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
             return NULL;
         }
         if ((py_namespaces = glist_to_plist(namespaces)) == NULL)  
-            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return py_namespaces;
     }
     if (!strncmp(attrname, "suffix", strlen("suffix")))  {
@@ -812,7 +814,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
             return NULL;
         }
         if ((py_suffix = glist_to_plist(suffix)) == NULL)
-            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return py_suffix;
     }
     if (!strncmp(attrname, "dns_root_servers", strlen("dns_root_servers")))  {
@@ -827,7 +829,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
             return NULL;
         }
         if ((py_rootservers = glist_to_plist(dns_root_servers)) == NULL)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         }
         return py_rootservers;
     }
@@ -847,7 +849,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
         if ((py_upstream_servers = glist_to_plist(upstream_list)) == NULL)  {
 #endif 
         if ((py_upstream_servers = pythonify_address_list(upstream_list)) == NULL)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
             return NULL;
         }
         return py_upstream_servers;
@@ -921,6 +923,49 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
 
 
 PyObject *
+context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
+{
+    getdns_context *context;
+    
+    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
+        return NULL;
+    }
+    (void)event_base_dispatch(self->event_base);
+    Py_RETURN_NONE;
+}
+
+
+PyObject *
+context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = {
+        "transaction_id",
+        0
+    };
+    getdns_context *context;
+    getdns_transaction_t tid = 0;
+    getdns_return_t ret;
+
+    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
+        return NULL;
+    }
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "L", kwlist, &tid))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if ((ret = getdns_cancel_callback(context, tid)) != GETDNS_RETURN_GOOD)  {
+        char err_buf[256];
+        getdns_strerror(ret, err_buf, sizeof err_buf);
+        PyErr_SetString(getdns_error, err_buf);
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+    
+
+PyObject *
 context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {
@@ -936,28 +981,76 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     char *name;
     uint16_t  request_type;
     PyDictObject *extensions_obj = 0;
-    void *userarg;
+    struct getdns_dict *extensions_dict = 0;
+    getdns_return_t ret;
+    void *userarg = 0;
     getdns_transaction_t tid = 0;
     char *callback = 0;
-    PyObject *resp;
+    struct getdns_dict *resp;
+    PyObject *callback_func;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "sH|OsLs", kwlist,
                                      &name, &request_type,
                                      &extensions_obj, &userarg, &tid, &callback))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
-    if ((resp = do_query(self->py_context, name, request_type, extensions_obj, userarg,
-                           tid, callback)) == 0)  {
-        PyObject *err_type, *err_value, *err_traceback;
-        PyErr_Fetch(&err_type, &err_value, &err_traceback);
-        PyErr_Restore(err_type, err_value, err_traceback);
-        return NULL;
+    if (extensions_obj)  {
+        if ((extensions_dict = extensions_to_getdnsdict(extensions_obj)) == 0)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
     }
-    return resp;
+    if (callback)  {
+        userarg_blob *blob;
+
+        if (!self->event_base)  {
+            if ((self->event_base = event_base_new()) == 0)  {
+                PyErr_SetString(getdns_error, "Can't create event base");
+                return NULL;
+            }
+            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
+                GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, "Can't set event base");
+                return NULL;
+            }
+        }
+        if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
+            PyErr_SetString(getdns_error, "Memory allocation failed");
+            return NULL;
+        }
+        if (userarg)  
+            strncpy(blob->userarg, userarg, BUFSIZ-1);
+        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
+            PyObject *err_type, *err_value, *err_traceback;
+            PyErr_Fetch(&err_type, &err_value, &err_traceback);
+            PyErr_Restore(err_type, err_value, err_traceback);
+            return NULL;
+        }
+        blob->callback_func = callback_func;
+        if ((ret = getdns_general(context, name, request_type,
+                                  extensions_dict, (void *)blob, &tid, callback_shim)) !=
+            GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return(PyInt_FromLong((long)tid));
+    } else  {
+        if ((ret = getdns_general_sync(context, name, request_type,
+                                       extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return result_create(resp);
+    }
 }
 
 
@@ -972,31 +1065,80 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         "callback",
         0
     };
+    getdns_return_t ret;
     getdns_context *context;
     char *name;
+    PyObject *callback_func;
     PyDictObject *extensions_obj = 0;
-    void *userarg;
+    struct getdns_dict *extensions_dict = 0;
+    char *userarg = 0;
     getdns_transaction_t tid;
     char *callback = 0;
-    PyObject *resp;
+    struct getdns_dict *resp;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
                                      &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-    }
-    if ((resp = do_query(self->py_context, name, GETDNS_RRTYPE_A, extensions_obj, userarg,
-                           tid, callback)) == 0)  {
-        PyObject *err_type, *err_value, *err_traceback;
-        PyErr_Fetch(&err_type, &err_value, &err_traceback);
-        PyErr_Restore(err_type, err_value, err_traceback);
         return NULL;
     }
-    return resp;
+    if (extensions_obj)  {
+        if ((extensions_dict = extensions_to_getdnsdict(extensions_obj)) == 0)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+    }
+    if (callback)  {
+        userarg_blob *blob;
+
+        if (!self->event_base)  {
+            if ((self->event_base = event_base_new()) == 0)  {
+                PyErr_SetString(getdns_error, "Can't create event base");
+                return NULL;
+            }
+            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
+                GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, "Can't set event base");
+                return NULL;
+            }
+        }
+        if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
+            PyErr_SetString(getdns_error, "Memory allocation failed");
+            return NULL;
+        }
+        if (userarg)  {
+            strncpy(blob->userarg, userarg, BUFSIZ-1);
+        }  else  {
+            blob->userarg[0] = 0;
+        }
+        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
+            PyObject *err_type, *err_value, *err_traceback;
+            PyErr_Fetch(&err_type, &err_value, &err_traceback);
+            PyErr_Restore(err_type, err_value, err_traceback);
+            return NULL;
+        }
+        blob->callback_func = callback_func;
+        if ((ret = getdns_address(context, name, extensions_dict, (void *)blob, &tid, callback_shim)) !=
+            GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return(PyInt_FromLong((long)tid));
+    } else  {
+        if ((ret = getdns_address_sync(context, name, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return result_create(resp);
+    }
 }
 
 
@@ -1013,14 +1155,18 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     };
     void *address;
     PyDictObject *extensions_obj = 0;
-    void *userarg;
+    struct getdns_dict *extensions_dict = 0;
+    void *userarg = 0;
     getdns_transaction_t tid;
     char * callback = 0;
-    PyObject *resp;
+    struct getdns_dict *resp;
     getdns_context *context;
+    struct getdns_dict *addr_dict;
+    getdns_return_t ret;
+    PyObject *callback_func;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|OsLs", kwlist,
@@ -1029,14 +1175,65 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL; 
     }
-    if ((resp = do_query(self->py_context, address, GETDNS_RRTYPE_PTR, extensions_obj, userarg,
-                           tid, callback)) == 0)  {
+    if (extensions_obj)  {
+        if ((extensions_dict = extensions_to_getdnsdict(extensions_obj)) == 0)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+    }
+    if ((addr_dict = getdnsify_addressdict((PyObject *)address)) == NULL)  {
         PyObject *err_type, *err_value, *err_traceback;
         PyErr_Fetch(&err_type, &err_value, &err_traceback);
         PyErr_Restore(err_type, err_value, err_traceback);
         return NULL;
     }
-    return resp;
+    if (callback)  {
+        userarg_blob *blob;
+
+        if (!self->event_base)  {
+            if ((self->event_base = event_base_new()) == 0)  {
+                PyErr_SetString(getdns_error, "Can't create event base");
+                return NULL;
+            }
+            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
+                GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, "Can't set event base");
+                return NULL;
+            }
+        }
+        if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
+            PyErr_SetString(getdns_error, "Memory allocation failed");
+            return NULL;
+        }
+        if (userarg)  {
+            strncpy(blob->userarg, userarg, BUFSIZ-1);
+        }  else  {
+            blob->userarg[0] = 0;
+        }
+        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
+            PyObject *err_type, *err_value, *err_traceback;
+            PyErr_Fetch(&err_type, &err_value, &err_traceback);
+            PyErr_Restore(err_type, err_value, err_traceback);
+            return NULL;
+        }
+        blob->callback_func = callback_func;
+        if ((ret = getdns_hostname(context, addr_dict, extensions_dict, (void *)blob, &tid, callback_shim)) !=
+            GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return(PyInt_FromLong((long)tid));
+    } else  {
+        if ((ret = getdns_hostname_sync(context, addr_dict, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return result_create(resp);
+    }
 }
 
 
@@ -1053,14 +1250,17 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     };
     char *name;
     PyDictObject *extensions_obj = 0;
+    struct getdns_dict *extensions_dict = 0;
+    getdns_return_t ret;
     void *userarg;
     getdns_transaction_t tid;
     char *callback = 0;
-    PyObject *resp;
+    struct getdns_dict *resp;
     getdns_context *context;
+    PyObject *callback_func;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
@@ -1069,14 +1269,59 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;            
     }
-    if ((resp = do_query(self->py_context, name, (uint16_t)GETDNS_RRTYPE_SRV, extensions_obj, userarg,
-                           tid, callback)) == 0)  {
-        PyObject *err_type, *err_value, *err_traceback;
-        PyErr_Fetch(&err_type, &err_value, &err_traceback);
-        PyErr_Restore(err_type, err_value, err_traceback);
-        return NULL;
+    if (extensions_obj)  {
+        if ((extensions_dict = extensions_to_getdnsdict(extensions_obj)) == 0)  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
     }
-    return resp;
+    if (callback)  {
+        userarg_blob *blob;
+
+        if (!self->event_base)  {
+            if ((self->event_base = event_base_new()) == 0)  {
+                PyErr_SetString(getdns_error, "Can't create event base");
+                return NULL;
+            }
+            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
+                GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, "Can't set event base");
+                return NULL;
+            }
+        }
+        if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
+            PyErr_SetString(getdns_error, "Memory allocation failed");
+            return NULL;
+        }
+        if (userarg)  {
+            strncpy(blob->userarg, userarg, BUFSIZ-1);
+        }  else  {
+            blob->userarg[0] = 0;
+        }
+        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
+            PyObject *err_type, *err_value, *err_traceback;
+            PyErr_Fetch(&err_type, &err_value, &err_traceback);
+            PyErr_Restore(err_type, err_value, err_traceback);
+            return NULL;
+        }
+        blob->callback_func = callback_func;
+        if ((ret = getdns_service(context, name, extensions_dict, (void *)blob, &tid, callback_shim)) !=
+            GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return(PyInt_FromLong((long)tid));
+    } else  {
+        if ((ret = getdns_service_sync(context, name, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
+            char err_buf[256];
+            getdns_strerror(ret, err_buf, sizeof err_buf);
+            PyErr_SetString(getdns_error, err_buf);
+            return NULL;
+        }
+        return result_create(resp);
+    }
 }
 
 
@@ -1099,9 +1344,8 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
     int i;
 
 
-
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
     py_api = PyDict_New();

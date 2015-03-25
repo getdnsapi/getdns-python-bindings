@@ -39,6 +39,84 @@
 #include <ldns/ldns.h>
 #include "pygetdns.h"
 
+
+
+int
+get_status(struct getdns_dict *result_dict)
+{
+    uint32_t status;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_int(result_dict, "status", &status)) != GETDNS_RETURN_GOOD)
+        return 0;
+    return (int)status;
+}
+        
+
+int
+get_answer_type(struct getdns_dict *result_dict)
+{
+    uint32_t answer_type;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_int(result_dict, "answer_type", &answer_type)) != GETDNS_RETURN_GOOD)
+        return 0;
+    return (int)answer_type;
+}
+
+
+char *
+get_canonical_name(struct getdns_dict *result_dict)
+{
+    getdns_bindata *canonical_name;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_bindata(result_dict, "canonical_name", &canonical_name)) != GETDNS_RETURN_GOOD)
+        return 0;
+    return (char *)canonical_name->data;
+}
+        
+
+PyObject *
+get_just_address_answers(struct getdns_dict *result_dict)
+{
+    struct getdns_list *just_address_answers;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_list(result_dict, "just_address_answers", &just_address_answers)) !=
+        GETDNS_RETURN_GOOD)
+        return NULL;
+    return pythonify_address_list(just_address_answers);
+}
+
+
+PyObject *
+get_replies_tree(struct getdns_dict *result_dict)
+{
+    struct getdns_list *replies_tree;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_list(result_dict, "replies_tree", &replies_tree)) !=
+        GETDNS_RETURN_GOOD)
+        return NULL;
+    return glist_to_plist(replies_tree);
+}
+
+
+PyObject *
+get_validation_chain(struct getdns_dict *result_dict)
+{
+    struct getdns_list *validation_chain;
+    getdns_return_t ret;
+
+    if ((ret = getdns_dict_get_list(result_dict, "validation_chain", &validation_chain)) !=
+        GETDNS_RETURN_GOOD)
+        Py_RETURN_NONE;
+    else
+        return glist_to_plist(validation_chain);
+}
+
+
 struct getdns_dict *
 extensions_to_getdnsdict(PyDictObject *pydict)
 {
@@ -54,7 +132,7 @@ extensions_to_getdnsdict(PyDictObject *pydict)
     struct getdns_bindata *option_data;
     struct getdns_dict *tmpoptions_list_dict; /* a dict to hold add_opt_parameters[options] stuff */
 
-    if (!PyDict_Check(pydict))  {
+    if ((!pydict) || (!PyDict_Check(pydict)))  {
         PyErr_SetString(getdns_error, "Expected dict, didn't get one");
         return NULL;
     }
@@ -567,39 +645,6 @@ void error_exit(char* msg, getdns_return_t ret)
     }
 }
 
-
-
-/**
- * reverse an IP address for PTR lookup
- * @param address_data IP address to reverse
- * @return NULL on allocation failure
- * @return reversed string on success, caller must free storage via call to free()
- */
-char *
-reverse_address(struct getdns_bindata *address_data)
-{
-    ldns_rdf *addr_rdf;
-    ldns_rdf *rev_rdf;
-    char *rev_str;
-
-    if (address_data->size == 4)
-        addr_rdf = ldns_rdf_new(LDNS_RDF_TYPE_A, 4, address_data->data);
-    else if (address_data->size == 16)
-        addr_rdf = ldns_rdf_new(LDNS_RDF_TYPE_AAAA, 16, address_data->data);
-    else
-        return NULL;
-    if (!addr_rdf)
-        return NULL;
-
-    rev_rdf = ldns_rdf_address_reverse(addr_rdf);
-    ldns_rdf_free(addr_rdf);
-    if (!rev_rdf)
-        return NULL;
-
-    rev_str = ldns_rdf2str(rev_rdf);
-    ldns_rdf_deep_free(rev_rdf);
-    return rev_str;
-}
 
 
 // Code to display the entire response.
