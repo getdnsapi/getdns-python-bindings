@@ -47,21 +47,39 @@ result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
         return -1;
     }
     self->answer_type = PyInt_FromLong((long)answer_type);
-    if ((canonical_name = get_canonical_name(result_dict)) == 0)  {
-        Py_DECREF(self);
-        return -1;
-    }
-    self->canonical_name = PyString_FromString(canonical_name);
+    if ((canonical_name = get_canonical_name(result_dict)) == 0)  
+        self->canonical_name = Py_None;
+    else
+        self->canonical_name = PyString_FromString(canonical_name);
     if ((self->just_address_answers = get_just_address_answers(result_dict)) == NULL)  {
-        Py_DECREF(self);
-        return -1;
+        self->just_address_answers = Py_None;
     }
-    if ((self->validation_chain = get_validation_chain(result_dict)) == NULL)  {
-        Py_DECREF(self);
-        return -1;
-    }
+    if ((self->validation_chain = get_validation_chain(result_dict)) == NULL)  
+        self->validation_chain = Py_None;
     return 0;
 }
+
+
+PyObject *
+result_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    getdns_ResultObject *self;
+
+    self = (getdns_ResultObject *)type->tp_alloc(type, 0);
+    if (self != NULL)  {
+        self->just_address_answers = Py_None;
+        self->answer_type = Py_None;
+        self->status = Py_None;
+        self->replies_tree = Py_None;
+        self->canonical_name = Py_None;
+        self->replies_full = Py_None;
+        self->validation_chain = Py_None;
+    }
+    return (PyObject *)self;
+}
+
+
+
 
 
 void
