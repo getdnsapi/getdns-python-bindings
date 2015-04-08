@@ -99,6 +99,7 @@ void result_dealloc(getdns_ResultObject *self);
 extern PyObject *result_getattro(PyObject *self, PyObject *nameobj);
 PyObject *py_result(PyObject *result_capsule);
 PyObject *result_create(struct getdns_dict *resp);
+PyObject *result_str(PyObject *self);
 
 int get_status(struct getdns_dict *result_dict);
 int get_answer_type(struct getdns_dict *result_dict);

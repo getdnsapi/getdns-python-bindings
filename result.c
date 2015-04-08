@@ -102,6 +102,19 @@ result_getattro(PyObject *self, PyObject *nameobj)
 }
 
 
+PyObject *
+result_str(PyObject *self)
+{
+    getdns_ResultObject *me = (getdns_ResultObject *)self;
+    PyObject *cname;
+
+    cname = me->canonical_name;
+    Py_INCREF(cname);
+    return cname;
+}
+    
+
+
 /*
  * package up a getdns response dict and use it to
  * build a new Python result object
