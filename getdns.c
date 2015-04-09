@@ -240,9 +240,6 @@ initgetdns(void)
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
     PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
-#if 0
-    Py_AtExit(cleanup);
-#endif
 /*
  * return value constants
  */
