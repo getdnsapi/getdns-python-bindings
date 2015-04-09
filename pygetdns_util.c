@@ -72,9 +72,14 @@ get_canonical_name(struct getdns_dict *result_dict)
     getdns_bindata *canonical_name;
     getdns_return_t ret;
 
-    if ((ret = getdns_dict_get_bindata(result_dict, "canonical_name", &canonical_name)) != GETDNS_RETURN_GOOD)
+    if ((ret = getdns_dict_get_bindata(result_dict, "canonical_name", &canonical_name)) == GETDNS_RETURN_GOOD)  {
+        char *dname = 0;
+        if (getdns_convert_dns_name_to_fqdn(canonical_name, &dname) == GETDNS_RETURN_GOOD)
+            return dname;
+        else
+            return (char *)canonical_name->data;
+    }  else
         return 0;
-    return (char *)canonical_name->data;
 }
         
 
