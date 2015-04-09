@@ -894,6 +894,24 @@ context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *ke
     
 
 PyObject *
+context_str(PyObject *self)
+{
+    getdns_ContextObject *myself = (getdns_ContextObject *)self;
+    struct getdns_context *context;
+    getdns_dict *api_info;
+    char *str_api_dict;
+
+    context = PyCapsule_GetPointer(myself->py_context, "context");
+    api_info = getdns_context_get_api_information(context);
+    if ((str_api_dict = getdns_print_json_dict(api_info, 0)) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    return(PyString_FromString(str_api_dict));    
+}
+
+
+PyObject *
 context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = {

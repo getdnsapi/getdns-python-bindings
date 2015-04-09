@@ -182,13 +182,13 @@ PyTypeObject getdns_ContextType = {
     0,                         /* tp_getattr */
     0,                         /* tp_setattr */
     0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
+    context_str,               /*tp_repr*/
     0,                         /*tp_as_number*/
     0,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
     0,                         /*tp_hash */
     0,                         /*tp_call*/
-    0,                         /*tp_str*/
+    context_str,                         /*tp_str*/
     context_getattro,          /*tp_getattro*/
     context_setattro,          /*tp_setattro*/
     0,                         /*tp_as_buffer*/

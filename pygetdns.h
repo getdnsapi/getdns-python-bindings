@@ -128,6 +128,8 @@ int context_set_dnssec_trust_anchors(getdns_context *context, PyObject *py_value
 int context_set_upstream_recursive_servers(getdns_context *context, PyObject *py_value);
 int context_set_edns_do_bit(getdns_context *context, PyObject *py_value);
 
+PyObject *context_str(PyObject *self);
+
 PyObject *context_get_api_information(getdns_ContextObject *self, PyObject *unused);
 PyObject *context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
