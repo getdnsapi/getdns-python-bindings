@@ -27,7 +27,7 @@ def compute_hash(func, string):
 def get_addresses(hostname):
 
     extensions = {
-        "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE
+        "return_both_v4_and_v6" : getdns.EXTENSION_TRUE
     }
     ctx = getdns.Context()
     try:
@@ -39,7 +39,7 @@ def get_addresses(hostname):
     status = results.status
 
     address_list = []
-    if status == getdns.GETDNS_RESPSTATUS_GOOD:
+    if status == getdns.RESPSTATUS_GOOD:
         for addr in results.just_address_answers:
             address_list.append((addr['address_type'], addr['address_data']))
     else:
@@ -68,7 +68,7 @@ def get_tlsa_rdata_set(replies, requested_usage=None):
 def get_tlsa(port, proto, hostname):
 
     extensions = {
-        "dnssec_return_only_secure" : getdns.GETDNS_EXTENSION_TRUE,
+        "dnssec_return_only_secure" : getdns.EXTENSION_TRUE,
     }
     qname = "_%d._%s.%s" % (port, proto, hostname)
     ctx = getdns.Context()
@@ -82,7 +82,7 @@ def get_tlsa(port, proto, hostname):
 
     status = results.status
 
-    if status == getdns.GETDNS_RESPSTATUS_GOOD:
+    if status == getdns.RESPSTATUS_GOOD:
         return get_tlsa_rdata_set(results.replies_tree, requested_usage=3)
     else:
         print "getdns.general(): failed, return code: %d" % status

@@ -19,7 +19,7 @@ import sys
 # 
 # I commented out the "return None" because this is demo code and you
 # should be able to play with it.  But, in deployed applications you
-# MUST check that dnssec_status is GETDNS_DNSSEC_SECURE
+# MUST check that dnssec_status is DNSSEC_SECURE
 #
 
 def get_first_secure_response(results):
@@ -29,7 +29,7 @@ def get_first_secure_response(results):
         return None
     else:
         reply = replies_tree[0]
-        if reply['dnssec_status'] != getdns.GETDNS_DNSSEC_SECURE:
+        if reply['dnssec_status'] != getdns.DNSSEC_SECURE:
             print 'insecure reply'
 #            return None                      
         answer = replies_tree[0]['answer']
@@ -45,9 +45,9 @@ def main():
     if len(sys.argv) == 2:
         tls_name = sys.argv[1]
     c = getdns.Context()
-    extensions = { 'dnssec_return_status' : getdns.GETDNS_EXTENSION_TRUE }
+    extensions = { 'dnssec_return_status' : getdns.EXTENSION_TRUE }
     results = c.general(tls_name, request_type=getdns.RRTYPE_TLSA, extensions=extensions)
-    if results.replies_full['status'] != getdns.GETDNS_RESPSTATUS_GOOD:
+    if results.replies_full['status'] != getdns.RESPSTATUS_GOOD:
         print 'query status is {0}'.format(results.status)
         sys.exit(1)
     else:

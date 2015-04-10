@@ -266,33 +266,19 @@ initgetdns(void)
  * return value constants
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_GOOD", 0);
     PyModule_AddIntConstant(g, "RETURN_GOOD", 0);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_GENERIC_ERROR", 1);
     PyModule_AddIntConstant(g, "RETURN_GENERIC_ERROR", 1);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_BAD_DOMAIN_NAME", 300);
     PyModule_AddIntConstant(g, "RETURN_BAD_DOMAIN_NAME", 300);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_BAD_CONTEXT", 301);
     PyModule_AddIntConstant(g, "RETURN_BAD_CONTEXT", 301);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_CONTEXT_UPDATE_FAIL", 302);
     PyModule_AddIntConstant(g, "RETURN_CONTEXT_UPDATE_FAIL", 302);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_UNKNOWN_TRANSACTION", 303);
     PyModule_AddIntConstant(g, "RETURN_UNKNOWN_TRANSACTION", 303);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_NO_SUCH_LIST_ITEM", 304);
     PyModule_AddIntConstant(g, "RETURN_NO_SUCH_LIST_ITEM", 304);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_NO_SUCH_DICT_NAME", 305);
     PyModule_AddIntConstant(g, "RETURN_NO_SUCH_DICT_NAME", 305);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_WRONG_TYPE_REQUESTED", 306);
     PyModule_AddIntConstant(g, "RETURN_WRONG_TYPE_REQUESTED", 306);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_NO_SUCH_EXTENSION", 307);
     PyModule_AddIntConstant(g, "RETURN_NO_SUCH_EXTENSION", 307);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_EXTENSION_MISFORMAT", 308);
     PyModule_AddIntConstant(g, "RETURN_EXTENSION_MISFORMAT", 308);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_DNSSEC_WITH_STUB_DISALLOWED", 309);
     PyModule_AddIntConstant(g, "RETURN_DNSSEC_WITH_STUB_DISALLOWED", 309);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_MEMORY_ERROR", 310);
     PyModule_AddIntConstant(g, "RETURN_MEMORY_ERROR", 310);
-    PyModule_AddIntConstant(g, "GETDNS_RETURN_INVALID_PARAMETER", 311);
     PyModule_AddIntConstant(g, "RETURN_INVALID_PARAMETER", 311);
 
 /*
@@ -314,138 +300,89 @@ initgetdns(void)
  * namespace types
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_NAMESPACE_DNS", 500);
+
     PyModule_AddIntConstant(g, "NAMESPACE_DNS", 500);
-    PyModule_AddIntConstant(g, "GETDNS_NAMESPACE_LOCALNAMES", 501);
     PyModule_AddIntConstant(g, "NAMESPACE_LOCALNAMES", 501);
-    PyModule_AddIntConstant(g, "GETDNS_NAMESPACE_NETBIOS", 502);
     PyModule_AddIntConstant(g, "NAMESPACE_NETBIOS", 502);
-    PyModule_AddIntConstant(g, "GETDNS_NAMESPACE_MDNS", 503);
     PyModule_AddIntConstant(g, "NAMESPACE_MDNS", 503);
-    PyModule_AddIntConstant(g, "GETDNS_NAMESPACE_NIS", 504);
     PyModule_AddIntConstant(g, "NAMESPACE_NIS", 504);
 
 /*
  * resolution types
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_RESOLUTION_STUB", 520);
     PyModule_AddIntConstant(g, "RESOLUTION_STUB", 520);
-    PyModule_AddIntConstant(g, "GETDNS_RESOLUTION_RECURSING", 521);
     PyModule_AddIntConstant(g, "RESOLUTION_RECURSING", 521);
 
 /*
  * redirect policies
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_REDIRECTS_FOLLOW", 530);
     PyModule_AddIntConstant(g, "REDIRECTS_FOLLOW", 530);
-    PyModule_AddIntConstant(g, "GETDNS_REDIRECTS_DO_NOT_FOLLOW", 531);
     PyModule_AddIntConstant(g, "REDIRECTS_DO_NOT_FOLLOW", 531);
 
 /*
  * transport arrangements
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP", 540);
     PyModule_AddIntConstant(g, "TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP", 540);
-    PyModule_AddIntConstant(g, "GETDNS_TRANSPORT_UDP_ONLY", 541);
     PyModule_AddIntConstant(g, "TRANSPORT_UDP_ONLY", 541);
-    PyModule_AddIntConstant(g, "GETDNS_TRANSPORT_TCP_ONLY", 542);
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY", 542);
-    PyModule_AddIntConstant(g, "GETDNS_TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
 
 /*
  * suffix appending methods
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_APPEND_NAME_ALWAYS", 550);
     PyModule_AddIntConstant(g, "APPEND_NAME_ALWAYS", 550);
-    PyModule_AddIntConstant(g, "GETDNS_APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE", 551);
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE", 551);
-    PyModule_AddIntConstant(g, "GETDNS_APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE", 552);
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE", 552);
-    PyModule_AddIntConstant(g, "GETDNS_APPEND_NAME_NEVER", 553);
     PyModule_AddIntConstant(g, "APPEND_NAME_NEVER", 553);
 
 /*
  * context codes
  */
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_NAMESPACES", 600);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_NAMESPACES", 600);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_RESOLUTION_TYPE", 601);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_RESOLUTION_TYPE", 601);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_FOLLOW_REDIRECTS", 602);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_FOLLOW_REDIRECTS", 602);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_UPSTREAM_RECURSIVE_SERVERS", 603);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_UPSTREAM_RECURSIVE_SERVERS", 603);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_DNS_ROOT_SERVERS", 604);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_DNS_ROOT_SERVERS", 604);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_DNS_TRANSPORT", 605);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_DNS_TRANSPORT", 605);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_LIMIT_OUTSTANDING_QUERIES", 606);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_LIMIT_OUTSTANDING_QUERIES", 606);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_APPEND_NAME", 607);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_APPEND_NAME", 607);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_SUFFIX", 608);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_SUFFIX", 608);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_DNSSEC_TRUST_ANCHORS", 609);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_DNSSEC_TRUST_ANCHORS", 609);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_MAXIMUM_UDP_PAYLOAD_SIZE", 610);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_EDNS_MAXIMUM_UDP_PAYLOAD_SIZE", 610);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_EXTENDED_RCODE", 611);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_EDNS_EXTENDED_RCODE", 611);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_VERSION", 612);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_EDNS_VERSION", 612);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_DO_BIT", 613);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_EDNS_DO_BIT", 613);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_DNSSEC_ALLOWED_SKEW", 614);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_DNSSEC_ALLOWED_SKEW", 614);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_MEMORY_FUNCTIONS", 615);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_MEMORY_FUNCTIONS", 615);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TIMEOUT", 61);
-    PyModule_AddIntConstant(g, "CONTEXT_CODE_TIMEOUT", 61);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_TIMEOUT", 616);
 
 /*
  * name service types
  */
 
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_DNS", 800);
-    PyModule_AddIntConstant(g, "NAMETYPE_DNS", 800);
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_WINS", 801);
-    PyModule_AddIntConstant(g, "NAMETYPE_WINS", 801);
 
-    PyModule_AddIntConstant(g, "GETDNS_EXTENSION_TRUE", 1000);
     PyModule_AddIntConstant(g, "EXTENSION_TRUE", 1000);
-    PyModule_AddIntConstant(g, "GETDNS_EXTENSION_FALSE", 1001);
     PyModule_AddIntConstant(g, "EXTENSION_FALSE", 1001);
 
-    PyModule_AddIntConstant(g, "GETDNS_CALLBACK_COMPLETE", 700);
     PyModule_AddIntConstant(g, "CALLBACK_COMPLETE", 700);
-    PyModule_AddIntConstant(g, "GETDNS_CALLBACK_CANCEL", 701);
     PyModule_AddIntConstant(g, "CALLBACK_CANCEL", 701);
-    PyModule_AddIntConstant(g, "GETDNS_CALLBACK_TIMEOUT", 702);
     PyModule_AddIntConstant(g, "CALLBACK_TIMEOUT", 702);
-    PyModule_AddIntConstant(g, "GETDNS_CALLBACK_ERROR", 703);
     PyModule_AddIntConstant(g, "CALLBACK_ERROR", 703);
 
-    PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_GOOD", 900);
     PyModule_AddIntConstant(g, "RESPSTATUS_GOOD", 900);
-    PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_NO_NAME", 901);
     PyModule_AddIntConstant(g, "RESPSTATUS_NO_NAME", 901);
-    PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_ALL_TIMEOUT", 902);
     PyModule_AddIntConstant(g, "RESPSTATUS_ALL_TIMEOUT", 902);
-    PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_NO_SECURE_ANSWERS", 903);
     PyModule_AddIntConstant(g, "RESPSTATUS_NO_SECURE_ANSWERS", 903);
-    PyModule_AddIntConstant(g, "GETDNS_RESPSTATUS_ALL_BOGUS_ANSWERS", 904);
     PyModule_AddIntConstant(g, "RESPSTATUS_ALL_BOGUS_ANSWERS", 904);
 
-    PyModule_AddIntConstant(g, "GETDNS_BAD_DNS_CNAME_IN_TARGET", 1100);
     PyModule_AddIntConstant(g, "BAD_DNS_CNAME_IN_TARGET", 1100);
-    PyModule_AddIntConstant(g, "GETDNS_BAD_DNS_ALL_NUMERIC_LABEL", 1101);
     PyModule_AddIntConstant(g, "BAD_DNS_ALL_NUMERIC_LABEL", 1101);
-    PyModule_AddIntConstant(g, "GETDNS_BAD_DNS_CNAME_RETURNED_FOR_OTHER_TYPE", 1102);
     PyModule_AddIntConstant(g, "BAD_DNS_CNAME_RETURNED_FOR_OTHER_TYPE", 1102);
 
 /*

@@ -37,12 +37,12 @@ else:
     if not args:
         usage()
 
-extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE }
+extensions = { "return_both_v4_and_v6" : getdns.EXTENSION_TRUE }
 desired_addr_type = None
 
 for (opt, optval) in options:
     if opt == "-s":
-        extensions["dnssec_return_only_secure"] = getdns.GETDNS_EXTENSION_TRUE
+        extensions["dnssec_return_only_secure"] = getdns.EXTENSION_TRUE
     elif opt == "-4":
         desired_addr_type = "IPv4"
     elif opt == "-6":
@@ -57,13 +57,13 @@ for hostname in args:
         print(str(e))
         break
     status = results.status
-    if status == getdns.GETDNS_RESPSTATUS_GOOD:
+    if status == getdns.RESPSTATUS_GOOD:
         for addr in results.just_address_answers:
             addr_type = addr['address_type']
             addr_data = addr['address_data']
             if (desired_addr_type == None) or (addr_type == desired_addr_type):
                 print "%s: %s  %s" % (hostname, addr_type, addr_data)
-    elif status == getdns.GETDNS_RESPSTATUS_NO_SECURE_ANSWERS:
+    elif status == getdns.RESPSTATUS_NO_SECURE_ANSWERS:
         print "%s: No DNSSEC secured responses found" % hostname
     else:
         print "%s: getdns.address() returned error: %d" % (hostname, status)

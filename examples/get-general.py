@@ -6,7 +6,7 @@
 
 import getdns, pprint, sys
 
-extensions = { "dnssec_return_status" : getdns.GETDNS_EXTENSION_TRUE }
+extensions = { "dnssec_return_status" : getdns.EXTENSION_TRUE }
 
 def get_rrtype(qtype):
     try:
@@ -38,15 +38,15 @@ if __name__ == '__main__':
 
     status = results.status
 
-    if status == getdns.GETDNS_RESPSTATUS_GOOD:
+    if status == getdns.RESPSTATUS_GOOD:
         for reply in results.replies_tree:
             answers = reply['answer']           # list of 1 here
             for answer in answers:
                 if answer['type'] != getdns.RRTYPE_RRSIG:
                     pprint.pprint(answer)
-    elif status == getdns.GETDNS_RESPSTATUS_NO_NAME:
+    elif status == getdns.RESPSTATUS_NO_NAME:
         print "%s, %s: no such name" % (qname, qtype)
-    elif status == getdns.GETDNS_RESPSTATUS_ALL_TIMEOUT:
+    elif status == getdns.RESPSTATUS_ALL_TIMEOUT:
         print "%s, %s: query timed out" % (qname, qtype)
     else:
         print "%s, %s: unknown return code: %d" % results.status

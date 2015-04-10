@@ -26,12 +26,12 @@ import getdns, sys, getopt
 def cbk(type, result, userarg, tid):
     if type == getdns.CALLBACK_COMPLETE:
         status = result.status
-        if status == getdns.GETDNS_RESPSTATUS_GOOD:
+        if status == getdns.RESPSTATUS_GOOD:
             for addr in result.just_address_answers:
                 addr_type = addr['address_type']
                 addr_data = addr['address_data']
                 print '{0}: {1} {2}'.format(userarg, addr_type, addr_data)
-        elif status == getdns.GETDNS_RESPSTATUS_NO_SECURE_ANSWERS:
+        elif status == getdns.RESPSTATUS_NO_SECURE_ANSWERS:
             print "%s: No DNSSEC secured responses found" % hostname
         else:
             print "%s: getdns.address() returned error: %d" % (hostname, status)
@@ -63,7 +63,7 @@ else:
     if not args:
         usage()
 
-extensions = { "return_both_v4_and_v6" : getdns.GETDNS_EXTENSION_TRUE }
+extensions = { "return_both_v4_and_v6" : getdns.EXTENSION_TRUE }
 
 ctx = getdns.Context()
 tids = []
