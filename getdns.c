@@ -211,11 +211,33 @@ PyTypeObject getdns_ContextType = {
     (initproc)context_init,    /* tp_init           */
 };
 
-
+static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
 
 static struct PyMethodDef getdns_methods[] = {
+    { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
+      METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
     { 0, 0, 0 }
 };
+
+
+static PyObject *
+get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = { "id",
+                            NULL };
+    int id;
+    char *errstr;
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "i", kwlist, &id))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if ((errstr = (char *)getdns_get_errorstr_by_id((uint16_t)id)) == 0) 
+        return Py_None;
+    else
+        return PyString_FromString(errstr);
+}
+
 
 PyMODINIT_FUNC
 initgetdns(void)

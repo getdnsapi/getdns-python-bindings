@@ -29,7 +29,7 @@ This version of getdns has been built and tested against Python
 2.7.  We also expect these other prerequisites to be
 installed:
 
-* `libgetdns <http://getdnsapi.net/>`_, version 0.1.2 or later
+* `libgetdns <http://getdnsapi.net/>`_, version 0.1.7 or later
 * `libldns <https://www.nlnetlabs.nl/projects/ldns/>`_,
   version 1.6.11 or later
 * `libunbound
@@ -45,7 +45,7 @@ as follows:
 
   ./configure --with-libevent
 
-This release has been tested against libgetdns 0.1.5.
+This release has been tested against libgetdns 0.1.7.
 
 Building
 ========

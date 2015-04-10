@@ -493,3 +493,23 @@ This is an example callback function:
             print 'Query timed out'
         else:
             print 'Unknown error'
+
+
+Utility methods
+---------------
+
+At the present time we support one utility method.
+
+.. py:method:: get_errorstr_by_id(id)
+
+   ``getdns.get_errorstr_by_id`` returns a string containing
+   text describing a getdns return code, helping to make
+   reporting errors to users a little easier.  For example:
+
+.. code-block:: python
+
+    if results.replies_full['status'] != getdns.GETDNS_RESPSTATUS_GOOD:
+        print(getdns.get_errorstr_by_id(id=results.replies_full['status'])
+        sys.exit(1)
+
+   
