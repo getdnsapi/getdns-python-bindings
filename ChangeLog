@@ -1,8 +1,8 @@
 Changes in version 0.3.1 (10 April 2015)
 
- * implemented asynchronous queries, bound to Context()
-   objects, and introduced Context.run() method.  See
-   getdns.readthedocs.org
+* implemented asynchronous queries, bound to Context()
+  objects, and introduced Context.run() method.  See
+  getdns.readthedocs.org
 
 * queries now return a Result() object, with attributes.
   See getdns.readthedocs.org
