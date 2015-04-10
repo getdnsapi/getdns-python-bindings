@@ -4,4 +4,8 @@
 import getdns, sys, pprint
 
 ctx = getdns.Context()
-pprint.pprint(ctx.get_api_information())
+try:
+    pprint.pprint(ctx.get_api_information())
+except getdns.error, e:
+    print(str(e))
+    sys.exit(1)

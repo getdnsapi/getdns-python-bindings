@@ -6,11 +6,11 @@
 
 import getdns, pprint, sys
 
-extensions = { "dnssec_return_status" : getdns.GETDNS_EXTENSION_TRUE }
+extensions = { "dnssec_return_status" : getdns.EXTENSION_TRUE }
 
 def get_rrtype(qtype):
     try:
-        rrtype = eval("getdns.GETDNS_RRTYPE_%s" % qtype.upper())
+        rrtype = eval("getdns.RRTYPE_%s" % qtype.upper())
     except AttributeError:
         print "Unknown DNS record type: %s" % qtype
         sys.exit(1)
@@ -19,7 +19,7 @@ def get_rrtype(qtype):
 
 
 def print_answer(r):
-    pprint.pprint(r['replies_tree'][0]['answer'])
+    pprint.pprint(r.replies_tree[0]['answer'])
     return
 
 
@@ -29,19 +29,25 @@ if __name__ == '__main__':
     rrtype = get_rrtype(qtype)
 
     ctx = getdns.Context()
-    results = ctx.general(name=qname, request_type=rrtype,
-                          extensions=extensions)
-    status = results['status']
+    try:
+        results = ctx.general(name=qname, request_type=rrtype,
+                              extensions=extensions)
+    except getdns.error, e:
+        print(str(e))
+        sys.exit(1)
 
-    if status == getdns.GETDNS_RESPSTATUS_GOOD:
-        for reply in results['replies_tree']:
+    status = results.status
+
+    if status == getdns.RESPSTATUS_GOOD:
+        for reply in results.replies_tree:
             answers = reply['answer']           # list of 1 here
             for answer in answers:
-                if answer['type'] != getdns.GETDNS_RRTYPE_RRSIG:
+                if answer['type'] != getdns.RRTYPE_RRSIG:
                     pprint.pprint(answer)
-    elif status == getdns.GETDNS_RESPSTATUS_NO_NAME:
+    elif status == getdns.RESPSTATUS_NO_NAME:
         print "%s, %s: no such name" % (qname, qtype)
-    elif status == getdns.GETDNS_RESPSTATUS_ALL_TIMEOUT:
+    elif status == getdns.RESPSTATUS_ALL_TIMEOUT:
         print "%s, %s: query timed out" % (qname, qtype)
     else:
-        print "%s, %s: unknown return code: %d" % results["status"]
+        print "%s, %s: unknown return code: %d" % results.status
+

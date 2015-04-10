@@ -3,4 +3,8 @@
 import getdns
 
 ctx = getdns.Context()
-print ctx.get_api_information()['version_string']
+try:
+    print ctx.get_api_information()['version_string']
+except getdns.error, e:
+    print(str(e))
+    sys.exit(1)

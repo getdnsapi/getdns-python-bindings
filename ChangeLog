@@ -1,0 +1,35 @@
+Changes in version 0.3.1 (10 April 2015)
+
+* implemented asynchronous queries, bound to Context()
+  objects, and introduced Context.run() method.  See
+  getdns.readthedocs.org
+
+* queries now return a Result() object, with attributes.
+  See getdns.readthedocs.org
+
+* removed leading GETDNS_ in all constants
+  (i.e. getdns.GETDNS_RRTYPE_AAAA is now getdns.RRTYPE_AAAA)
+
+* added getdns.get_errorstr_by_id() method, making it easier
+  to provide user-friendly error messages
+
+* prettied up printing of canonical names in Result object
+
+* str and repr printing has been added to both Context and
+  Result objects
+
+* dead code removed
+
+* replaced instances of getdns_strerror() with
+  getdns_get_errorstr_by_id()
+
+* fixed incorrect error return from Result construction
+
+* moved __version__ attribute from Context to top-level
+  getdns module
+
+* made exception handling within the module more consistent
+
+* added documentation describing getdns.error
+
+* broke out query types

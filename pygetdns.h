@@ -32,7 +32,8 @@
 #ifndef PYGETDNS_H
 #define PYGETDNS_H
 
-#define PYGETDNS_VERSION "0.2.1"
+#define PYGETDNS_VERSION "0.3.1"
+#define GETDNS_DOCSTRING "getdns bindings for Python (see http://www.getdnsapi.net)"
 
 #define GETDNS_STR_IPV4 "IPv4"
 #define GETDNS_STR_IPV6 "IPv6"
@@ -49,16 +50,23 @@ typedef struct pygetdns_libevent_callback_data  {
 } pygetdns_libevent_callback_data;
 
 
-typedef struct pygetdns_async_args_blob  {
-    PyObject *context_capsule;
-    PyObject *runner;
-    uint16_t type;
-    PyDictObject *extensions;
-    getdns_transaction_t tid;
-    char *callback;
-    pygetdns_libevent_callback_data *userarg;
-    char *name;
-} pygetdns_async_args_blob;
+typedef struct  {
+    PyObject_HEAD
+    PyObject *just_address_answers;
+    PyObject *answer_type;
+    PyObject *status;
+    PyObject *replies_tree;
+    PyObject *canonical_name;
+    PyObject *replies_full;
+    PyObject *validation_chain;
+} getdns_ResultObject;
+
+
+typedef struct  {
+    PyObject *callback_func;
+    char userarg[BUFSIZ];
+} userarg_blob;
+
 
 
 typedef struct {
@@ -80,10 +88,25 @@ typedef struct {
     getdns_list *dns_root_servers;
     getdns_list *dnssec_trust_anchors;
     getdns_list *upstream_recursive_servers;
+    struct event_base *event_base;
     char *implementation_string;
     char *version_string;
 } getdns_ContextObject;
 
+
+extern PyTypeObject getdns_ResultType;
+void result_dealloc(getdns_ResultObject *self);
+extern PyObject *result_getattro(PyObject *self, PyObject *nameobj);
+PyObject *py_result(PyObject *result_capsule);
+PyObject *result_create(struct getdns_dict *resp);
+PyObject *result_str(PyObject *self);
+
+int get_status(struct getdns_dict *result_dict);
+int get_answer_type(struct getdns_dict *result_dict);
+char *get_canonical_name(struct getdns_dict *result_dict);
+PyObject *get_just_address_answers(struct getdns_dict *result_dict);
+PyObject *get_replies_tree(struct getdns_dict *result_dict);
+PyObject *get_validation_chain(struct getdns_dict *result_dict);
 
 int context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_getattro(PyObject *self, PyObject *nameobj);
@@ -105,14 +128,25 @@ int context_set_dnssec_trust_anchors(getdns_context *context, PyObject *py_value
 int context_set_upstream_recursive_servers(getdns_context *context, PyObject *py_value);
 int context_set_edns_do_bit(getdns_context *context, PyObject *py_value);
 
+PyObject *context_str(PyObject *self);
+
 PyObject *context_get_api_information(getdns_ContextObject *self, PyObject *unused);
 PyObject *context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
+PyObject *context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
+PyObject *context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 
-PyObject *do_query(PyObject *context_capsule, void *name, uint16_t request_type,
-                   PyDictObject *extensions_obj, void *userarg, getdns_transaction_t tid, char *callback);
+void context_dealloc(getdns_ContextObject *self);
+PyObject *get_callback(char *py_main, char *callback);
+void callback_shim(struct getdns_context *context, getdns_callback_type_t type,
+                   struct getdns_dict *response, void *userarg, getdns_transaction_t tid);
+
+int result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds);
+PyObject *result_getattro(PyObject *self, PyObject *nameobj);
+int result_setattro(PyObject *self, PyObject *attrname, PyObject *value);
+
 PyObject *pythonify_address_list(getdns_list *list);
 PyObject *glist_to_plist(struct getdns_list *list);
 PyObject *gdict_to_pdict(struct getdns_dict *dict);
@@ -121,14 +155,7 @@ struct getdns_dict *extensions_to_getdnsdict(PyDictObject *);
 PyObject *decode_getdns_response(struct getdns_dict *);
 PyObject *decode_getdns_replies_tree_response(struct getdns_dict *response);
 PyObject *getFullResponse(struct getdns_dict *dict);
-char *reverse_address(struct getdns_bindata *address_data);
-PyObject *context_fd(PyObject *self, PyObject *args, PyObject *keywds);
-PyObject *context_get_num_pending_requests(PyObject *self, PyObject *args, PyObject *keywds);
-PyObject *context_process_async(PyObject *self, PyObject *args, PyObject *keywds);
 getdns_dict *getdnsify_addressdict(PyObject *pydict);
-void context_dealloc(getdns_ContextObject *self);
-void *marshall_query(void *blob);
-PyObject *dispatch_query(PyObject *context_capsule, void *name, uint16_t request_type,
-                         PyDictObject *extensions_obj, void *userarg, getdns_transaction_t tid, char *callback);
+
 
 #endif /* PYGETDNS_H */
