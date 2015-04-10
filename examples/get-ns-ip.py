@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     ctx = getdns.Context()
     try:
-        results = ctx.general(name=qname, request_type=getdns.GETDNS_RRTYPE_NS)
+        results = ctx.general(name=qname, request_type=getdns.RRTYPE_NS)
     except getdns.error, e:
         print(str(e))
         sys.exit(1)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         for reply in results.replies_tree:
             answers = reply['answer']
             for answer in answers:
-                if answer['type'] == getdns.GETDNS_RRTYPE_NS:
+                if answer['type'] == getdns.RRTYPE_NS:
                     iplist = get_ip(ctx, answer['rdata']['nsdname'])
                     for ip in iplist:
                         hostlist.append( (answer['rdata']['nsdname'], ip) )

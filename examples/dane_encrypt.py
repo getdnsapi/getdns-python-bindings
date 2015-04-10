@@ -33,7 +33,7 @@ def get_first_secure_response(results):
             print 'insecure reply'
 #            return None                      
         answer = replies_tree[0]['answer']
-        record = [ x for x in answer if x['type'] is getdns.GETDNS_RRTYPE_TLSA ]
+        record = [ x for x in answer if x['type'] is getdns.RRTYPE_TLSA ]
         if len(record) == 0:
             print 'no answers of type TLSA'
             return None

@@ -22,7 +22,7 @@ if results.status == getdns.GETDNS_RESPSTATUS_GOOD:
         for a in reply["answer"]:
             rrname  = a["name"]
             rrtype  = a["type"]
-            if rrtype == getdns.GETDNS_RRTYPE_SRV:
+            if rrtype == getdns.RRTYPE_SRV:
                 rdata   = a["rdata"]
                 prio, weight, port, target = rdata['priority'], rdata['weight'], rdata['port'], rdata['target']
                 print "SRV %s --> %d %d %d %s" % \

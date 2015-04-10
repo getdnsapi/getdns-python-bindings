@@ -52,7 +52,7 @@ def get_tlsa_rdata_set(replies, requested_usage=None):
     tlsa_rdata_set = []
     for reply in replies:
         for rr in reply['answer']:
-            if rr['type'] == getdns.GETDNS_RRTYPE_TLSA:
+            if rr['type'] == getdns.RRTYPE_TLSA:
                 rdata = rr['rdata']
                 usage = rdata['certificate_usage']
                 selector = rdata['selector']
@@ -74,13 +74,13 @@ def get_tlsa(port, proto, hostname):
     ctx = getdns.Context()
     try:
         results = ctx.general(name=qname,
-                              request_type=getdns.GETDNS_RRTYPE_TLSA,
+                              request_type=getdns.RRTYPE_TLSA,
                               extensions=extensions)
     except getdns.error, e:
         print(str(e))
         sys.exit(1)
 
-    status = results.status'
+    status = results.status
 
     if status == getdns.GETDNS_RESPSTATUS_GOOD:
         return get_tlsa_rdata_set(results.replies_tree, requested_usage=3)

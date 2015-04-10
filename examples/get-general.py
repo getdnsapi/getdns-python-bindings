@@ -10,7 +10,7 @@ extensions = { "dnssec_return_status" : getdns.GETDNS_EXTENSION_TRUE }
 
 def get_rrtype(qtype):
     try:
-        rrtype = eval("getdns.GETDNS_RRTYPE_%s" % qtype.upper())
+        rrtype = eval("getdns.RRTYPE_%s" % qtype.upper())
     except AttributeError:
         print "Unknown DNS record type: %s" % qtype
         sys.exit(1)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
         for reply in results.replies_tree:
             answers = reply['answer']           # list of 1 here
             for answer in answers:
-                if answer['type'] != getdns.GETDNS_RRTYPE_RRSIG:
+                if answer['type'] != getdns.RRTYPE_RRSIG:
                     pprint.pprint(answer)
     elif status == getdns.GETDNS_RESPSTATUS_NO_NAME:
         print "%s, %s: no such name" % (qname, qtype)
