@@ -26,7 +26,7 @@
 
 
 from distutils.core import setup, Extension
-import platform, os
+import platform, os, sys
 
 platform_version = list(platform.python_version_tuple())[0:2]
 if platform_version != ['2', '7']:
@@ -38,13 +38,19 @@ long_description = ( 'getdns is a set of wrappers around the getdns'
                      'Python language bindings for the API')
 
 CFLAGS = [ '-g' ]
+
+if '--with-edns-cookies' in sys.argv:
+    CFLAGS.append('-DWITH_EDNS_COOKIES')
+    sys.argv.remove('--with-edns-cookies')
+    
 getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
                     libraries = [ 'ldns', 'getdns', 'getdns_ext_event', 'event' ],
                     library_dirs = [ '/usr/local/lib' ],
                     sources = [ 'getdns.c', 'pygetdns_util.c', 'context.c',
                                 'context_util.c', 'result.c' ],
-                    runtime_library_dirs = [ '/usr/local/lib' ]
+                          extra_compile_args = CFLAGS,
+                    runtime_library_dirs = [ '/usr/local/lib' ],
                     )
 
 setup(name='getdns',

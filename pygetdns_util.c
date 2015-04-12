@@ -156,6 +156,9 @@ extensions_to_getdnsdict(PyDictObject *pydict)
              (!strncmp(tmp_key, "dnssec_return_supporting_responses", strlen("dnssec_return_supporting_responses")))  ||
              (!strncmp(tmp_key, "return_api_information", strlen("return_api_information")))  ||
              (!strncmp(tmp_key, "return_call_debugging", strlen("return_call_debugging")))  ||
+#if defined(WITH_EDNS_COOKIES)
+             (!strncmp(tmp_key, "edns_cookies", strlen("edns_cookies")))  ||
+#endif             
              (!strncmp(tmp_key, "add_warning_for_bad_dns", strlen("add_warning_for_bad_dns"))) )  {
             if (!PyInt_Check(value))  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
