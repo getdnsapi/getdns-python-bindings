@@ -253,7 +253,7 @@ Extensions are Python dictionaries, with the keys being the names of the
 extensions.  The definition of each extension describes the values that
 may be assigned to that extension.  For most extensions it is a Boolean,
 and since the default value is "False" it will most often take the value
-``getdns.GETDNS_EXTENSION_TRUE``.
+``getdns.EXTENSION_TRUE``.
 
 The extensions currently supported by :py:mod:`getdns` are:
 
@@ -265,6 +265,12 @@ The extensions currently supported by :py:mod:`getdns` are:
    * ``add_warning_for_bad_dns``
    * ``specify_class``
    * ``return_call_debugging``
+
+Extensions that are optionally built (see above) include
+
+   * ``edns-cookies``
+
+``edns-cookies`` also takes the value ``getdns.EXTENSION_TRUE``.
 
 Extensions for DNSSEC
 ^^^^^^^^^^^^^^^^^^^^^

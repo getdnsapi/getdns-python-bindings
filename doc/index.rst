@@ -45,6 +45,11 @@ as follows:
 
   ./configure --with-libevent
 
+To enable the use of edns cookies in the Python bindings,
+you must compile support for them into libgetdns, by
+including the --enable-draft-edns-cookies argument to
+configure.
+
 This release has been tested against libgetdns 0.1.7.
 
 Building
@@ -67,6 +72,12 @@ build and install:
   python setup.py build
   python setup.py install
 
+We've added optional support for draft-ietf-dnsop-cookies.
+It is implemented as a getdns extension (see below).  It is
+not built by default.  To enable it, you must build
+libgetdns with cookies support and add the
+``--with-edns-cookies`` to the Python module build
+(i.e. ``python setup.py build --with-edns-cookies``).
 
 Using getdns
 ==============
