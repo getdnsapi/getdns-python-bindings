@@ -855,12 +855,6 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
 PyObject *
 context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 {
-    getdns_context *context;
-    
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
-        return NULL;
-    }
     (void)event_base_dispatch(self->event_base);
     Py_RETURN_NONE;
 }
