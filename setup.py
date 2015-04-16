@@ -43,6 +43,10 @@ if '--with-edns-cookies' in sys.argv:
     CFLAGS.append('-DWITH_EDNS_COOKIES')
     sys.argv.remove('--with-edns-cookies')
     
+if '--with-tls' in sys.argv:
+    CFLAGS.append('-DWITH_TLS')
+    sys.argv.remove('--with-tls')
+
 getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
                     libraries = [ 'ldns', 'getdns', 'getdns_ext_event', 'event' ],

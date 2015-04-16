@@ -141,7 +141,11 @@ context_set_dns_transport(getdns_context *context, PyObject *py_value)
         return -1;
     }
     if ((value < GETDNS_TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP) ||
+#if defined(WITH_TLS)
+        (value > GETDNS_TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN))  {
+#else        
         (value > GETDNS_TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }

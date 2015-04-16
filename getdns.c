@@ -329,6 +329,10 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "TRANSPORT_UDP_ONLY", 541);
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY", 542);
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
+#if defined(WITH_TLS)
+    PyModule_AddIntConstant(g, "TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN", 544);
+    PyModule_AddIntConstant(g, "TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN", 545);
+#endif
 
 /*
  * suffix appending methods
