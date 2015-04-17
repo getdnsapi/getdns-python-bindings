@@ -106,7 +106,7 @@ results to the screen:
     
         ctx = getdns.Context()
         extensions = { "return_both_v4_and_v6" :
-        getdns.GETDNS_EXTENSION_TRUE }
+        getdns.EXTENSION_TRUE }
         results = ctx.address(name=sys.argv[1],
         extensions=extensions)
         if results.status == getdns.RESPSTATUS_GOOD:
@@ -131,11 +131,11 @@ In this example, we do a DNSSEC query and check the response:
     import getdns, sys
     
     dnssec_status = {
-        "GETDNS_DNSSEC_SECURE" : 400,
-        "GETDNS_DNSSEC_BOGUS" : 401,
-        "GETDNS_DNSSEC_INDETERINATE" : 402,
-        "GETDNS_DNSSEC_INSECURE" : 403,
-        "GETDNS_DNSSEC_NOT_PERFORMED" : 404
+        "DNSSEC_SECURE" : 400,
+        "DNSSEC_BOGUS" : 401,
+        "DNSSEC_INDETERINATE" : 402,
+        "DNSSEC_INSECURE" : 403,
+        "DNSSEC_NOT_PERFORMED" : 404
     }
     
     
