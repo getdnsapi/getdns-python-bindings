@@ -72,6 +72,8 @@ context_dealloc(getdns_ContextObject *self)
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
         return;
     }
+    if (self->event_base)  
+        event_base_free(self->event_base);
     Py_XDECREF(self->py_context);
     getdns_context_destroy(context);
     return;
