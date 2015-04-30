@@ -176,7 +176,7 @@ as its methods and attributes.
    DNS record.  The keyword arguments are:
 
    * ``name``: a representation of the query term; usually a
-     string but must be a dict (as described below) in the
+     string but must be a dict (as described in ``Context.hostname()`` below) in the
      case of a PTR record lookup
    * ``request_type``: a DNS RR type as a getdns constant
      (listed here)
@@ -190,11 +190,11 @@ as its methods and attributes.
 
   .. py:method:: address(name, [extensions], [userarg], [transaction_id], [callback])
 
-   There are three critical differences between
+   There are two critical differences between
    ``Context.address()`` and ``Context.general()`` beyond the missing
    *request_type* argument:
 
-   * In ``getdns.address()``, the name argument can only take a host name.
+   * In ``Context.address()``, the name argument can only take a host name.
    * ``Context.address()`` always uses all of namespaces from the
      context (to better emulate getaddrinfo()), while ``Context.general()`` only uses the DNS namespace.
 
@@ -205,7 +205,7 @@ as its methods and attributes.
 
    * ``address_type``: must be a string matching either "IPv4"
      or "IPv6"
-   * ``address_type``: a string representation of an IPv4 or
+   * ``address_data``: a string representation of an IPv4 or
      IPv6 IP address
 
   .. py:method:: service(name [, extensions], [userarg], [transaction_id], [callback])
