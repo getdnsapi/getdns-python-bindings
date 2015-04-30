@@ -190,11 +190,11 @@ as its methods and attributes.
 
   .. py:method:: address(name, [extensions], [userarg], [transaction_id], [callback])
 
-   There are three critical differences between
+   There are two critical differences between
    ``Context.address()`` and ``Context.general()`` beyond the missing
    *request_type* argument:
 
-   * In ``getdns.address()``, the name argument can only take a host name.
+   * In ``Context.address()``, the name argument can only take a host name.
    * ``Context.address()`` always uses all of namespaces from the
      context (to better emulate getaddrinfo()), while ``Context.general()`` only uses the DNS namespace.
 
