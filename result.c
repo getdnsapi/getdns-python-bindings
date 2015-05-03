@@ -41,16 +41,28 @@ result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
         Py_DECREF(self);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    self->status = PyLong_FromLong((long)status);
+#else
     self->status = PyInt_FromLong((long)status);
+#endif
     if ((answer_type = get_answer_type(result_dict)) == 0)  {
         Py_DECREF(self);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    self->answer_type = PyLong_FromLong((long)answer_type);
+#else
     self->answer_type = PyInt_FromLong((long)answer_type);
+#endif
     if ((canonical_name = get_canonical_name(result_dict)) == 0)  
         self->canonical_name = Py_None;
     else
+#if PY_MAJOR_VERSION >= 3
+        self->canonical_name = PyUnicode_FromString(canonical_name);
+#else
         self->canonical_name = PyString_FromString(canonical_name);
+#endif
     if ((self->just_address_answers = get_just_address_answers(result_dict)) == NULL)  {
         self->just_address_answers = Py_None;
     }
@@ -91,7 +103,9 @@ result_dealloc(getdns_ResultObject *self)
     Py_XDECREF(self->replies_tree);
     Py_XDECREF(self->replies_full);
     Py_XDECREF(self->canonical_name);
+#if PY_MAJOR_VERSION < 3
     self->ob_type->tp_free((PyObject *)self);
+#endif
 }
 
 

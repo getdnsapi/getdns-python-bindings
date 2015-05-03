@@ -28,11 +28,6 @@
 from distutils.core import setup, Extension
 import platform, os, sys
 
-platform_version = list(platform.python_version_tuple())[0:2]
-if platform_version != ['2', '7']:
-    print 'getdns requires Python version 2.7.  Exiting ... '
-    os._exit(1)
-
 long_description = ( 'getdns is a set of wrappers around the getdns'
                      'library (http://www.getdnsapi.net), providing'
                      'Python language bindings for the API')
@@ -46,6 +41,12 @@ if '--with-edns-cookies' in sys.argv:
 if '--with-tls' in sys.argv:
     CFLAGS.append('-DWITH_TLS')
     sys.argv.remove('--with-tls')
+
+platform_version = list(platform.python_version_tuple())[0:2]
+
+if not ((platform_version[0] == '3') or (platform_version == ['2', '7'])):
+    print('getdns requires Python version 2.7 or Python version 3.  Exiting ... ')
+    os._exit(1)
 
 getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],

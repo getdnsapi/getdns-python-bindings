@@ -49,6 +49,31 @@
 
 PyObject *getdns_error;
 
+static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
+static void add_getdns_constants(PyObject *g);
+
+static struct PyMethodDef getdns_methods[] = {
+    { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
+      METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
+    { 0, 0, 0 }
+};
+
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef getdnsdef = {
+    PyModuleDef_HEAD_INIT,
+    "getdns",     /* m_name */
+    GETDNS_DOCSTRING,    /* m_doc */
+    -1,                  /* m_size */
+    getdns_methods,      /* m_methods */
+    NULL,                /* m_reload */
+    NULL,                /* m_traverse */
+    NULL,                /* m_clear */
+    NULL,                /* m_free */
+
+};
+#endif
+
 PyMemberDef Result_members[] = {
     { "just_address_answers", T_OBJECT_EX, offsetof(getdns_ResultObject, just_address_answers),
       READONLY, "Only the query answers" },
@@ -72,8 +97,12 @@ static PyMethodDef Result_methods[] = {
 
 
 PyTypeObject getdns_ResultType = {
-   PyObject_HEAD_INIT(NULL)
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
+#endif
     "getdns.Result",           /*tp_name*/
     sizeof(getdns_ResultObject), /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -172,8 +201,12 @@ PyMemberDef Context_members[] = {
 
 
 PyTypeObject getdns_ContextType = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
     PyObject_HEAD_INIT(NULL)
     0,
+#endif
     "getdns.Context",
     sizeof(getdns_ContextObject),
     0,                         /*tp_itemsize*/
@@ -211,14 +244,6 @@ PyTypeObject getdns_ContextType = {
     (initproc)context_init,    /* tp_init           */
 };
 
-static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
-
-static struct PyMethodDef getdns_methods[] = {
-    { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
-      METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
-    { 0, 0, 0 }
-};
-
 
 static PyObject *
 get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
@@ -235,17 +260,57 @@ get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
     if ((errstr = (char *)getdns_get_errorstr_by_id((uint16_t)id)) == 0) 
         return Py_None;
     else
+#if PY_MAJOR_VERSION >= 3
+        return PyUnicode_FromString(errstr);
+#else
         return PyString_FromString(errstr);
+#endif
 }
 
 
+#if PY_MAJOR_VERSION >= 3
+
+PyMODINIT_FUNC
+PyInit_getdns(void)
+{
+    PyObject *g;                /* the getdns module object */
+
+    Py_Initialize();
+    if ((g = PyModule_Create(&getdnsdef)) == NULL)  {
+        PyErr_SetString(PyExc_ImportError, "Unable to initialize getdns");
+        return NULL;
+    }
+    getdns_error = PyErr_NewException("getdns.error", NULL, NULL);
+    Py_INCREF(getdns_error);
+    PyModule_AddObject(g, "error", getdns_error);
+    getdns_ContextType.tp_new = PyType_GenericNew;
+    getdns_ResultType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&getdns_ResultType) < 0)  {
+        PyErr_SetString(PyExc_ImportError, "Unable to initialize getdns");
+        return NULL;
+    }
+    Py_INCREF(&getdns_ResultType);
+    PyModule_AddObject(g, "Result", (PyObject *)&getdns_ResultType);
+    if (PyType_Ready(&getdns_ContextType) < 0)  {
+        PyErr_SetString(PyExc_ImportError, "Unable to initialize getdns");
+        return NULL;
+    }
+    Py_INCREF(&getdns_ContextType);
+    PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
+    PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
+    add_getdns_constants(g);
+    return g;
+}
+    
+
+#else
+        
 PyMODINIT_FUNC
 initgetdns(void)
 {
     PyObject *g;
 
     Py_Initialize();
-    PyEval_InitThreads();
     if ((g = Py_InitModule3("getdns", getdns_methods, GETDNS_DOCSTRING)) == NULL)
         return;
     getdns_error = PyErr_NewException("getdns.error", NULL, NULL);
@@ -262,6 +327,15 @@ initgetdns(void)
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
     PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
+    add_getdns_constants(g);
+}
+
+#endif
+
+    
+static void
+add_getdns_constants(PyObject *g)
+{
 /*
  * return value constants
  */
@@ -473,5 +547,4 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "RRTYPE_CAA", 257);
     PyModule_AddIntConstant(g, "RRTYPE_TA", 32768);
     PyModule_AddIntConstant(g, "RRTYPE_DLV", 32769);
-
 }

@@ -148,7 +148,11 @@ extensions_to_getdnsdict(PyDictObject *pydict)
         char *tmp_key;
         int  tmp_int;
 
+#if PY_MAJOR_VERSION >= 3
+        tmp_key = PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(key), "ascii", NULL));
+#else
         tmp_key = PyString_AsString(PyObject_Str(key));
+#endif
         if ( (!strncmp(tmp_key, "dnssec_return_status", strlen("dnssec_return_status")))  ||
              (!strncmp(tmp_key, "dnssec_return_only_secure", strlen("dnssec_return_only_secure")))  ||
              (!strncmp(tmp_key, "dnssec_return_validation_chain", strlen("dnssec_return_validation_chain")))  ||
@@ -160,23 +164,42 @@ extensions_to_getdnsdict(PyDictObject *pydict)
              (!strncmp(tmp_key, "edns_cookies", strlen("edns_cookies")))  ||
 #endif             
              (!strncmp(tmp_key, "add_warning_for_bad_dns", strlen("add_warning_for_bad_dns"))) )  {
+#if PY_MAJOR_VERSION >= 3
+            if (!PyLong_Check(value))  {
+#else
             if (!PyInt_Check(value))  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
                 return NULL;
             }
+#if PY_MAJOR_VERSION >= 3
+            if ( !((PyLong_AsLong(value) == GETDNS_EXTENSION_TRUE) || (PyLong_AsLong(value) == GETDNS_EXTENSION_FALSE)) )  {
+#else
             if ( !((PyInt_AsLong(value) == GETDNS_EXTENSION_TRUE) || (PyInt_AsLong(value) == GETDNS_EXTENSION_FALSE)) )  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
                 return NULL;
             }
+#if PY_MAJOR_VERSION >= 3
+            tmp_int = (int)PyLong_AsLong(value);
+#else
             tmp_int = (int)PyInt_AsLong(value);
-
+#endif
             (void)getdns_dict_set_int(newdict, tmp_key, tmp_int);
         } else if (!strncmp(tmp_key, "specify_class", strlen("specify_class")))  { /* takes integer */
+#if PY_MAJOR_VERSION >= 3
+            if (!PyLong_Check(value))  {
+#else
             if (!PyInt_Check(value))  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
                 return NULL;
             }
+#if PY_MAJOR_VERSION >= 3
+            tmp_int = (int)PyLong_AsLong(value);
+#else
             tmp_int = (int)PyInt_AsLong(value);
+#endif
             (void)getdns_dict_set_int(newdict, tmp_key, tmp_int);
 
 /*
@@ -201,16 +224,28 @@ extensions_to_getdnsdict(PyDictObject *pydict)
             }
             out_optdict = getdns_dict_create();
             while (PyDict_Next((PyObject *)in_optdict, &opt_pos, &opt_key, &opt_value))  {
+#if PY_MAJOR_VERSION >= 3
+                tmp_opt_key = PyBytes_AsString(PyUnicode_AsEncodedString(opt_key, "ascii", NULL));
+#else
                 tmp_opt_key = PyString_AsString(opt_key);
+#endif
                 if ( (!strncmp(tmp_opt_key, "maximum_udp_payload_size", strlen("maximum_udp_payload_size")))  ||
                      (!strncmp(tmp_opt_key, "extended_rcode", strlen("extended_rcode"))) ||
                      (!strncmp(tmp_opt_key, "version", strlen("version"))) ||
                      (!strncmp(tmp_opt_key, "do_bit", strlen("do_bit"))) )  {
+#if PY_MAJOR_VERSION >= 3
+                    if (!PyLong_Check(opt_value))  {
+#else
                     if (!PyInt_Check(opt_value))  {
+#endif
                         PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
                         return NULL;
                     }
+#if PY_MAJOR_VERSION >= 3
+                    optint = (int)PyLong_AsLong(opt_value);
+#else
                     optint = (int)PyInt_AsLong(opt_value);
+#endif
                     (void)getdns_dict_set_int(out_optdict, tmp_opt_key, optint);
                 }  else if (!strncmp(tmp_opt_key, "options", strlen("options")))  { /* options */
 /*
@@ -241,17 +276,33 @@ extensions_to_getdnsdict(PyDictObject *pydict)
                         }
                         /* optionitem should be a dict with keys option_code and option_data */
                         while (PyDict_Next(optionitem, &optiondictpos, &optiondictkey, &optiondictvalue))  {
+#if PY_MAJOR_VERSION >= 3
+                            tmpoptionlistkey = PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(optiondictkey), "ascii", NULL)); /* XXX */
+#else
                             tmpoptionlistkey = PyString_AsString(PyObject_Str(optiondictkey));
+#endif
                             if  (!strncmp(tmpoptionlistkey, "option_code", strlen("option_code")))  {
+#if PY_MAJOR_VERSION >= 3
+                                if (!PyLong_Check(optiondictvalue))  {
+#else
                                 if (!PyInt_Check(optiondictvalue))  {
+#endif
                                     PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
                                     return NULL;
                                 }
+#if PY_MAJOR_VERSION >= 3
+                                getdns_dict_set_int(tmpoptions_list_dict, "option_code", (uint32_t)PyLong_AsLong(optiondictvalue));
+#else
                                 getdns_dict_set_int(tmpoptions_list_dict, "option_code", (uint32_t)PyInt_AsLong(optiondictvalue));
+#endif
                             }  else if (!strncmp(tmpoptionlistkey, "option_data", strlen("option_data")))  {
                                 option_data = (struct getdns_bindata *)malloc(sizeof(struct getdns_bindata));
                                 option_data->size = PyObject_Length(optiondictvalue);
+#if PY_MAJOR_VERSION >= 3
+                                option_data->data = (uint8_t *)PyBytes_AsString(PyObject_Bytes(optiondictvalue)); /* This is almost certainly wrong */
+#else
                                 option_data->data = (uint8_t *)PyString_AsString(PyObject_Bytes(optiondictvalue)); /* This is almost certainly wrong */
+#endif
                                 getdns_dict_set_bindata(tmpoptions_list_dict, "option_data", option_data);
                             } else  {
                                 PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
@@ -302,11 +353,19 @@ getdnsify_addressdict(PyObject *pydict)
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(str))  {
+#else
     if (!PyString_Check(str))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    addr_type.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
     addr_type.data = (uint8_t *)strdup(PyString_AsString(str));
+#endif
     addr_type.size = strlen((char *)addr_type.data);
     if (strlen((char *)addr_type.data) != 4)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_WRONG_TYPE_REQUESTED_TEXT);
@@ -326,11 +385,19 @@ getdnsify_addressdict(PyObject *pydict)
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(str))  {
+#else
     if (!PyString_Check(str))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    if (inet_pton(domain, PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)), buf) <= 0)  {
+#else
     if (inet_pton(domain, PyString_AsString(str), buf) <= 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
@@ -394,10 +461,19 @@ pythonify_address_list(getdns_list *list)
         }
         py_item = PyDict_New();
         PyDict_SetItemString(py_item, "address_data",
+#if PY_MAJOR_VERSION >= 3
+                             PyUnicode_FromString(inet_ntop(domain, (void *)a_address_data->data,
+                                                           (char *)paddr_buf, 256)));
+#else
                              PyString_FromString(inet_ntop(domain, (void *)a_address_data->data,
                                                            (char *)paddr_buf, 256)));
+#endif
         PyDict_SetItemString(py_item, "address_type",
+#if PY_MAJOR_VERSION >= 3
+                             PyUnicode_FromString((domain == AF_INET ? "IPv4" : "IPv6")));
+#else
                              PyString_FromString((domain == AF_INET ? "IPv4" : "IPv6")));
+#endif
         PyList_Append(py_list, py_item);
     }
     return py_list;
@@ -468,7 +544,11 @@ glist_to_plist(struct getdns_list *list)
                 PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
                 return NULL;
             }
+#if PY_MAJOR_VERSION >= 3
+            py_int = PyLong_FromLong((long)localint);
+#else
             py_int = PyInt_FromLong((long)localint);
+#endif
             if (PyList_Append(py_list, py_int) == -1)  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
                 return NULL;
@@ -575,7 +655,11 @@ gdict_to_pdict(struct getdns_dict *dict)
                 PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
                 return NULL;
             }
+#if PY_MAJOR_VERSION >= 3
+            py_localint = PyLong_FromLong((long)int_item);
+#else
             py_localint = PyInt_FromLong((long)int_item);
+#endif
             if (PyDict_SetItemString(py_dict, (char *)key_name->data, py_localint) == -1)  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
                 return NULL;
@@ -655,7 +739,11 @@ convertBinData(getdns_bindata* data,
     if (data->size == 1 && data->data[0] == 0) {
         PyObject *a_string;
 
+#if PY_MAJOR_VERSION >= 3
+        if ((a_string = PyUnicode_FromString(".")) == NULL)  {
+#else
         if ((a_string = PyString_FromString(".")) == NULL)  {
+#endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
         }
@@ -677,7 +765,11 @@ convertBinData(getdns_bindata* data,
     if (printable == 1) {
         PyObject *a_string;
 
+#if PY_MAJOR_VERSION >= 3
+        if ((a_string = PyUnicode_FromString((char *)data->data)) == NULL)  {
+#else
         if ((a_string = PyString_FromString((char *)data->data)) == NULL)  {
+#endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
         }
@@ -692,7 +784,11 @@ convertBinData(getdns_bindata* data,
 
         if (getdns_convert_dns_name_to_fqdn(data, &dname)
             == GETDNS_RETURN_GOOD) {
+#if PY_MAJOR_VERSION >= 3
+            if ((dname_string = PyUnicode_FromString(dname)) != NULL)  {
+#else
             if ((dname_string = PyString_FromString(dname)) != NULL)  {
+#endif
                 return(dname_string);
             }  else  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
@@ -711,7 +807,11 @@ convertBinData(getdns_bindata* data,
         char* ipStr = getdns_display_ip_address(data);
         if (ipStr) {
             PyObject *addr_string;
+#if PY_MAJOR_VERSION >= 3
+            if ((addr_string = PyUnicode_FromString(ipStr)) == NULL)  {
+#else
             if ((addr_string = PyString_FromString(ipStr)) == NULL)  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
                 return NULL;
             }
@@ -721,7 +821,11 @@ convertBinData(getdns_bindata* data,
         uint8_t *blob = (uint8_t *)malloc(data->size);
         
         memcpy(blob, data->data, data->size);
+#if PY_MAJOR_VERSION >= 3                       
+        return (PyMemoryView_FromMemory((char *)blob, (Py_ssize_t)data->size, PyBUF_READ));
+#else
         return (PyBuffer_FromMemory(blob, (Py_ssize_t)data->size));
+#endif
     }
     return NULL;                /* should never get here .. */
 }
@@ -732,11 +836,12 @@ PyObject *convertToList(struct getdns_list* list);
 PyObject*
 convertToDict(struct getdns_dict* dict) {
 
+    PyObject *resultsdict1;
+    
     if (!dict) {
         return 0;
     }
 
-    PyObject* resultsdict1;
     if ((resultsdict1 = PyDict_New()) == NULL)  {
         error_exit("Unable to allocate response dict", 0);
         return NULL;
@@ -757,13 +862,18 @@ convertToDict(struct getdns_dict* dict) {
         getdns_list_get_bindata(names, i, &nameBin);
         getdns_data_type type;
         getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
+
         switch (type) {
             case t_bindata:
             {
                 getdns_bindata* data = NULL;
                 getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
                 PyObject* res = convertBinData(data, (char*)nameBin->data);
+#if PY_MAJOR_VERSION >= 3
+                PyDict_SetItem(resultsdict1, PyUnicode_FromString((char*) nameBin->data), res);
+#else
                 PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res);
+#endif
                 break;
             }
             case t_int:
@@ -772,7 +882,11 @@ convertToDict(struct getdns_dict* dict) {
                 getdns_dict_get_int(dict, (char*)nameBin->data, &res);
                 PyObject* rl1 = Py_BuildValue("i", res);
                 PyObject *res1 = Py_BuildValue("O", rl1);
+#if PY_MAJOR_VERSION >= 3
+                PyDict_SetItem(resultsdict1, PyUnicode_FromString((char*) nameBin->data), res1);
+#else
                 PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
+#endif
                 break;
             }
             case t_dict:
@@ -781,7 +895,11 @@ convertToDict(struct getdns_dict* dict) {
                 getdns_dict_get_dict(dict, (char*)nameBin->data, &subdict);
                 PyObject *rl1 = convertToDict(subdict);
                 PyObject *res1 = Py_BuildValue("O", rl1);
+#if PY_MAJOR_VERSION >= 3
+                PyDict_SetItem(resultsdict1, PyUnicode_FromString((char*) nameBin->data), res1);
+#else
                 PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
+#endif
                 break;
             }
             case t_list:
@@ -790,7 +908,11 @@ convertToDict(struct getdns_dict* dict) {
                 getdns_dict_get_list(dict, (char*)nameBin->data, &list);
                 PyObject *rl1 = convertToList(list);
                 PyObject *res1 = Py_BuildValue("O", rl1);
+#if PY_MAJOR_VERSION >= 3
+                PyObject *key = PyUnicode_FromString((char *)nameBin->data);
+#else
                 PyObject *key = PyString_FromString((char *)nameBin->data);
+#endif
                 PyDict_SetItem(resultsdict1, key, res1);
                 break;
             }
@@ -901,12 +1023,20 @@ getdns_dict_to_ip_string(getdns_dict* dict) {
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        if (PyDict_SetItemString(addr_dict, "address_type", PyUnicode_FromString((char *)type->data)) != 0)  {
+#else
         if (PyDict_SetItemString(addr_dict, "address_type", PyString_FromString((char *)type->data)) != 0)  {
+#endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
         }
         addr_string = getdns_display_ip_address(addr);
+#if PY_MAJOR_VERSION >= 3
+        if ((pyaddr_string = PyUnicode_FromString(addr_string)) == NULL)  {
+#else
         if ((pyaddr_string = PyString_FromString(addr_string)) == NULL)  {
+#endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
         }
@@ -944,10 +1074,18 @@ getFullResponse(struct getdns_dict *dict)
                 getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
                 PyObject *res = convertBinData(data, (char*)nameBin->data);
                 if (res) {
+#if PY_MAJOR_VERSION >= 3
+                   PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res);
+#else
                    PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res);
+#endif
                 } else {
                    PyObject* res1 = Py_BuildValue("s", "empty");
+#if PY_MAJOR_VERSION >= 3
+                   PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res1);
+#else
                    PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
+#endif
                 }
                 break;
             }
@@ -956,7 +1094,11 @@ getFullResponse(struct getdns_dict *dict)
                 uint32_t res = 0;
                 getdns_dict_get_int(dict, (char*)nameBin->data, &res);
                 PyObject* res1 = Py_BuildValue("i", res);
+#if PY_MAJOR_VERSION >= 3
+                PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res1);
+#else
                 PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
+#endif
                 break;
             }
             case t_dict:
@@ -965,7 +1107,11 @@ getFullResponse(struct getdns_dict *dict)
                 getdns_dict_get_dict(dict, (char*)nameBin->data, &subdict);
                 PyObject* rl1 = convertToDict(subdict);
                 PyObject *res1 = Py_BuildValue("O", rl1);
+#if PY_MAJOR_VERSION >= 3
+                PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res1);
+#else
                 PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
+#endif
                 break;
             }
             case t_list:
@@ -973,7 +1119,11 @@ getFullResponse(struct getdns_dict *dict)
                 getdns_list* list = NULL;
                 getdns_dict_get_list(dict, (char*)nameBin->data, &list);
                 PyObject* rl1 = convertToList(list);
+#if PY_MAJOR_VERSION >= 3
+                PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), rl1); 
+#else
                 PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), rl1); 
+#endif
                 break;
             }
             default:

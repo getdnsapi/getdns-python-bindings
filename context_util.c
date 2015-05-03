@@ -47,7 +47,11 @@ callback_shim(struct getdns_context *context,
     PyObject *py_userarg;
 
     userarg_blob *u = (userarg_blob *)userarg;
+#if PY_MAJOR_VERSION >= 3
+    if ((py_callback_type = PyLong_FromLong((long)type)) == NULL)  {
+#else
     if ((py_callback_type = PyInt_FromLong((long)type)) == NULL)  {
+#endif
         PyObject *err_type, *err_value, *err_traceback;
         PyErr_Fetch(&err_type, &err_value, &err_traceback);
         PyErr_Restore(err_type, err_value, err_traceback);
@@ -59,9 +63,17 @@ callback_shim(struct getdns_context *context,
         py_userarg = Py_None;
     }  else  {
         py_result = result_create(response);
-        py_tid = PyInt_FromLong((long)tid);
+#if PY_MAJOR_VERSION >= 3
+
+#else
+        py_tid = PyLong_FromLong((long)tid);
+#endif
         if (u->userarg)
+#if PY_MAJOR_VERSION >= 3
+            py_userarg = PyUnicode_FromString(u->userarg);
+#else
             py_userarg = PyString_FromString(u->userarg);
+#endif
         else
             py_userarg = Py_None;
     }
