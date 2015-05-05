@@ -49,6 +49,13 @@ people who are using the bindings should go ahead and install.
 python setup.py install
 ````
 
+We recently added Python 3 support.  To build, just invoke
+the Python 3 interpreter rather the Python 2 interpreter (on
+most systems this will be "python3").  You will need the
+Python 3 development environment ("python3-dev" or
+"python3-devel", most often).
+
+
 Documentation
 =============
 
