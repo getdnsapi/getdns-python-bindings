@@ -64,9 +64,9 @@ callback_shim(struct getdns_context *context,
     }  else  {
         py_result = result_create(response);
 #if PY_MAJOR_VERSION >= 3
-
-#else
         py_tid = PyLong_FromLong((long)tid);
+#else
+        py_tid = PyInt_FromLong((long)tid);
 #endif
         if (u->userarg)
 #if PY_MAJOR_VERSION >= 3
