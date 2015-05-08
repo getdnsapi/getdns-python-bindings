@@ -10,6 +10,10 @@
 #include "pygetdns.h"
 
 
+#if !defined(Py_TYPE)
+    #define Py_TYPE(ob)  (((PyObject *)(ob))->ob_type)
+#endif
+
 int
 result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
 {
@@ -103,7 +107,9 @@ result_dealloc(getdns_ResultObject *self)
     Py_XDECREF(self->replies_tree);
     Py_XDECREF(self->replies_full);
     Py_XDECREF(self->canonical_name);
-#if PY_MAJOR_VERSION < 3
+#if PY_MAJOR_VERSION >= 3
+    Py_TYPE(self)->tp_free((PyObject *)self);
+#else
     self->ob_type->tp_free((PyObject *)self);
 #endif
 }
