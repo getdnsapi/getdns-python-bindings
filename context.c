@@ -70,6 +70,8 @@ context_dealloc(getdns_ContextObject *self)
     getdns_context *context;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+        PyErr_Clear();
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return;
     }
     if (self->event_base)  
