@@ -1114,7 +1114,7 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     getdns_return_t ret;
     void *userarg = 0;
     getdns_transaction_t tid = 0;
-    char *callback = 0;
+    PyObject *callback = 0;
     struct getdns_dict *resp;
     PyObject *callback_func;
 
@@ -1122,7 +1122,7 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sH|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sH|OsLO", kwlist,
                                      &name, &request_type,
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1154,13 +1154,21 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }
         if (userarg)  
             strncpy(blob->userarg, userarg, BUFSIZ-1);
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+        if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+
         if ((ret = getdns_general(context, name, request_type,
                                   extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
@@ -1202,14 +1210,14 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     struct getdns_dict *extensions_dict = 0;
     char *userarg = 0;
     getdns_transaction_t tid;
-    char *callback = 0;
+    PyObject *callback = 0;
     struct getdns_dict *resp;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLO", kwlist,
                                      &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1244,13 +1252,21 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+        if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+                                      
         if ((ret = getdns_address(context, name, extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
@@ -1287,7 +1303,7 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     struct getdns_dict *extensions_dict = 0;
     void *userarg = 0;
     getdns_transaction_t tid;
-    char * callback = 0;
+    PyObject* callback = 0;
     struct getdns_dict *resp;
     getdns_context *context;
     struct getdns_dict *addr_dict;
@@ -1298,7 +1314,7 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|OsLO", kwlist,
                                      &address, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1339,13 +1355,21 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+        if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+
         if ((ret = getdns_hostname(context, addr_dict, extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
@@ -1383,7 +1407,7 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     getdns_return_t ret;
     void *userarg;
     getdns_transaction_t tid;
-    char *callback = 0;
+    PyObject *callback = 0;
     struct getdns_dict *resp;
     getdns_context *context;
     PyObject *callback_func;
@@ -1392,7 +1416,7 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLO", kwlist,
                                      &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1427,13 +1451,21 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+        if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+
         if ((ret = getdns_service(context, name, extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
