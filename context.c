@@ -1040,7 +1040,8 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
 PyObject *
 context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 {
-    (void)event_base_dispatch(self->event_base);
+    if (self->event_base)  
+        (void)event_base_dispatch(self->event_base);
     Py_RETURN_NONE;
 }
 
