@@ -720,6 +720,49 @@ context_set_upstream_recursive_servers(getdns_context *context, PyObject *py_val
 }
 
 
+int
+context_set_dns_transport_list(getdns_context *context, PyObject *py_value)
+{
+    getdns_return_t ret;
+    Py_ssize_t len;
+    getdns_transport_list_t *transports;
+    int  i;
+
+    if (!PyList_Check(py_value))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+    len = PyList_Size(py_value);
+    if ((transports = (getdns_transport_list_t *)malloc(sizeof(getdns_transport_list_t)*(int)len)) ==
+        (getdns_transport_list_t *)0)  {
+        PyErr_SetString(getdns_error, "memory allocation error");
+        return -1;
+    }
+    for ( i = 0 ; i < (int)len ; i++ )  {
+        PyObject *py_transport;
+        long transport;
+        if ((py_transport = PyList_GetItem(py_value, (Py_ssize_t)i)) != NULL)  {
+            transport = PyLong_AsLong(py_transport);
+            if ((transport < GETDNS_TRANSPORT_UDP) || (transport > GETDNS_TRANSPORT_STARTTLS))  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+                return -1;
+            }
+            transports[i] = transport;
+        }
+        else  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return -1;
+        }
+    }
+    if ((ret = getdns_context_set_dns_transport_list(context, (size_t)len, transports)) !=
+        GETDNS_RETURN_GOOD)  {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return -1;
+    }
+    return 0;
+}
+            
+
 PyObject *
 context_getattro(PyObject *self, PyObject *nameobj)
 {
@@ -785,6 +828,25 @@ context_getattro(PyObject *self, PyObject *nameobj)
             return NULL;
         }
         return PyLong_FromLong((long)timeout);
+    }
+    if (!strncmp(attrname, "dns_transport_list", strlen("dns_transport_list")))  {
+        getdns_transport_list_t *transports;
+        PyObject *py_transports;
+        size_t transport_count;
+        int i;
+        if ((ret = getdns_context_get_dns_transport_list(context, &transport_count, &transports)) != 
+            GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+        if ((py_transports = PyList_New((Py_ssize_t)transport_count)) == NULL)  {
+            PyErr_SetString(getdns_error, "Could not create PyList");
+            return NULL;
+        }
+        for ( i = 0 ; i < transport_count ; i++ )  {
+            PyList_SetItem(py_transports, (Py_ssize_t)i, PyLong_FromLong((long)transports[i]));
+        }
+        return py_transports;
     }
     if (!strncmp(attrname, "dns_transport", strlen("dns_transport")))  {
         uint32_t dns_transport;
@@ -1029,10 +1091,12 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     if (!strncmp(name, "upstream_recursive_servers", strlen("upstream_recursive_servers")))  {
         return(context_set_upstream_recursive_servers(context, py_value));
     }
+    if (!strncmp(name, "dns_transport_list", strlen("dns_transport_list")))  {
+        return(context_set_dns_transport_list(context, py_value));
+    }
     if (!strncmp(name, "dns_transport", strlen("dns_transport")))  {
         return(context_set_dns_transport(context, py_value));
     }
-        
     return 0;
 }
 

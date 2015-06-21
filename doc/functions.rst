@@ -33,12 +33,12 @@ as its methods and attributes.
 
    Specifies whether DNS queries are performed with
    nonrecursive lookups or as a stub resolver. The value is
-   either ``getdns.GETDNS_RESOLUTION_RECURSING`` or
-   ``getdns.GETDNS_RESOLUTION_STUB``.
+   either ``getdns.RESOLUTION_RECURSING`` or
+   ``getdns.RESOLUTION_STUB``.
 
    If an implementation of this API is only able to act as a
    recursive resolver, setting `resolution_type`
-   to ``getdns.GETDNS_RESOLUTION_STUB`` will throw an exception.
+   to ``getdns.RESOLUTION_STUB`` will throw an exception.
 
   .. py:attribute:: namespaces
 
@@ -47,9 +47,9 @@ as its methods and attributes.
    setting is ignored for the getdns.general() function;
    it is used for the other
    functions.*) The allowed values are
-   ``getdns.GETDNS_NAMESPACE_DNS``, ``getdns.GETDNS_NAMESPACE_LOCALNAMES``, 
-   ``getdns.GETDNS_NAMESPACE_NETBIOS``,
-   ``getdns.GETDNS_NAMESPACE_MDNS``, and ``getdns.GETDNS_NAMESPACE_NIS``. When a
+   ``getdns.NAMESPACE_DNS``, ``getdns.NAMESPACE_LOCALNAMES``, 
+   ``getdns.NAMESPACE_NETBIOS``,
+   ``getdns.NAMESPACE_MDNS``, and ``getdns.NAMESPACE_NIS``. When a
    normal lookup is done, the API does the lookups in the
    order given and stops when it gets the first result; a
    different method with the same result would be to run the
@@ -59,12 +59,21 @@ as its methods and attributes.
    be information leakage that is similar to that seen with
    POSIX *getaddrinfo()*. The default is determined by the OS.
 
-  .. py:attribute:: dns_transport
+   .. py:attribute:: dns_transport_list
+
+   An ordered list of transport options to be used for DNS
+   lookups, ordered by preference (first choice as list
+   element 0, second as list element 1, and so on).  The
+   possible values are ``getdns.TRANSPORT_UDP``,
+   ``getdns.TRANSPORT_TCP``, ``getdns.TRANSPORT_TLS``,
+   and ``getdns.TRANSPORT_STARTTLS``.
+
+   .. py:attribute:: dns_transport
 
    Specifies what transport is used for DNS lookups. The
-   value must be one of ``getdns.GETDNS_TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP``,
-   ``getdns.GETDNS_TRANSPORT_UDP_ONLY``, ``getdns.GETDNS_TRANSPORT_TCP_ONLY``, or
-   ``getdns.GETDNS_TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN``. 
+   value must be one of ``getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP``,
+   ``getdns.TRANSPORT_UDP_ONLY``, ``getdns.TRANSPORT_TCP_ONLY``, or
+   ``getdns.TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN``. 
 
   .. py:attribute:: limit_outstanding_queries
 
@@ -77,9 +86,9 @@ as its methods and attributes.
   .. py:attribute:: follow_redirects
 
    Specifies whether or not DNS queries follow
-   redirects.  The value must be one of ``getdns.GETDNS_REDIRECTS_FOLLOW`` for
+   redirects.  The value must be one of ``getdns.REDIRECTS_FOLLOW`` for
    normal following of redirects though CNAME and DNAME; or
-   ``getdns.GETDNS_REDIRECTS_DO_NOT_FOLLOW`` to cause any lookups that
+   ``getdns.REDIRECTS_DO_NOT_FOLLOW`` to cause any lookups that
    would have gone through CNAME and DNAME to return the
    CNAME or DNAME, not the eventual target.
 
@@ -105,10 +114,10 @@ as its methods and attributes.
    Specifies whether to append a suffix to the query string
    before the API starts resolving a name. Its value must be
    one of
-   ``getdns.GETDNS_APPEND_NAME_ALWAYS``,
-   ``getdns.GETDNS_APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE``,
-   ``getdns.GETDNS_APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE``,
-   or ``getdns.GETDNS_APPEND_NAME_NEVER``. This controls whether or not
+   ``getdns.APPEND_NAME_ALWAYS``,
+   ``getdns.APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE``,
+   ``getdns.APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE``,
+   or ``getdns.APPEND_NAME_NEVER``. This controls whether or not
    to append the suffix given by :attr:`suffix`.
 
   .. py:attribute:: suffix
@@ -285,30 +294,30 @@ a few circumstances.
 To return the DNSSEC status for each DNS record in the
 ``replies_tree`` list, use the ``dnssec_return_status``
 extension. Set the extension's value to
-``getdns.GETDNS_EXTENSION_TRUE`` to cause the returned status to have
+``getdns.EXTENSION_TRUE`` to cause the returned status to have
 the name ``dnssec_status`` added to the other names in
 the record's dictionary ("header", "question", and so on). The
-potential values for that name are ``getdns.GETDNS_DNSSEC_SECURE``,
-``getdns.GETDNS_DNSSEC_BOGUS``, ``getdns.GETDNS_DNSSEC_INDETERMINATE``, and
-``getdns.GETDNS_DNSSEC_INSECURE``. 
+potential values for that name are ``getdns.DNSSEC_SECURE``,
+``getdns.DNSSEC_BOGUS``, ``getdns.DNSSEC_INDETERMINATE``, and
+``getdns.DNSSEC_INSECURE``. 
 
 If instead of returning the status, you want to only see
 secure results, use the ``dnssec_return_only_secure``
 extension. The extension's value is set to
-``getdns.GETDNS_EXTENSION_TRUE`` to cause only records that the API can
+``getdns.EXTENSION_TRUE`` to cause only records that the API can
 validate as secure with DNSSEC to be returned in the
 ``replies_tree`` and ``replies_full lists``. No additional names are
 added to the dict of the record; the change is that some
 records might not appear in the results. When this context
 option is set, if the API receives DNS replies but none are
 determined to be secure, the error code at the top level of
-the ``response`` object is ``getdns.GETDNS_RESPSTATUS_NO_SECURE_ANSWERS``.
+the ``response`` object is ``getdns.RESPSTATUS_NO_SECURE_ANSWERS``.
 
 Applications that want to do their own validation will want
 to have the DNSSEC-related records for a particular
 response. Use the ``dnssec_return_validation_chain``
 extension. Set the extension's value to
-``getdns.GETDNS_EXTENSION_TRUE`` to cause a set of additional
+``getdns.EXTENSION_TRUE`` to cause a set of additional
 DNSSEC-related records needed for validation to be returned
 in the ``response object``. This set comes as ``validation_chain``
 (a list) at the top level of the ``response`` object. This list
@@ -321,7 +330,7 @@ set, and that request also has any of the
 ``dnssec_return_status``, ``dnssec_return_only_secure``, or
 ``dnssec_return_validation_chain`` extensions specified, the API
 will not perform the request and will instead return an
-error of ``getdns.GETDNS_RETURN_DNSSEC_WITH_STUB_DISALLOWED``.
+error of ``getdns.RETURN_DNSSEC_WITH_STUB_DISALLOWED``.
 
 Returning both IPv4 and IPv6 responses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -333,7 +342,7 @@ method is able to do this automatically. If you are
 using the :meth:`general` method,
 you can enable this with the ``return_both_v4_and_v6``
 extension. The extension's value must be set to
-``getdns.GETDNS_EXTENSION_TRUE`` to cause the results to be the lookup
+``getdns.EXTENSION_TRUE`` to cause the results to be the lookup
 of either A or AAAA records to include any A and AAAA
 records for the queried name (otherwise, the extension does
 nothing). These results are expected to be usable with Happy
@@ -376,20 +385,20 @@ Getting Warnings for Responses that Violate the DNS Standard
 To receive a warning if a particular response violates some
 parts of the DNS standard, use the ``add_warning_for_bad_dns``
 extension. The extension's value is set to
-``getdns.GETDNS_EXTENSION_TRUE`` to cause each reply in the
+``getdns.EXTENSION_TRUE`` to cause each reply in the
 ``replies_tree`` to contain an additional name, ``bad_dns`` (a
 list). The list is zero or more values that indicate types of
 bad DNS found in that reply. The list of values is:
 
-.. py:data:: GETDNS_BAD_DNS_CNAME_IN_TARGET
+.. py:data:: BAD_DNS_CNAME_IN_TARGET
 
 A DNS query type that does not allow a target to be a CNAME pointed to a CNAME
 
-.. py:data:: GETDNS_BAD_DNS_ALL_NUMERIC_LABEL
+.. py:data:: BAD_DNS_ALL_NUMERIC_LABEL
 
 One or more labels in a returned domain name is all-numeric; this is not legal for a hostname
 
-.. py:data:: GETDNS_BAD_DNS_CNAME_RETURNED_FOR_OTHER_TYPE
+.. py:data:: BAD_DNS_CNAME_RETURNED_FOR_OTHER_TYPE
 
 A DNS query for a type other than CNAME returned a CNAME response
 
@@ -409,7 +418,7 @@ An application might want to see debugging information for
 queries, such as the length of time it takes for each query
 to return to the API.  Use the ``return_call_debugging``
 extension. The extension's value is set to
-``getdns.GETDNS_EXTENSION_TRUE`` to add the name ``call_debugging`` (a
+``getdns.EXTENSION_TRUE`` to add the name ``call_debugging`` (a
 list) to the top level of the ``response`` object. Each member
 of the list is a dict that represents one call made for the
 call to the API. Each member has the following names:
@@ -420,7 +429,7 @@ call to the API. Each member has the following names:
    * ``start_time`` is the time the query started in milliseconds since the epoch, represented as an integer
    * ``end_time`` is the time the query was received in milliseconds since the epoch, represented as an integer
    * ``entire_reply`` is the entire response received
-   * ``dnssec_result`` is the DNSSEC status, or ``getdns.GETDNS_DNSSEC_NOT_PERFORMED`` if DNSSEC validation was not performed
+   * ``dnssec_result`` is the DNSSEC status, or ``getdns.DNSSEC_NOT_PERFORMED`` if DNSSEC validation was not performed
 
 
 Asynchronous queries
@@ -484,12 +493,12 @@ This is an example callback function:
     def cbk(type, result, userarg, tid):
         if type == getdns.CALLBACK_COMPLETE:
             status = result.status
-            if status == getdns.GETDNS_RESPSTATUS_GOOD:
+            if status == getdns.RESPSTATUS_GOOD:
                 for addr in result.just_address_answers:
                     addr_type = addr['address_type']
                     addr_data = addr['address_data']
                     print '{0}: {1} {2}'.format(userarg, addr_type, addr_data)
-            elif status == getdns.GETDNS_RESPSTATUS_NO_SECURE_ANSWERS:
+            elif status == getdns.RESPSTATUS_NO_SECURE_ANSWERS:
                 print "{0}: No DNSSEC secured responses found".format(hostname)
             else:
                 print "{0}: getdns.address() returned error: {1}".format(hostname, status)
@@ -514,7 +523,7 @@ At the present time we support one utility method.
 
 .. code-block:: python
 
-    if results.replies_full['status'] != getdns.GETDNS_RESPSTATUS_GOOD:
+    if results.replies_full['status'] != getdns.RESPSTATUS_GOOD:
         print(getdns.get_errorstr_by_id(id=results.replies_full['status'])
         sys.exit(1)
 

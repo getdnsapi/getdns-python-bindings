@@ -88,6 +88,7 @@ typedef struct {
     getdns_list *dns_root_servers;
     getdns_list *dnssec_trust_anchors;
     getdns_list *upstream_recursive_servers;
+    getdns_transport_list_t *dns_transport_list;
     struct event_base *event_base;
     char *implementation_string;
     char *version_string;
@@ -127,7 +128,7 @@ int context_set_dns_root_servers(getdns_context *context, PyObject *py_value);
 int context_set_dnssec_trust_anchors(getdns_context *context, PyObject *py_value);
 int context_set_upstream_recursive_servers(getdns_context *context, PyObject *py_value);
 int context_set_edns_do_bit(getdns_context *context, PyObject *py_value);
-
+int context_set_dns_transport_list(getdns_context *context, PyObject *py_value);
 PyObject *context_str(PyObject *self);
 
 PyObject *context_get_api_information(getdns_ContextObject *self, PyObject *unused);

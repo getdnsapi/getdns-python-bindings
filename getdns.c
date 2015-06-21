@@ -167,6 +167,8 @@ PyMemberDef Context_members[] = {
       "lookup as recursive or stub resolver" },
     { "dns_transport", T_INT, offsetof(getdns_ContextObject, dns_transport),
       0, "dns transport" },
+    { "dns_transport_list", T_OBJECT, offsetof(getdns_ContextObject, dns_transport_list), 0, 
+      "ordered list of dns transports" },
     { "limit_outstanding_queries", T_INT, offsetof(getdns_ContextObject, limit_outstanding_queries),
       0, "limit on the number of unanswered queries" },
     { "follow_redirects", T_INT, offsetof(getdns_ContextObject, follow_redirects),
@@ -407,6 +409,15 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN", 544);
     PyModule_AddIntConstant(g, "TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN", 545);
 #endif
+
+/*
+ * transport list constants
+ */
+
+    PyModule_AddIntConstant(g, "TRANSPORT_UDP", 1200);
+    PyModule_AddIntConstant(g, "TRANSPORT_TCP", 1201);
+    PyModule_AddIntConstant(g, "TRANSPORT_TLS", 1202);
+    PyModule_AddIntConstant(g, "TRANSPORT_STARTTLS", 1203);
 
 /*
  * suffix appending methods

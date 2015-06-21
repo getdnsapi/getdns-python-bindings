@@ -222,7 +222,7 @@ Response data from queries
     }
   ],
   "canonical_name": <bindata of "www.example.com">,
-  "answer_type": GETDNS_NAMETYPE_DNS,
+  "answer_type": NAMETYPE_DNS,
   "intermediate_aliases": [],
   "replies_tree":
   [
@@ -259,7 +259,7 @@ Response data from queries
       ]
       "additional": [],
       "canonical_name": <bindata of "www.example.com">,
-      "answer_type": GETDNS_NAMETYPE_DNS
+      "answer_type": NAMETYPE_DNS
     },
     {     # This is the second reply
       "header": { "id": 47809, "qr": 1, "opcode": 0, ... },
@@ -291,58 +291,58 @@ Return Codes
 ------------
 The return codes for all the functions are:
 
-.. py:data:: GETDNS_RETURN_GOOD
+.. py:data:: RETURN_GOOD
 
   Good
 
-.. py:data:: GETDNS_RETURN_GENERIC_ERROR
+.. py:data:: RETURN_GENERIC_ERROR
 
   Generic error
 
-.. py:data:: GETDNS_RETURN_BAD_DOMAIN_NAME
+.. py:data:: RETURN_BAD_DOMAIN_NAME
 
   Badly-formed domain name in first argument
 
-.. py:data:: GETDNS_RETURN_BAD_CONTEXT
+.. py:data:: RETURN_BAD_CONTEXT
 
   The context has internal deficiencies
 
-.. py:data:: GETDNS_RETURN_CONTEXT_UPDATE_FAIL
+.. py:data:: RETURN_CONTEXT_UPDATE_FAIL
 
   Did not update the context
 
-.. py:data:: GETDNS_RETURN_UNKNOWN_TRANSACTION
+.. py:data:: RETURN_UNKNOWN_TRANSACTION
 
   An attempt was made to cancel a callback with a transaction_id that is not recognized
 
-.. py:data:: GETDNS_RETURN_NO_SUCH_LIST_ITEM
+.. py:data:: RETURN_NO_SUCH_LIST_ITEM
 
   A helper function for lists had an index argument that was too high.
 
-.. py:data:: GETDNS_RETURN_NO_SUCH_DICT_NAME
+.. py:data:: RETURN_NO_SUCH_DICT_NAME
 
   A helper function for dicts had a name argument that for a name that is not in the dict.
 
-.. py:data:: GETDNS_RETURN_WRONG_TYPE_REQUESTED
+.. py:data:: RETURN_WRONG_TYPE_REQUESTED
 
   A helper function was supposed to return a certain type for an item, but the wrong type was given.
 
-.. py:data:: GETDNS_RETURN_NO_SUCH_EXTENSION
+.. py:data:: RETURN_NO_SUCH_EXTENSION
 
   A name in the extensions dict is not a valid extension.
 
-.. py:data:: GETDNS_RETURN_EXTENSION_MISFORMAT
+.. py:data:: RETURN_EXTENSION_MISFORMAT
 
   One or more of the extensions have a bad format.
 
-.. py:data:: GETDNS_RETURN_DNSSEC_WITH_STUB_DISALLOWED
+.. py:data:: RETURN_DNSSEC_WITH_STUB_DISALLOWED
 
   A query was made with a context that is using stub resolution and a DNSSEC extension specified.
 
-.. py:data:: GETDNS_RETURN_MEMORY_ERROR
+.. py:data:: RETURN_MEMORY_ERROR
 
   Unable to allocate the memory required.
 
-.. py:data:: GETDNS_RETURN_INVALID_PARAMETER
+.. py:data:: RETURN_INVALID_PARAMETER
 
   A required parameter had an invalid value.
