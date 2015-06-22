@@ -74,7 +74,9 @@ typedef struct {
     PyObject *py_context;       /* Python capsule containing getdns_context */
     uint64_t  timeout;          /* timeout attribute (milliseconds) */
     getdns_resolution_t resolution_type; /* stub or recursive? */
+#if 0
     getdns_transport_t dns_transport;    /* udp/tcp/etc */
+#endif    
     uint16_t limit_outstanding_queries;
     getdns_redirects_t follow_redirects;
     getdns_append_name_t append_name;

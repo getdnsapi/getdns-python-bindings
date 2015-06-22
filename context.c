@@ -146,6 +146,7 @@ context_set_resolution_type(getdns_context *context, PyObject *py_value)
 }
 
 
+#if 0                           /* commenting this out for the time being, delete later */
 int
 context_set_dns_transport(getdns_context *context, PyObject *py_value)
 {
@@ -183,7 +184,7 @@ context_set_dns_transport(getdns_context *context, PyObject *py_value)
     }
     return 0;
 }
-                                   
+#endif                                   
 
 int
 context_set_limit_outstanding_queries(getdns_context *context, PyObject *py_value)
@@ -848,6 +849,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
         }
         return py_transports;
     }
+#if 0
     if (!strncmp(attrname, "dns_transport", strlen("dns_transport")))  {
         uint32_t dns_transport;
         if ((ret = getdns_dict_get_int(all_context, "dns_transport", &dns_transport)) !=
@@ -861,6 +863,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong((long)dns_transport);
 #endif
     }
+#endif    
     if (!strncmp(attrname, "limit_outstanding_queries", strlen("limit_outstanding_queries")))  {
         uint32_t limit_outstanding_queries;
         if ((ret = getdns_dict_get_int(all_context, "limit_outstanding_queries",
@@ -1094,9 +1097,11 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     if (!strncmp(name, "dns_transport_list", strlen("dns_transport_list")))  {
         return(context_set_dns_transport_list(context, py_value));
     }
+#if 0
     if (!strncmp(name, "dns_transport", strlen("dns_transport")))  {
         return(context_set_dns_transport(context, py_value));
     }
+#endif
     return 0;
 }
 
@@ -1562,12 +1567,7 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
     uint32_t resolution_type;
     getdns_dict *all_context;
     PyObject *py_all_context;
-    size_t ncontexts;
-    getdns_list *context_names;
-    getdns_bindata *a_name;
-    uint32_t context_value;
     getdns_return_t ret;
-    int i;
 
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
@@ -1616,122 +1616,10 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
-    if ((ret = getdns_dict_get_names(all_context, &context_names)) != GETDNS_RETURN_GOOD)  {
-        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+    if ((py_all_context = gdict_to_pdict(all_context)) == NULL)  {
+        PyErr_SetString(getdns_error, "Unable to convert all_context dict");
         return NULL;
     }
-    if ((ret = getdns_list_get_length(context_names, &ncontexts)) != GETDNS_RETURN_GOOD)  {
-        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-        return NULL;
-    }
-    py_all_context = PyDict_New();
-    for ( i = 0 ; i < ncontexts ; i++ )  {
-        if ((ret = getdns_list_get_bindata(context_names, (size_t)i, &a_name)) != GETDNS_RETURN_GOOD)  {
-            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-            return NULL;
-        }
-        if (!strncmp((char *)a_name->data, "namespaces", strlen("namespaces")))  {
-            getdns_list *namespaces = getdns_list_create();
-            PyObject *py_namespaces;
-            size_t n_spaces;
-            uint32_t space;
-            int j;
-
-            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &namespaces)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-            (void)getdns_list_get_length(namespaces, &n_spaces);
-            py_namespaces = PyList_New((Py_ssize_t)n_spaces);
-            for ( j = 0 ; j < n_spaces ; j++ )  {
-                (void)getdns_list_get_int(namespaces, j, &space);
-#if PY_MAJOR_VERSION >= 3
-                PyList_SetItem(py_namespaces, (Py_ssize_t)j, PyLong_FromLong((long)space));
-#else
-                PyList_SetItem(py_namespaces, (Py_ssize_t)j, PyInt_FromLong((long)space));
-#endif
-            }
-            PyDict_SetItemString(py_all_context, "namespaces", py_namespaces);
-        } else if (!strncmp((char *)a_name->data, "suffix", strlen("suffix")))  {
-            getdns_list *suffixes = getdns_list_create();
-            PyObject *py_suffixes;
-            size_t n_suffixes;
-            getdns_bindata *suffix;
-            int j;
-
-            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &suffixes)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-            (void)getdns_list_get_length(suffixes, &n_suffixes);
-            py_suffixes = PyList_New((Py_ssize_t)n_suffixes);
-            for ( j = 0 ; j < n_suffixes ; j++ )  {
-                (void)getdns_list_get_bindata(suffixes, j, &suffix);
-#if PY_MAJOR_VERSION >= 3
-                PyList_SetItem(py_suffixes, (Py_ssize_t)j, PyUnicode_FromString((char *)suffix->data));
-#else
-                PyList_SetItem(py_suffixes, (Py_ssize_t)j, PyString_FromString((char *)suffix->data));
-#endif
-            }
-            PyDict_SetItemString(py_all_context, "suffix", py_suffixes);
-        } else if (!strncmp((char *)a_name->data, "upstream_recursive_servers",
-                            strlen("upstream_recursive_servers")))  {
-            getdns_list *upstream_list;
-            PyObject *py_upstream_list;
-            PyObject *py_upstream;
-            size_t n_upstreams;
-            getdns_dict *upstream;
-            getdns_bindata *upstream_data;
-            getdns_bindata *upstream_type;
-            char *paddr_buf[256];
-            int domain;
-            int j;
-
-            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &upstream_list)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-            (void)getdns_list_get_length(upstream_list, &n_upstreams);
-            py_upstream_list = PyList_New((Py_ssize_t)n_upstreams);
-            for ( j = 0 ; j < n_upstreams ; j++ )  {
-                (void)getdns_list_get_dict(upstream_list, j, &upstream);
-                (void)getdns_dict_get_bindata(upstream, "address_data", &upstream_data);
-                (void)getdns_dict_get_bindata(upstream, "address_type", &upstream_type);
-                if (!strncasecmp((char *)upstream_type->data, "IPv4", 4))  
-                    domain = AF_INET;
-                else if (!strncasecmp((char *)upstream_type->data, "IPv6", 6))  
-                    domain = AF_INET6;
-                else  {
-                    PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
-                    return NULL;
-                }
-                py_upstream = PyDict_New();
-                PyDict_SetItemString(py_upstream, "address_data",
-#if PY_MAJOR_VERSION >= 3
-                                     PyUnicode_FromString(inet_ntop(domain, (void *)upstream_data->data, (char *)paddr_buf, 256)));
-#else
-                                     PyString_FromString(inet_ntop(domain, (void *)upstream_data->data, (char *)paddr_buf, 256)));
-#endif
-#if PY_MAJOR_VERSION >= 3
-                PyDict_SetItemString(py_upstream, "address_type", PyUnicode_FromString((domain == AF_INET ? "IPv4" : "IPv6")));
-#else
-                PyDict_SetItemString(py_upstream, "address_type", PyString_FromString((domain == AF_INET ? "IPv4" : "IPv6")));
-#endif
-                PyList_SetItem(py_upstream_list, j, py_upstream);
-            }
-            PyDict_SetItemString(py_all_context, (char *)a_name->data, py_upstream_list);
-        }  else  {            
-            if ((ret = getdns_dict_get_int(all_context, (char *)a_name->data, &context_value)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-#if PY_MAJOR_VERSION >= 3
-            PyDict_SetItemString(py_all_context, (char *)a_name->data, PyLong_FromLong((long)context_value));
-#else
-            PyDict_SetItemString(py_all_context, (char *)a_name->data, PyInt_FromLong((long)context_value));
-#endif
-        }
-        PyDict_SetItemString(py_api, "all_context", py_all_context);
-    }    
+    PyDict_SetItemString(py_api, "all_context", py_all_context);
     return(py_api);
 }        

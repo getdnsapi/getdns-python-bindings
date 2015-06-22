@@ -165,8 +165,6 @@ PyMemberDef Context_members[] = {
     { "timeout", T_INT, offsetof(getdns_ContextObject, timeout), 0, "timeout in milliseconds" },
     { "resolution_type", T_INT, offsetof(getdns_ContextObject, resolution_type), 0,
       "lookup as recursive or stub resolver" },
-    { "dns_transport", T_INT, offsetof(getdns_ContextObject, dns_transport),
-      0, "dns transport" },
     { "dns_transport_list", T_OBJECT, offsetof(getdns_ContextObject, dns_transport_list), 0, 
       "ordered list of dns transports" },
     { "limit_outstanding_queries", T_INT, offsetof(getdns_ContextObject, limit_outstanding_queries),

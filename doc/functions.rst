@@ -68,13 +68,6 @@ as its methods and attributes.
    ``getdns.TRANSPORT_TCP``, ``getdns.TRANSPORT_TLS``,
    and ``getdns.TRANSPORT_STARTTLS``.
 
-   .. py:attribute:: dns_transport
-
-   Specifies what transport is used for DNS lookups. The
-   value must be one of ``getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP``,
-   ``getdns.TRANSPORT_UDP_ONLY``, ``getdns.TRANSPORT_TCP_ONLY``, or
-   ``getdns.TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN``. 
-
   .. py:attribute:: limit_outstanding_queries
 
    Specifies `limit` (an integer value) on the number of outstanding DNS
