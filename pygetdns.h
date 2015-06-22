@@ -73,6 +73,7 @@ typedef struct {
     PyObject_HEAD
     PyObject *py_context;       /* Python capsule containing getdns_context */
     uint64_t  timeout;          /* timeout attribute (milliseconds) */
+    uint64_t  idle_timeout;     /* TCP timeout attribute (milliseconds) */
     getdns_resolution_t resolution_type; /* stub or recursive? */
 #if 0
     getdns_transport_t dns_transport;    /* udp/tcp/etc */

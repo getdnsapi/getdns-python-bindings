@@ -196,6 +196,7 @@ PyMemberDef Context_members[] = {
       "string set by the implementer" },
     { "version_string", T_STRING|READONLY, offsetof(getdns_ContextObject, version_string), 0,
       "string set by the implementer" },
+    {"idle_timeout", T_INT, offsetof(getdns_ContextObject, idle_timeout), 0, "TCP idle timeout" },
     { NULL }
 };
 

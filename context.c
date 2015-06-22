@@ -113,6 +113,36 @@ context_set_timeout(getdns_context *context, PyObject *py_value)
 
 
 int
+context_set_idle_timeout(getdns_context *context, PyObject *py_value)
+{
+    getdns_return_t ret;
+    uint64_t value;
+    
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
+    if (!PyInt_Check(py_value))  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+#if PY_MAJOR_VERSION >= 3
+    if ((long)(value = PyLong_AsLong(py_value)) < 0)  {
+#else
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+    if ((ret = getdns_context_set_idle_timeout(context, value)) != GETDNS_RETURN_GOOD)  {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return -1;
+    }
+    return 0;
+}
+
+
+int
 context_set_resolution_type(getdns_context *context, PyObject *py_value)
 {
     getdns_return_t ret;
@@ -830,6 +860,14 @@ context_getattro(PyObject *self, PyObject *nameobj)
         }
         return PyLong_FromLong((long)timeout);
     }
+    if (!strncmp(attrname, "idle_timeout", strlen("idle_timeout")))  {
+        uint64_t timeout;
+        if ((ret = getdns_context_get_idle_timeout(context, &timeout)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+        return PyLong_FromLong((long)timeout);
+    }
     if (!strncmp(attrname, "dns_transport_list", strlen("dns_transport_list")))  {
         getdns_transport_list_t *transports;
         PyObject *py_transports;
@@ -1054,6 +1092,9 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     }
     if (!strncmp(name, "timeout", strlen("timeout")))  {
         return(context_set_timeout(context, py_value));
+    }
+    if (!strncmp(name, "idle_timeout", strlen("idle_timeout")))  {
+        return(context_set_idle_timeout(context, py_value));
     }
     if (!strncmp(name, "resolution_type", strlen("resolution_type")))  {
         return(context_set_resolution_type(context, py_value));
