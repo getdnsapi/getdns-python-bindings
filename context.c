@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 #include <event2/event.h>
 #include <getdns/getdns_ext_libevent.h>
+#include <sys/wait.h>
 #include "pygetdns.h"
 
 int
@@ -68,12 +69,14 @@ void
 context_dealloc(getdns_ContextObject *self)
 {
     getdns_context *context;
+    int status;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
         return;
     }
     Py_XDECREF(self->py_context);
     getdns_context_destroy(context);
+    (void)wait(&status);        /* reap the process spun off by unbound */
     return;
 }
 
