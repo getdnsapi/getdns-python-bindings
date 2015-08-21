@@ -66,7 +66,9 @@ as its methods and attributes.
    element 0, second as list element 1, and so on).  The
    possible values are ``getdns.TRANSPORT_UDP``,
    ``getdns.TRANSPORT_TCP``, ``getdns.TRANSPORT_TLS``,
-   and ``getdns.TRANSPORT_STARTTLS``.
+   and ``getdns.TRANSPORT_STARTTLS``.  [n.b.: *the
+   ``dns_transport`` attribute is still supported but will
+   be deprecated in a future release*]
 
   .. py:attribute:: limit_outstanding_queries
 
@@ -442,7 +444,7 @@ differences:
      address lookup could look like
 
    >>> c = getdns.Context()
-   >>> tid = c.address('www.example.org', callback='my_callback')
+   >>> tid = c.address('www.example.org', callback=my_callback)
 
    * We've introduced a new ``Context`` method, called
      ``run``.  When your program is ready to check to see
@@ -453,6 +455,11 @@ differences:
      outstanding events associated with a particular
      context, ``run`` will invoke all of those that are
      waiting and ready.
+
+   * In previous releases the callback argument took the
+     form of a literal string, but as of this release you
+     may pass in the name of any Python runnable, without
+     quotes.  The newer form is preferred.
 
 The callback script takes four arguments: ``type``,
 ``result``, ``userarg``, and ``transaction_id.  The ``type``
