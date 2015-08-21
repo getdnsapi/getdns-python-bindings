@@ -61,7 +61,7 @@ result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
         Py_DECREF(self);
         return -1;
     }
-    if ((self->replies_full = getFullResponse(result_dict)) == NULL)  {
+    if ((self->replies_full = gdict_to_pdict(result_dict)) == NULL)  {
         Py_DECREF(self);
         return -1;
     }

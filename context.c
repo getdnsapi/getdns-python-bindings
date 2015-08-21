@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 #include <event2/event.h>
 #include <getdns/getdns_ext_libevent.h>
+#include <sys/wait.h>
 #include "pygetdns.h"
 
 int
@@ -68,16 +69,17 @@ void
 context_dealloc(getdns_ContextObject *self)
 {
     getdns_context *context;
+    int status;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_Clear();
-        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return;
     }
-    if (self->event_base)  
-        event_base_free(self->event_base);
     Py_XDECREF(self->py_context);
     getdns_context_destroy(context);
+    (void)wait(&status);        /* reap the process spun off by unbound */
+                                /* TODO: this has just been fixed in unbound and */
+                                /* this wait() should be removed once the new */
+                                /* libunbound is distributed */
     return;
 }
 
@@ -834,9 +836,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             return NULL;
         }
 #if PY_MAJOR_VERSION >= 3
-        return PyUnicode_FromString((char *)implementation_string->data);
+        return PyUnicode_FromStringAndSize((char *)implementation_string->data,
+                                           (Py_ssize_t)implementation_string->size);
 #else
-        return PyString_FromString((char *)implementation_string->data);
+        return PyString_FromStringAndSize((char *)implementation_string->data,
+                                          (Py_ssize_t)implementation_string->size);
 #endif
     }
     if (!strncmp(attrname, "version_string", strlen("version_string")))  {
@@ -846,9 +850,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             return NULL;
         }
 #if PY_MAJOR_VERSION >= 3
-        return PyUnicode_FromString((char *)version_string->data);
+        return PyUnicode_FromStringAndSize((char *)version_string->data,
+                                           (Py_ssize_t)version_string->size);
 #else
-        return PyString_FromString((char *)version_string->data);
+        return PyString_FromStringAndSize((char *)version_string->data,
+                                          (Py_ssize_t)version_string->size);
 #endif
     }
         
@@ -1622,9 +1628,13 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         return NULL;
     }
 #if PY_MAJOR_VERSION >= 3
-    if (PyDict_SetItemString(py_api, "version_string", PyUnicode_FromString((char *)version_string->data)))  {
+    if (PyDict_SetItemString(py_api, "version_string",
+                             PyUnicode_FromStringAndSize((char *)version_string->data,
+                                                         (Py_ssize_t)version_string->size)))  {
 #else
-    if (PyDict_SetItemString(py_api, "version_string", PyString_FromString((char *)version_string->data)))  {
+    if (PyDict_SetItemString(py_api, "version_string",
+                             PyString_FromStringAndSize((char *)version_string->data,
+                                                        (Py_ssize_t)version_string->size)))  {
 #endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
@@ -1634,9 +1644,13 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         return NULL;
     }
 #if PY_MAJOR_VERSION >= 3
-    if (PyDict_SetItemString(py_api, "implementation_string", PyUnicode_FromString((char *)imp_string->data)))  {
+    if (PyDict_SetItemString(py_api, "implementation_string",
+                             PyUnicode_FromStringAndSize((char *)imp_string->data,
+                                                         (Py_ssize_t)imp_string->size)))  {
 #else
-    if (PyDict_SetItemString(py_api, "implementation_string", PyString_FromString((char *)imp_string->data)))  {
+    if (PyDict_SetItemString(py_api, "implementation_string",
+                             PyString_FromStringAndSize((char *)imp_string->data,
+                                                        (Py_ssize_t)imp_string->size)))  {
 #endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;

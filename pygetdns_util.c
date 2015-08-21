@@ -766,9 +766,10 @@ convertBinData(getdns_bindata* data,
         PyObject *a_string;
 
 #if PY_MAJOR_VERSION >= 3
-        if ((a_string = PyUnicode_FromString((char *)data->data)) == NULL)  {
+        if ((a_string = PyUnicode_FromStringAndSize((char *)data->data), (Py_ssize_t)data->size) == NULL)  {
 #else
-        if ((a_string = PyString_FromString((char *)data->data)) == NULL)  {
+
+        if ((a_string = PyString_FromStringAndSize((char *)data->data, (Py_ssize_t)data->size)) == NULL)  {
 #endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
@@ -870,9 +871,11 @@ convertToDict(struct getdns_dict* dict) {
                 getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
                 PyObject* res = convertBinData(data, (char*)nameBin->data);
 #if PY_MAJOR_VERSION >= 3
-                PyDict_SetItem(resultsdict1, PyUnicode_FromString((char*) nameBin->data), res);
+                PyDict_SetItem(resultsdict1, PyUnicode_FromStringAndSize((char *)nameBin->data, 
+                                                                         (Py_ssize_t)nameBin->size), res);
 #else
-                PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res);
+                PyDict_SetItem(resultsdict1, PyString_FromStringAndSize((char *)nameBin->data,
+                                                                 (Py_ssize_t)nameBin->size), res);
 #endif
                 break;
             }
@@ -883,9 +886,11 @@ convertToDict(struct getdns_dict* dict) {
                 PyObject* rl1 = Py_BuildValue("i", res);
                 PyObject *res1 = Py_BuildValue("O", rl1);
 #if PY_MAJOR_VERSION >= 3
-                PyDict_SetItem(resultsdict1, PyUnicode_FromString((char*) nameBin->data), res1);
+                PyDict_SetItem(resultsdict1, PyUnicode_FromStringAndSize((char *)nameBin->data,
+                                                                         (Py_ssize_t)nameBin->size), res1);
 #else
-                PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
+                PyDict_SetItem(resultsdict1, PyString_FromStringAndSize((char *)nameBin->data,
+                                                                        (Py_ssize_t)nameBin->size), res1);
 #endif
                 break;
             }
@@ -896,9 +901,11 @@ convertToDict(struct getdns_dict* dict) {
                 PyObject *rl1 = convertToDict(subdict);
                 PyObject *res1 = Py_BuildValue("O", rl1);
 #if PY_MAJOR_VERSION >= 3
-                PyDict_SetItem(resultsdict1, PyUnicode_FromString((char*) nameBin->data), res1);
+                PyDict_SetItem(resultsdict1, PyUnicode_FromStringAndSize((char *)nameBin->data,
+                                                                         (Py_ssize_t)nameBin->size), res1);
 #else
-                PyDict_SetItem(resultsdict1, PyString_FromString((char*) nameBin->data), res1);
+                PyDict_SetItem(resultsdict1, PyString_FromStringAndSize((char *)nameBin->data,
+                                                                        (Py_ssize_t)nameBin->size), res1);
 #endif
                 break;
             }
@@ -909,9 +916,11 @@ convertToDict(struct getdns_dict* dict) {
                 PyObject *rl1 = convertToList(list);
                 PyObject *res1 = Py_BuildValue("O", rl1);
 #if PY_MAJOR_VERSION >= 3
-                PyObject *key = PyUnicode_FromString((char *)nameBin->data);
+                PyObject *key = PyUnicode_FromStringAndSize((char *)nameBin->data,
+                                                            (Py_ssize_t)nameBin->size);
 #else
-                PyObject *key = PyString_FromString((char *)nameBin->data);
+                PyObject *key = PyString_FromStringAndSize((char *)nameBin->data,
+                                                           (Py_ssize_t)nameBin->size);
 #endif
                 PyDict_SetItem(resultsdict1, key, res1);
                 break;
@@ -1024,9 +1033,11 @@ getdns_dict_to_ip_string(getdns_dict* dict) {
             return NULL;
         }
 #if PY_MAJOR_VERSION >= 3
-        if (PyDict_SetItemString(addr_dict, "address_type", PyUnicode_FromString((char *)type->data)) != 0)  {
+        if (PyDict_SetItemString(addr_dict, "address_type", PyUnicode_FromStringAndSize((char *)type->data,
+                                                                                        (Py_ssize_t)type->size)) != 0)  {
 #else
-        if (PyDict_SetItemString(addr_dict, "address_type", PyString_FromString((char *)type->data)) != 0)  {
+        if (PyDict_SetItemString(addr_dict, "address_type", PyString_FromStringAndSize((char *)type->data,
+                                                                                       (Py_ssize_t)type->size)) != 0)  {
 #endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
@@ -1048,91 +1059,4 @@ getdns_dict_to_ip_string(getdns_dict* dict) {
     return NULL;
 }
 
-PyObject*
-getFullResponse(struct getdns_dict *dict)
-{
-
-    PyObject* resultslist;
-    if ((resultslist = PyDict_New()) == NULL)  {
-        error_exit("Unable to allocate response list", 0);
-        return NULL;
-    }
-
-    getdns_list* names;
-    getdns_dict_get_names(dict, &names);
-    size_t len = 0, i = 0;
-    getdns_list_get_length(names, &len);
-    for (i = 0; i < len; ++i) {
-        getdns_bindata* nameBin;
-        getdns_list_get_bindata(names, i, &nameBin);
-        getdns_data_type type;
-        getdns_dict_get_data_type(dict, (char*)nameBin->data, &type);
-        switch (type) {
-            case t_bindata:
-            {
-                getdns_bindata* data = NULL;
-                getdns_dict_get_bindata(dict, (char*)nameBin->data, &data);
-                PyObject *res = convertBinData(data, (char*)nameBin->data);
-                if (res) {
-#if PY_MAJOR_VERSION >= 3
-                   PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res);
-#else
-                   PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res);
-#endif
-                } else {
-                   PyObject* res1 = Py_BuildValue("s", "empty");
-#if PY_MAJOR_VERSION >= 3
-                   PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res1);
-#else
-                   PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-#endif
-                }
-                break;
-            }
-            case t_int:
-            {
-                uint32_t res = 0;
-                getdns_dict_get_int(dict, (char*)nameBin->data, &res);
-                PyObject* res1 = Py_BuildValue("i", res);
-#if PY_MAJOR_VERSION >= 3
-                PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res1);
-#else
-                PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-#endif
-                break;
-            }
-            case t_dict:
-            {
-                getdns_dict* subdict = NULL;
-                getdns_dict_get_dict(dict, (char*)nameBin->data, &subdict);
-                PyObject* rl1 = convertToDict(subdict);
-                PyObject *res1 = Py_BuildValue("O", rl1);
-#if PY_MAJOR_VERSION >= 3
-                PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), res1);
-#else
-                PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), res1);
-#endif
-                break;
-            }
-            case t_list:
-            {
-                getdns_list* list = NULL;
-                getdns_dict_get_list(dict, (char*)nameBin->data, &list);
-                PyObject* rl1 = convertToList(list);
-#if PY_MAJOR_VERSION >= 3
-                PyDict_SetItem(resultslist, PyUnicode_FromString((char*)nameBin->data), rl1); 
-#else
-                PyDict_SetItem(resultslist, PyString_FromString((char*)nameBin->data), rl1); 
-#endif
-                break;
-            }
-            default:
-                break;
-        }
-    }
-
-    getdns_list_destroy(names);
-
-    return resultslist;
-}
 
