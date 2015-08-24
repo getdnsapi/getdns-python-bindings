@@ -766,7 +766,7 @@ convertBinData(getdns_bindata* data,
         PyObject *a_string;
 
 #if PY_MAJOR_VERSION >= 3
-        if ((a_string = PyUnicode_FromStringAndSize((char *)data->data), (Py_ssize_t)data->size) == NULL)  {
+        if ((a_string = PyUnicode_FromStringAndSize((char *)data->data, (Py_ssize_t)data->size)) == NULL)  {
 #else
 
         if ((a_string = PyString_FromStringAndSize((char *)data->data, (Py_ssize_t)data->size)) == NULL)  {

@@ -1271,8 +1271,13 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }
         if (userarg)  
             strncpy(blob->userarg, userarg, BUFSIZ-1);
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
         if (PyString_Check(callback))  {
             if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
                 PyObject *err_type, *err_value, *err_traceback;
                 PyErr_Fetch(&err_type, &err_value, &err_traceback);
                 PyErr_Restore(err_type, err_value, err_traceback);
@@ -1369,8 +1374,13 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
-        if (PyString_Check(callback))  {
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
+                   if (PyString_Check(callback))  {
             if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
                 PyObject *err_type, *err_value, *err_traceback;
                 PyErr_Fetch(&err_type, &err_value, &err_traceback);
                 PyErr_Restore(err_type, err_value, err_traceback);
@@ -1472,8 +1482,13 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
         if (PyString_Check(callback))  {
             if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
                 PyObject *err_type, *err_value, *err_traceback;
                 PyErr_Fetch(&err_type, &err_value, &err_traceback);
                 PyErr_Restore(err_type, err_value, err_traceback);
@@ -1568,8 +1583,13 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
         if (PyString_Check(callback))  {
             if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
                 PyObject *err_type, *err_value, *err_traceback;
                 PyErr_Fetch(&err_type, &err_value, &err_traceback);
                 PyErr_Restore(err_type, err_value, err_traceback);

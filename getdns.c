@@ -43,18 +43,22 @@
 #include <getdns/getdns.h>
 #include <getdns/getdns_ext_libevent.h>
 #include <event2/event.h>
-#include <pthread.h>
+#include <datetime.h>
+#include <time.h>
 #include "pygetdns.h"
 
 
 PyObject *getdns_error;
 
 static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *root_trust_anchor(PyObject *self, PyObject *args, PyObject *keywds);
 static void add_getdns_constants(PyObject *g);
 
 static struct PyMethodDef getdns_methods[] = {
     { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
       METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
+    { "root_trust_anchor", (PyCFunction)root_trust_anchor, METH_NOARGS,
+      "retrieve default list of trust anchor records used to validate DNSSEC" },
     { 0, 0, 0 }
 };
 
@@ -266,6 +270,27 @@ get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
 #else
         return PyString_FromString(errstr);
 #endif
+}
+
+
+static PyObject *
+root_trust_anchor(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    getdns_list *trust_anchors;
+    time_t anchors_date;
+    struct tm *but;             /* busted out time */
+    PyObject *pdate;
+    PyObject *ta_tuple;
+
+    PyDateTime_IMPORT;
+    if ((trust_anchors = getdns_root_trust_anchor(&anchors_date)) == NULL)
+        Py_RETURN_NONE;
+    but = gmtime(&anchors_date);
+    pdate = PyDateTime_FromDateAndTime(but->tm_year+1900, but->tm_mon+1, but->tm_mday,
+                                       but->tm_hour, but->tm_min, but->tm_sec, 0);
+    ta_tuple = PyTuple_Pack(2, glist_to_plist(trust_anchors), pdate);
+    Py_INCREF(ta_tuple);
+    return ta_tuple;
 }
 
 

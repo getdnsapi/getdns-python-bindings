@@ -13,7 +13,7 @@ srvname = sys.argv[1]
 ctx = getdns.Context()
 try:
     results = ctx.service(name=srvname)
-except getdns.error, e:
+except getdns.error as e:
     print(str(e))
     sys.exit(1)
 
@@ -25,7 +25,6 @@ if results.status == getdns.RESPSTATUS_GOOD:
             if rrtype == getdns.RRTYPE_SRV:
                 rdata   = a["rdata"]
                 prio, weight, port, target = rdata['priority'], rdata['weight'], rdata['port'], rdata['target']
-                print "SRV %s --> %d %d %d %s" % \
-                    (rrname, prio, weight, port, target)
+                print("SRV {0} --> {1} {2} {3} {4}".format(rrname, prio, weight, port, target))
 else:
-    print "getdns.service() returned an error: %d" % results["status"]
+    print("getdns.service() returned an error: {0}".format(results.status))

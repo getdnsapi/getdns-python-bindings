@@ -12,13 +12,13 @@ ctx.resolver_type = getdns.RESOLUTION_STUB
 
 try:
     results = ctx.address(name=hostname, extensions=extensions)
-except getdns.error, e:
+except getdns.error as e:
     print(str(e))
     sys.exit(1)
 
 if results.status == getdns.RESPSTATUS_GOOD:
     for addr in results.just_address_answers:
-        print addr["address_data"]
+        print(addr["address_data"])
 else:
-    print "getdns.address() returned an error: %d" % results["status"]
+    print("getdns.address() returned an error: {0}".format(results["status"]))
 
