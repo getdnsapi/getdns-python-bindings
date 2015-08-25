@@ -38,10 +38,6 @@ if '--with-edns-cookies' in sys.argv:
     CFLAGS.append('-DWITH_EDNS_COOKIES')
     sys.argv.remove('--with-edns-cookies')
     
-if '--with-tls' in sys.argv:
-    CFLAGS.append('-DWITH_TLS')
-    sys.argv.remove('--with-tls')
-
 platform_version = list(platform.python_version_tuple())[0:2]
 
 if not ((platform_version[0] == '3') or (platform_version == ['2', '7'])):
