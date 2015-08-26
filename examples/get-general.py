@@ -12,7 +12,7 @@ def get_rrtype(qtype):
     try:
         rrtype = eval("getdns.RRTYPE_%s" % qtype.upper())
     except AttributeError:
-        print "Unknown DNS record type: %s" % qtype
+        print("Unknown DNS record type: {0}".format(qtype))
         sys.exit(1)
     else:
         return rrtype
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     try:
         results = ctx.general(name=qname, request_type=rrtype,
                               extensions=extensions)
-    except getdns.error, e:
+    except getdns.error as e:
         print(str(e))
         sys.exit(1)
 
@@ -45,9 +45,9 @@ if __name__ == '__main__':
                 if answer['type'] != getdns.RRTYPE_RRSIG:
                     pprint.pprint(answer)
     elif status == getdns.RESPSTATUS_NO_NAME:
-        print "%s, %s: no such name" % (qname, qtype)
+        print("{0}, {1}: no such name".format(qname, qtype))
     elif status == getdns.RESPSTATUS_ALL_TIMEOUT:
-        print "%s, %s: query timed out" % (qname, qtype)
+        print("{0}, {1}: query timed out".format(qname, qtype))
     else:
-        print "%s, %s: unknown return code: %d" % results.status
+        print("{0}, {1}: unknown return code: {2}".format(qname, qtype, results.status))
 

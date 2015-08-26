@@ -77,6 +77,9 @@ context_dealloc(getdns_ContextObject *self)
     Py_XDECREF(self->py_context);
     getdns_context_destroy(context);
     (void)wait(&status);        /* reap the process spun off by unbound */
+                                /* TODO: this has just been fixed in unbound and */
+                                /* this wait() should be removed once the new */
+                                /* libunbound is distributed */
     return;
 }
 
@@ -87,15 +90,53 @@ context_set_timeout(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     uint64_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((long)(value = PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((ret = getdns_context_set_timeout(context, value)) != GETDNS_RETURN_GOOD)  {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return -1;
+    }
+    return 0;
+}
+
+
+int
+context_set_idle_timeout(getdns_context *context, PyObject *py_value)
+{
+    getdns_return_t ret;
+    uint64_t value;
+    
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
+    if (!PyInt_Check(py_value))  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+#if PY_MAJOR_VERSION >= 3
+    if ((long)(value = PyLong_AsLong(py_value)) < 0)  {
+#else
+    if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+    if ((ret = getdns_context_set_idle_timeout(context, value)) != GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return -1;
     }
@@ -109,11 +150,19 @@ context_set_resolution_type(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     getdns_resolution_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((long long)(value = (getdns_resolution_t)PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((long long)(value = (getdns_resolution_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -129,22 +178,35 @@ context_set_resolution_type(getdns_context *context, PyObject *py_value)
 }
 
 
+#if 0                           /* commenting this out for the time being, delete later */
 int
 context_set_dns_transport(getdns_context *context, PyObject *py_value)
 {
     getdns_return_t ret;
     getdns_transport_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((long long)(value = (getdns_transport_t)PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((long long)(value = (getdns_transport_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if ((value < GETDNS_TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP) ||
+#if defined(WITH_TLS)
+        (value > GETDNS_TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN))  {
+#else        
         (value > GETDNS_TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -154,7 +216,7 @@ context_set_dns_transport(getdns_context *context, PyObject *py_value)
     }
     return 0;
 }
-                                   
+#endif                                   
 
 int
 context_set_limit_outstanding_queries(getdns_context *context, PyObject *py_value)
@@ -162,11 +224,19 @@ context_set_limit_outstanding_queries(getdns_context *context, PyObject *py_valu
     getdns_return_t ret;
     uint16_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((value = PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((value = PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -184,11 +254,19 @@ context_set_follow_redirects(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     uint64_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((long)(value = PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -211,11 +289,19 @@ context_set_append_name(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     uint64_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((long)(value = PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -255,11 +341,19 @@ context_set_suffix(getdns_context *context, PyObject *py_value)
         getdns_bindata value;
 
         if ((a_value = PyList_GetItem(py_value, (Py_ssize_t)i)) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+            if (!PyUnicode_Check(a_value))  {
+#else
             if (!PyString_Check(a_value))  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
+#if PY_MAJOR_VERSION >= 3
+            value.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(a_value), "ascii", NULL)));
+#else
             value.data = (uint8_t *)strdup(PyString_AsString(a_value));
+#endif
             value.size = strlen((char *)value.data);
             getdns_list_set_bindata(values, (size_t)i, &value);
         }  else  {
@@ -281,11 +375,19 @@ context_set_dnssec_allowed_skew(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     uint32_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyUnicode_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((long)(value = (uint32_t)PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((long)(value = (uint32_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -303,11 +405,19 @@ context_set_edns_maximum_udp_payload_size(getdns_context *context, PyObject *py_
     getdns_return_t ret;
     uint16_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((long)(value = PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((long)(value = PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -326,11 +436,19 @@ context_set_edns_extended_rcode(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     uint8_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((value = (uint8_t)PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((value = (uint8_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -349,11 +467,19 @@ context_set_edns_version(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     uint8_t value;
     
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((value = (uint8_t)PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((value = (uint8_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -372,11 +498,19 @@ context_set_edns_do_bit(getdns_context *context, PyObject *py_value)
     getdns_return_t ret;
     uint8_t value;
 
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
     if (!PyInt_Check(py_value))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((value = (uint8_t)PyLong_AsLong(py_value)) < 0)  {
+#else
     if ((value = (uint8_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -414,7 +548,11 @@ context_set_namespaces(getdns_context *context, PyObject *py_value)
         return -1;
     }
     for (i = 0 ; i < count ; i++)  {
+#if PY_MAJOR_VERSION >= 3
+        namespaces[i] = (getdns_namespace_t)PyLong_AsLong(PyList_GetItem(py_value, (Py_ssize_t)i));
+#else
         namespaces[i] = (getdns_namespace_t)PyInt_AsLong(PyList_GetItem(py_value, (Py_ssize_t)i));
+#endif
         if ((namespaces[i] < GETDNS_NAMESPACE_DNS) || (namespaces[i] > GETDNS_NAMESPACE_NIS))  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
             return -1;
@@ -461,11 +599,19 @@ context_set_dns_root_servers(getdns_context *context, PyObject *py_value)
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
+#if PY_MAJOR_VERSION >= 3
+            if (!PyUnicode_Check(str))  {
+#else
             if (!PyString_Check(str))  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
+#if PY_MAJOR_VERSION >= 3
+            addr_type.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(str), "ascii", NULL)));
+#else
             addr_type.data = (uint8_t *)strdup(PyString_AsString(str));
+#endif
             addr_type.size = strlen((char *)addr_type.data);
             if (strlen((char *)addr_type.data) != 4)  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_WRONG_TYPE_REQUESTED_TEXT);
@@ -485,11 +631,19 @@ context_set_dns_root_servers(getdns_context *context, PyObject *py_value)
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
-            if (!PyString_Check(str))  {
+#if PY_MAJOR_VERSION >= 3
+           if (!PyUnicode_Check(str))  {
+#else 
+           if (!PyString_Check(str))  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
+#if PY_MAJOR_VERSION >= 3
+           if (inet_pton(domain, PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(str), "ascii", NULL)), buf) <= 0)  {
+#else
             if (inet_pton(domain, PyString_AsString(str), buf) <= 0)  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
@@ -526,11 +680,19 @@ context_set_dnssec_trust_anchors(getdns_context *context, PyObject *py_value)
         getdns_bindata *value = 0;
 
         if ((an_address = PyList_GetItem(py_value, (Py_ssize_t)i)) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+            if (!PyUnicode_Check(an_address))  {
+#else
             if (!PyString_Check(an_address))  {
+#endif
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
+#if PY_MAJOR_VERSION >= 3
+            value->data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(py_value), "ascii", NULL)));
+#else
             value->data = (uint8_t *)strdup(PyString_AsString(py_value));
+#endif
             value->size = strlen((char *)value->data);
             getdns_list_set_bindata(addresses, (size_t)i, value);
         }  else  {
@@ -591,6 +753,49 @@ context_set_upstream_recursive_servers(getdns_context *context, PyObject *py_val
 }
 
 
+int
+context_set_dns_transport_list(getdns_context *context, PyObject *py_value)
+{
+    getdns_return_t ret;
+    Py_ssize_t len;
+    getdns_transport_list_t *transports;
+    int  i;
+
+    if (!PyList_Check(py_value))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+    len = PyList_Size(py_value);
+    if ((transports = (getdns_transport_list_t *)malloc(sizeof(getdns_transport_list_t)*(int)len)) ==
+        (getdns_transport_list_t *)0)  {
+        PyErr_SetString(getdns_error, "memory allocation error");
+        return -1;
+    }
+    for ( i = 0 ; i < (int)len ; i++ )  {
+        PyObject *py_transport;
+        long transport;
+        if ((py_transport = PyList_GetItem(py_value, (Py_ssize_t)i)) != NULL)  {
+            transport = PyLong_AsLong(py_transport);
+            if ((transport < GETDNS_TRANSPORT_UDP) || (transport > GETDNS_TRANSPORT_STARTTLS))  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+                return -1;
+            }
+            transports[i] = transport;
+        }
+        else  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return -1;
+        }
+    }
+    if ((ret = getdns_context_set_dns_transport_list(context, (size_t)len, transports)) !=
+        GETDNS_RETURN_GOOD)  {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return -1;
+    }
+    return 0;
+}
+            
+
 PyObject *
 context_getattro(PyObject *self, PyObject *nameobj)
 {
@@ -601,7 +806,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
     getdns_return_t ret;
     char *attrname;
 
+#if PY_MAJOR_VERSION >= 3
+    attrname = PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(nameobj), "ascii", NULL));
+#else
     attrname = PyString_AsString(nameobj);
+#endif
     context = PyCapsule_GetPointer(myself->py_context, "context");
     api_info = getdns_context_get_api_information(context);
     if (!strncmp(attrname, "resolution_type", strlen("resolution_type")))  {
@@ -610,7 +819,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)resolution_type);
+#else
         return PyInt_FromLong((long)resolution_type);
+#endif
     }
     if ((ret = getdns_dict_get_dict(api_info, "all_context", &all_context)) != GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
@@ -622,7 +835,13 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
-        return PyString_FromString((char *)implementation_string->data);
+#if PY_MAJOR_VERSION >= 3
+        return PyUnicode_FromStringAndSize((char *)implementation_string->data,
+                                           (Py_ssize_t)implementation_string->size);
+#else
+        return PyString_FromStringAndSize((char *)implementation_string->data,
+                                          (Py_ssize_t)implementation_string->size);
+#endif
     }
     if (!strncmp(attrname, "version_string", strlen("version_string")))  {
         getdns_bindata *version_string;
@@ -630,7 +849,13 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
-        return PyString_FromString((char *)version_string->data);
+#if PY_MAJOR_VERSION >= 3
+        return PyUnicode_FromStringAndSize((char *)version_string->data,
+                                           (Py_ssize_t)version_string->size);
+#else
+        return PyString_FromStringAndSize((char *)version_string->data,
+                                          (Py_ssize_t)version_string->size);
+#endif
     }
         
     if (!strncmp(attrname, "timeout", strlen("timeout")))  {
@@ -641,6 +866,34 @@ context_getattro(PyObject *self, PyObject *nameobj)
         }
         return PyLong_FromLong((long)timeout);
     }
+    if (!strncmp(attrname, "idle_timeout", strlen("idle_timeout")))  {
+        uint64_t timeout;
+        if ((ret = getdns_context_get_idle_timeout(context, &timeout)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+        return PyLong_FromLong((long)timeout);
+    }
+    if (!strncmp(attrname, "dns_transport_list", strlen("dns_transport_list")))  {
+        getdns_transport_list_t *transports;
+        PyObject *py_transports;
+        size_t transport_count;
+        int i;
+        if ((ret = getdns_context_get_dns_transport_list(context, &transport_count, &transports)) != 
+            GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+        if ((py_transports = PyList_New((Py_ssize_t)transport_count)) == NULL)  {
+            PyErr_SetString(getdns_error, "Could not create PyList");
+            return NULL;
+        }
+        for ( i = 0 ; i < transport_count ; i++ )  {
+            PyList_SetItem(py_transports, (Py_ssize_t)i, PyLong_FromLong((long)transports[i]));
+        }
+        return py_transports;
+    }
+#if 0
     if (!strncmp(attrname, "dns_transport", strlen("dns_transport")))  {
         uint32_t dns_transport;
         if ((ret = getdns_dict_get_int(all_context, "dns_transport", &dns_transport)) !=
@@ -648,8 +901,13 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)dns_transport);
+#else
         return PyInt_FromLong((long)dns_transport);
+#endif
     }
+#endif    
     if (!strncmp(attrname, "limit_outstanding_queries", strlen("limit_outstanding_queries")))  {
         uint32_t limit_outstanding_queries;
         if ((ret = getdns_dict_get_int(all_context, "limit_outstanding_queries",
@@ -658,7 +916,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong(limit_outstanding_queries);
+#else
         return PyInt_FromLong(limit_outstanding_queries);
+#endif
     }
     if (!strncmp(attrname, "follow_redirects", strlen("follow_redirects")))  {
         uint32_t follow_redirects;
@@ -668,7 +930,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong(follow_redirects);
+#else
         return PyInt_FromLong(follow_redirects);
+#endif
     }
     if (!strncmp(attrname, "append_name", strlen("append_name")))  {
         uint32_t append_name;
@@ -678,7 +944,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong(append_name);
+#else
         return PyInt_FromLong(append_name);
+#endif
     }
     if (!strncmp(attrname, "dnssec_allowed_skew", strlen("dnssec_allowed_skew")))  {
         uint32_t dnssec_allowed_skew;
@@ -687,7 +957,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)dnssec_allowed_skew);
+#else
         return PyInt_FromLong((long)dnssec_allowed_skew);
+#endif
     }
     if (!strncmp(attrname, "edns_maximum_udp_payload_size", strlen("edns_maximum_udp_payload_size")))  {
         uint32_t edns_maximum_udp_payload_size;
@@ -697,7 +971,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)edns_maximum_udp_payload_size);
+#else
         return PyInt_FromLong((long)edns_maximum_udp_payload_size);
+#endif
     }
     if (!strncmp(attrname, "edns_extended_rcode", strlen("edns_extended_rcode")))  {
         uint32_t edns_extended_rcode;
@@ -707,7 +985,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)edns_extended_rcode);
+#else
         return PyInt_FromLong((long)edns_extended_rcode);
+#endif
     }
     if (!strncmp(attrname, "edns_version", strlen("edns_version")))  {
         uint32_t edns_version;
@@ -717,7 +999,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)edns_version);
+#else
         return PyInt_FromLong((long)edns_version);
+#endif
     }
     if (!strncmp(attrname, "edns_do_bit", strlen("edns_do_bit")))  {
         uint32_t edns_do_bit;
@@ -727,7 +1013,11 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)edns_do_bit);
+#else
         return PyInt_FromLong((long)edns_do_bit);
+#endif
     }
     if (!strncmp(attrname, "namespaces", strlen("namespaces")))  {
         PyObject *py_namespaces;
@@ -778,9 +1068,6 @@ context_getattro(PyObject *self, PyObject *nameobj)
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
-#if 0
-        if ((py_upstream_servers = glist_to_plist(upstream_list)) == NULL)  {
-#endif 
         if ((py_upstream_servers = pythonify_address_list(upstream_list)) == NULL)  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
             return NULL;
@@ -800,13 +1087,20 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     struct getdns_context *context;
     char *name;
 
+#if PY_MAJOR_VERSION >= 3
+    name = PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(attrname), "ascii", NULL));
+#else
     name = PyString_AsString(attrname);
+#endif
     if ((context = PyCapsule_GetPointer(myself->py_context, "context")) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
     if (!strncmp(name, "timeout", strlen("timeout")))  {
         return(context_set_timeout(context, py_value));
+    }
+    if (!strncmp(name, "idle_timeout", strlen("idle_timeout")))  {
+        return(context_set_idle_timeout(context, py_value));
     }
     if (!strncmp(name, "resolution_type", strlen("resolution_type")))  {
         return(context_set_resolution_type(context, py_value));
@@ -847,10 +1141,14 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     if (!strncmp(name, "upstream_recursive_servers", strlen("upstream_recursive_servers")))  {
         return(context_set_upstream_recursive_servers(context, py_value));
     }
+    if (!strncmp(name, "dns_transport_list", strlen("dns_transport_list")))  {
+        return(context_set_dns_transport_list(context, py_value));
+    }
+#if 0
     if (!strncmp(name, "dns_transport", strlen("dns_transport")))  {
         return(context_set_dns_transport(context, py_value));
     }
-        
+#endif
     return 0;
 }
 
@@ -858,13 +1156,8 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
 PyObject *
 context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 {
-    getdns_context *context;
-    
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
-        return NULL;
-    }
-    (void)event_base_dispatch(self->event_base);
+    if (self->event_base)  
+        (void)event_base_dispatch(self->event_base);
     Py_RETURN_NONE;
 }
 
@@ -910,7 +1203,11 @@ context_str(PyObject *self)
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    return(PyUnicode_FromString(str_api_dict));    
+#else
     return(PyString_FromString(str_api_dict));    
+#endif
 }
 
 
@@ -934,7 +1231,7 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     getdns_return_t ret;
     void *userarg = 0;
     getdns_transaction_t tid = 0;
-    char *callback = 0;
+    PyObject *callback = 0;
     struct getdns_dict *resp;
     PyObject *callback_func;
 
@@ -942,7 +1239,7 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sH|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "sH|OsLO", kwlist,
                                      &name, &request_type,
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -974,20 +1271,37 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }
         if (userarg)  
             strncpy(blob->userarg, userarg, BUFSIZ-1);
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
+        if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+
         if ((ret = getdns_general(context, name, request_type,
                                   extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return(PyLong_FromUnsignedLong((long)tid));
+#else
         return(PyInt_FromLong((long)tid));
+#endif
     } else  {
         if ((ret = getdns_general_sync(context, name, request_type,
                                        extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
@@ -1018,14 +1332,14 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     struct getdns_dict *extensions_dict = 0;
     char *userarg = 0;
     getdns_transaction_t tid;
-    char *callback = 0;
+    PyObject *callback = 0;
     struct getdns_dict *resp;
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLO", kwlist,
                                      &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1060,19 +1374,36 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
+                   if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+                                      
         if ((ret = getdns_address(context, name, extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return(PyLong_FromUnsignedLong((long)tid));
+#else
         return(PyInt_FromLong((long)tid));
+#endif
     } else  {
         if ((ret = getdns_address_sync(context, name, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
@@ -1099,7 +1430,7 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     struct getdns_dict *extensions_dict = 0;
     void *userarg = 0;
     getdns_transaction_t tid;
-    char * callback = 0;
+    PyObject* callback = 0;
     struct getdns_dict *resp;
     getdns_context *context;
     struct getdns_dict *addr_dict;
@@ -1110,7 +1441,7 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O|OsLO", kwlist,
                                      &address, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1151,19 +1482,36 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
+        if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+
         if ((ret = getdns_hostname(context, addr_dict, extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return(PyLong_FromUnsignedLong((long)tid));
+#else
         return(PyInt_FromLong((long)tid));
+#endif
     } else  {
         if ((ret = getdns_hostname_sync(context, addr_dict, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
@@ -1191,7 +1539,7 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     getdns_return_t ret;
     void *userarg;
     getdns_transaction_t tid;
-    char *callback = 0;
+    PyObject *callback = 0;
     struct getdns_dict *resp;
     getdns_context *context;
     PyObject *callback_func;
@@ -1200,7 +1548,7 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLs", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s|OsLO", kwlist,
                                      &name, 
                                      &extensions_obj, &userarg, &tid, &callback))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -1235,19 +1583,36 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         }  else  {
             blob->userarg[0] = 0;
         }
-        if ((callback_func = get_callback("__main__", callback)) == (PyObject *)NULL)  {
-            PyObject *err_type, *err_value, *err_traceback;
-            PyErr_Fetch(&err_type, &err_value, &err_traceback);
-            PyErr_Restore(err_type, err_value, err_traceback);
+#if PY_MAJOR_VERSION >= 3
+        if (PyUnicode_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(callback), "ascii", NULL)))) == (PyObject *)NULL)  {
+#else
+        if (PyString_Check(callback))  {
+            if ((callback_func = get_callback("__main__", PyString_AsString(callback))) == (PyObject *)NULL)  {
+#endif
+                PyObject *err_type, *err_value, *err_traceback;
+                PyErr_Fetch(&err_type, &err_value, &err_traceback);
+                PyErr_Restore(err_type, err_value, err_traceback);
+                return NULL;
+            }
+            blob->callback_func = callback_func;
+        }  else if (PyCallable_Check(callback))  {
+            blob->callback_func = callback;
+        }  else  {
+            PyErr_SetString(getdns_error, "Invalid callback value");
             return NULL;
         }
-        blob->callback_func = callback_func;
+
         if ((ret = getdns_service(context, name, extensions_dict, (void *)blob, &tid, callback_shim)) !=
             GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        return(PyLong_FromUnsignedLong((long)tid));
+#else
         return(PyInt_FromLong((long)tid));
+#endif
     } else  {
         if ((ret = getdns_service_sync(context, name, extensions_dict, &resp)) != GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
@@ -1269,12 +1634,7 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
     uint32_t resolution_type;
     getdns_dict *all_context;
     PyObject *py_all_context;
-    size_t ncontexts;
-    getdns_list *context_names;
-    getdns_bindata *a_name;
-    uint32_t context_value;
     getdns_return_t ret;
-    int i;
 
 
     if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
@@ -1287,7 +1647,15 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
-    if (PyDict_SetItemString(py_api, "version_string", PyString_FromString((char *)version_string->data)))  {
+#if PY_MAJOR_VERSION >= 3
+    if (PyDict_SetItemString(py_api, "version_string",
+                             PyUnicode_FromStringAndSize((char *)version_string->data,
+                                                         (Py_ssize_t)version_string->size)))  {
+#else
+    if (PyDict_SetItemString(py_api, "version_string",
+                             PyString_FromStringAndSize((char *)version_string->data,
+                                                        (Py_ssize_t)version_string->size)))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
@@ -1295,7 +1663,15 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
-    if (PyDict_SetItemString(py_api, "implementation_string", PyString_FromString((char *)imp_string->data)))  {
+#if PY_MAJOR_VERSION >= 3
+    if (PyDict_SetItemString(py_api, "implementation_string",
+                             PyUnicode_FromStringAndSize((char *)imp_string->data,
+                                                         (Py_ssize_t)imp_string->size)))  {
+#else
+    if (PyDict_SetItemString(py_api, "implementation_string",
+                             PyString_FromStringAndSize((char *)imp_string->data,
+                                                        (Py_ssize_t)imp_string->size)))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
@@ -1303,7 +1679,11 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    if (PyDict_SetItemString(py_api, "resolution_type", PyLong_FromLong((long)resolution_type)))  {
+#else
     if (PyDict_SetItemString(py_api, "resolution_type", PyInt_FromLong((long)resolution_type)))  {
+#endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
@@ -1311,102 +1691,10 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
-    if ((ret = getdns_dict_get_names(all_context, &context_names)) != GETDNS_RETURN_GOOD)  {
-        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+    if ((py_all_context = gdict_to_pdict(all_context)) == NULL)  {
+        PyErr_SetString(getdns_error, "Unable to convert all_context dict");
         return NULL;
     }
-    if ((ret = getdns_list_get_length(context_names, &ncontexts)) != GETDNS_RETURN_GOOD)  {
-        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-        return NULL;
-    }
-    py_all_context = PyDict_New();
-    for ( i = 0 ; i < ncontexts ; i++ )  {
-        if ((ret = getdns_list_get_bindata(context_names, (size_t)i, &a_name)) != GETDNS_RETURN_GOOD)  {
-            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-            return NULL;
-        }
-        if (!strncmp((char *)a_name->data, "namespaces", strlen("namespaces")))  {
-            getdns_list *namespaces = getdns_list_create();
-            PyObject *py_namespaces;
-            size_t n_spaces;
-            uint32_t space;
-            int j;
-
-            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &namespaces)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-            (void)getdns_list_get_length(namespaces, &n_spaces);
-            py_namespaces = PyList_New((Py_ssize_t)n_spaces);
-            for ( j = 0 ; j < n_spaces ; j++ )  {
-                (void)getdns_list_get_int(namespaces, j, &space);
-                PyList_SetItem(py_namespaces, (Py_ssize_t)j, PyInt_FromLong((long)space));
-            }
-            PyDict_SetItemString(py_all_context, "namespaces", py_namespaces);
-        } else if (!strncmp((char *)a_name->data, "suffix", strlen("suffix")))  {
-            getdns_list *suffixes = getdns_list_create();
-            PyObject *py_suffixes;
-            size_t n_suffixes;
-            getdns_bindata *suffix;
-            int j;
-
-            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &suffixes)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-            (void)getdns_list_get_length(suffixes, &n_suffixes);
-            py_suffixes = PyList_New((Py_ssize_t)n_suffixes);
-            for ( j = 0 ; j < n_suffixes ; j++ )  {
-                (void)getdns_list_get_bindata(suffixes, j, &suffix);
-                PyList_SetItem(py_suffixes, (Py_ssize_t)j, PyString_FromString((char *)suffix->data));
-            }
-            PyDict_SetItemString(py_all_context, "suffix", py_suffixes);
-        } else if (!strncmp((char *)a_name->data, "upstream_recursive_servers",
-                            strlen("upstream_recursive_servers")))  {
-            getdns_list *upstream_list;
-            PyObject *py_upstream_list;
-            PyObject *py_upstream;
-            size_t n_upstreams;
-            getdns_dict *upstream;
-            getdns_bindata *upstream_data;
-            getdns_bindata *upstream_type;
-            char *paddr_buf[256];
-            int domain;
-            int j;
-
-            if ((ret = getdns_dict_get_list(all_context, (char *)a_name->data, &upstream_list)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-            (void)getdns_list_get_length(upstream_list, &n_upstreams);
-            py_upstream_list = PyList_New((Py_ssize_t)n_upstreams);
-            for ( j = 0 ; j < n_upstreams ; j++ )  {
-                (void)getdns_list_get_dict(upstream_list, j, &upstream);
-                (void)getdns_dict_get_bindata(upstream, "address_data", &upstream_data);
-                (void)getdns_dict_get_bindata(upstream, "address_type", &upstream_type);
-                if (!strncasecmp((char *)upstream_type->data, "IPv4", 4))  
-                    domain = AF_INET;
-                else if (!strncasecmp((char *)upstream_type->data, "IPv6", 6))  
-                    domain = AF_INET6;
-                else  {
-                    PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
-                    return NULL;
-                }
-                py_upstream = PyDict_New();
-                PyDict_SetItemString(py_upstream, "address_data",
-                                     PyString_FromString(inet_ntop(domain, (void *)upstream_data->data, (char *)paddr_buf, 256)));
-                PyDict_SetItemString(py_upstream, "address_type", PyString_FromString((domain == AF_INET ? "IPv4" : "IPv6")));
-                PyList_SetItem(py_upstream_list, j, py_upstream);
-            }
-            PyDict_SetItemString(py_all_context, (char *)a_name->data, py_upstream_list);
-        }  else  {            
-            if ((ret = getdns_dict_get_int(all_context, (char *)a_name->data, &context_value)) != GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-                return NULL;
-            }
-            PyDict_SetItemString(py_all_context, (char *)a_name->data, PyInt_FromLong((long)context_value));
-        }
-        PyDict_SetItemString(py_api, "all_context", py_all_context);
-    }    
+    PyDict_SetItemString(py_api, "all_context", py_all_context);
     return(py_api);
 }        

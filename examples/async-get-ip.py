@@ -30,21 +30,21 @@ def cbk(type, result, userarg, tid):
             for addr in result.just_address_answers:
                 addr_type = addr['address_type']
                 addr_data = addr['address_data']
-                print '{0}: {1} {2}'.format(userarg, addr_type, addr_data)
+                print("{0}: {1} {2}".format(userarg, addr_type, addr_data))
         elif status == getdns.RESPSTATUS_NO_SECURE_ANSWERS:
-            print "%s: No DNSSEC secured responses found" % hostname
+            print("{0}: No DNSSEC secured responses found".format(hostname))
         else:
-            print "%s: getdns.address() returned error: %d" % (hostname, status)
+            print("{0}: getdns.address() returned error: {1}".format(hostname, status))
     elif type == getdns.CALLBACK_CANCEL:
-        print 'Callback cancelled'
+        print('Callback cancelled')
     elif type == getdns.CALLBACK_TIMEOUT:
-        print 'Query timed out'
+        print('Query timed out')
     else:
-        print 'Unknown error'
+        print('Unknown error')
 
 
 def usage():
-    print """\
+    print("""\
 Usage: get-ip.py [-s] [-4|-6] <domain1> <domain2> ...
 
     -s: only return DNSSEC secured answers
@@ -52,7 +52,7 @@ Usage: get-ip.py [-s] [-4|-6] <domain1> <domain2> ...
     -6: only return IPv6 address answers
 
 -4 and -6 are mutually exclusive. If both are specified, IPv6 wins.
-"""
+""")
     sys.exit(1)
 
 try:
@@ -70,8 +70,8 @@ tids = []
 for hostname in args:
     try:
         tids.append(ctx.address(name=hostname, extensions=extensions, callback='cbk', userarg=hostname))
-        print 'submitted query for {0}'.format(hostname)
-    except getdns.error, e:
+        print ('submitted query for {0}'.format(hostname))
+    except getdns.error as e:
         print(str(e))
         break
 ctx.run()

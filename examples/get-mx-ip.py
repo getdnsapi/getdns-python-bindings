@@ -15,7 +15,7 @@ def get_ip(ctx, qname):
     iplist = []
     try:
         results = ctx.address(name=qname, extensions=extensions)
-    except getdns.error, e:
+    except getdns.error as e:
         print(str(e))
         sys.exit(1)
 
@@ -23,7 +23,7 @@ def get_ip(ctx, qname):
         for addr in results.just_address_answers:
             iplist.append(addr['address_data'])
     else:
-        print "getdns.address() returned an error: %d" % results.status
+        print("getdns.address() returned an error: {0}".format(results.status))
     return iplist
 
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     ctx = getdns.Context()
     try:
         results = ctx.general(name=qname, request_type=getdns.RRTYPE_MX)
-    except getdns.error, e:
+    except getdns.error as e:
         print(str(e))
         sys.exit(1)
 
@@ -51,11 +51,11 @@ if __name__ == '__main__':
                         hostlist.append( (answer['rdata']['preference'], \
                                           answer['rdata']['exchange'], ip) )
     elif status == getdns.RESPSTATUS_NO_NAME:
-        print "%s, %s: no such name" % (qname, qtype)
+        print("{0}, {1}: no such name".format(qname, qtype))
     elif status == getdns.RESPSTATUS_ALL_TIMEOUT:
-        print "%s, %s: query timed out" % (qname, qtype)
+        print("{0}, {1}: query timed out".format(qname, qtype))
     else:
-        print "%s, %s: unknown return code: %d" % results["status"]
+        print("{0}, {1}: unknown return code: {2}".format(qname, qtype, results["status"]))
 
     for (pref, mx, addr) in sorted(hostlist):
-        print pref, mx, addr
+        print(pref, mx, addr)

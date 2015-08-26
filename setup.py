@@ -26,29 +26,36 @@
 
 
 from distutils.core import setup, Extension
-import platform, os
-
-platform_version = list(platform.python_version_tuple())[0:2]
-if platform_version != ['2', '7']:
-    print 'getdns requires Python version 2.7.  Exiting ... '
-    os._exit(1)
+import platform, os, sys
 
 long_description = ( 'getdns is a set of wrappers around the getdns'
                      'library (http://www.getdnsapi.net), providing'
                      'Python language bindings for the API')
 
 CFLAGS = [ '-g' ]
+
+if '--with-edns-cookies' in sys.argv:
+    CFLAGS.append('-DWITH_EDNS_COOKIES')
+    sys.argv.remove('--with-edns-cookies')
+    
+platform_version = list(platform.python_version_tuple())[0:2]
+
+if not ((platform_version[0] == '3') or (platform_version == ['2', '7'])):
+    print('getdns requires Python version 2.7 or Python version 3.  Exiting ... ')
+    os._exit(1)
+
 getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
                     libraries = [ 'ldns', 'getdns', 'getdns_ext_event', 'event' ],
                     library_dirs = [ '/usr/local/lib' ],
                     sources = [ 'getdns.c', 'pygetdns_util.c', 'context.c',
                                 'context_util.c', 'result.c' ],
-                    runtime_library_dirs = [ '/usr/local/lib' ]
+                          extra_compile_args = CFLAGS,
+                    runtime_library_dirs = [ '/usr/local/lib' ],
                     )
 
 setup(name='getdns',
-      version='0.3.1',
+      version='0.4.0',
       description='getdns Python bindings for getdns',
       long_description=long_description,
       license='BSD',

@@ -6,11 +6,11 @@ Python bindings for getdns
 External dependencies
 =====================
 
-Built and tested against Python 2.7.  You will need to install
+Built and tested against Python 2.7 and Python 3.4.  You will need to install
 the Python headers and libraries - this is usually a package
 called "python-dev"
 
-Currently building against the getdns 0.1.3 release.
+Currently building against the getdns 0.3.1 release.
 getdns external dependencies include:
 
 * [libldns from NLnet Labs](https://www.nlnetlabs.nl/projects/ldns/) version 1.6.11 or later (ldns requires ope
@@ -49,6 +49,18 @@ people who are using the bindings should go ahead and install.
 python setup.py install
 ````
 
+We recently added Python 3 support.  To build, just invoke
+the Python 3 interpreter rather the Python 2 interpreter (on
+most systems this will be "python3").  
+
+```
+python3 setup.py build
+```
+You will need the
+Python 3 development environment ("python3-dev" or
+"python3-devel", most often).
+
+
 Documentation
 =============
 
@@ -60,18 +72,24 @@ source tree in doc/_build/html.  It is also available online at [readthedocs.org
 Changes from the earlier release
 ================================
 
-We've introduced a Context object with attributes and methods, with
-queries being Context methods.  Attributes can be assigned and read
-directly without using the getdns setters and getters.  For example,
+In addition to adding Python 3 support, we've changed the callback
+argument to the asynchronous methods to accept a callable by name,
+rather than as a literal string.
 
-```python
-import getdns.context
-my_context = getdns.Context()
-my_context.timeout = 1000
-print my_context.timeout
-```
+We're also now supporting a new transport_list attribute, an
+ordered (by preference) list of transport options, including
+TCP, UDP, TLS, and STARTTLS.
 
-Please see the documentation for details on attributes and methods.
+There are also a number of bugfixes, including cleaning up
+after unbound zombies (this has been fixed in unbound as well
+but the code is not yet included in a distribution) and
+correct handling of strings encoded as getdns bindatas.
+
+Examples have been updated to work with both Python 2.x and
+Python 3.
+
+Please see the documentation for details on new attributes 
+extensions, and methods.
 
 Examples
 ========
