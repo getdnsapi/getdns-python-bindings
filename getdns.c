@@ -266,7 +266,7 @@ Convert_alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds)
         return NULL;
     }
     ulabel = (char*)getdns_convert_alabel_to_ulabel((char*)alabel);
-# if PY_MAJOR_VERSION >= 3
+#if PY_MAJOR_VERSION >= 3
     return PyUnicode_FromString(ulabel);
 #else
     return PyString_FromString(ulabel);
@@ -285,7 +285,7 @@ Convert_ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds)
     }
     alabel = (char*)getdns_convert_ulabel_to_alabel((char*)ulabel);
 	
-# if PY_MAJOR_VERSION >= 3
+#if PY_MAJOR_VERSION >= 3
     return PyUnicode_FromString(alabel);
 #else
     return PyString_FromString(alabel);
