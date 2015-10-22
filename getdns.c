@@ -53,17 +53,17 @@ PyObject *getdns_error;
 static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *root_trust_anchor(PyObject *self, PyObject *args, PyObject *keywds);
 static void add_getdns_constants(PyObject *g);
-static PyObject *Convert_ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds);
-static PyObject *Convert_alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds);
 	
 static struct PyMethodDef getdns_methods[] = {
     { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
       METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
     { "root_trust_anchor", (PyCFunction)root_trust_anchor, METH_NOARGS,
       "retrieve default list of trust anchor records used to validate DNSSEC" },
-    { "Convert_alabel_to_ulabel", (PyCFunction)Convert_alabel_to_ulabel,
+    { "alabel_to_ulabel", (PyCFunction)alabel_to_ulabel,
       METH_VARARGS|METH_KEYWORDS, "return ulabel from alabel" },
-    { "Convert_ulabel_to_alabel", (PyCFunction)Convert_ulabel_to_alabel,
+    { "ulabel_to_alabel", (PyCFunction)ulabel_to_alabel,
       METH_VARARGS|METH_KEYWORDS, "return alabel from ulabel" },
     { 0, 0, 0 }
 };
@@ -256,7 +256,7 @@ PyTypeObject getdns_ContextType = {
 };
 
 static PyObject  * 
-Convert_alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds)
+alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = { "alabel", NULL };
     char *alabel;
@@ -274,7 +274,7 @@ Convert_alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds)
 }
 
 static PyObject  *
-Convert_ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds)
+ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = { "ulabel", NULL };
     char *alabel;
