@@ -72,6 +72,18 @@ build and install:
   python setup.py build
   python setup.py install
 
+
+If you have installed getdns libraries and headers in other
+than the default location, build the Python bindings using
+the ``--with-getdns`` argument to setup.py, providing the
+getdns root directory as an argument.  (Note that there
+should be a space between --with-getdns and the directory).
+For example, 
+::
+  python setup.py build --with-getdns ~/build
+
+if you installed getdns into your home/build directory.
+  
 We've added optional support for draft-ietf-dnsop-cookies.
 It is implemented as a getdns extension (see below).  It is
 not built by default.  To enable it, you must build

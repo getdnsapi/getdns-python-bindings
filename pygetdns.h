@@ -32,7 +32,7 @@
 #ifndef PYGETDNS_H
 #define PYGETDNS_H
 
-#define PYGETDNS_VERSION "0.3.1"
+#define PYGETDNS_VERSION "0.4.1"
 #define GETDNS_DOCSTRING "getdns bindings for Python (see http://www.getdnsapi.net)"
 
 #define GETDNS_STR_IPV4 "IPv4"
