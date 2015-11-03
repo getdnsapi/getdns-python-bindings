@@ -27,9 +27,10 @@
 
 #include <Python.h>
 #include <getdns/getdns.h>
+#include <getdns/getdns_ext_libevent.h>
+#include <getdns/getdns_extra.h>
 #include <arpa/inet.h>
 #include <event2/event.h>
-#include <getdns/getdns_ext_libevent.h>
 #include <sys/wait.h>
 #include "pygetdns.h"
 
@@ -812,6 +813,42 @@ context_getattro(PyObject *self, PyObject *nameobj)
     attrname = PyString_AsString(nameobj);
 #endif
     context = PyCapsule_GetPointer(myself->py_context, "context");
+
+    if (!strncmp(attrname, "append_name", strlen("append_name")))  {
+        getdns_append_name_t value;
+        if ((ret = getdns_context_get_append_name(context, &value)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)value);
+#else
+        return PyInt_FromLong((long)value);
+#endif
+    }
+
+    if (!strncmp(attrname, "dns_root_servers", strlen("dns_root_servers")))  {
+        PyObject *py_rootservers;
+        getdns_list *dns_root_servers;
+        if ((ret = getdns_context_get_dns_root_servers(context, &dns_root_servers)) !=
+            GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+        if (dns_root_servers == (getdns_list *)0)  {
+           Py_RETURN_NONE;
+        }
+        else  {
+        if ((py_rootservers = glist_to_plist(dns_root_servers)) == NULL)  {
+            PyObject *err_type, *err_value, *err_traceback;
+            PyErr_Fetch(&err_type, &err_value, &err_traceback);
+            PyErr_Restore(err_type, err_value, err_traceback);
+            return NULL;
+        }
+        return py_rootservers;
+        }
+    }
+
     api_info = getdns_context_get_api_information(context);
     if (!strncmp(attrname, "resolution_type", strlen("resolution_type")))  {
         uint32_t resolution_type;
@@ -936,20 +973,6 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong(follow_redirects);
 #endif
     }
-    if (!strncmp(attrname, "append_name", strlen("append_name")))  {
-        uint32_t append_name;
-        if ((ret = getdns_dict_get_int(all_context, "append_name",
-                                       &append_name)) !=
-            GETDNS_RETURN_GOOD)  {
-            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-            return NULL;
-        }
-#if PY_MAJOR_VERSION >= 3
-        return PyLong_FromLong(append_name);
-#else
-        return PyInt_FromLong(append_name);
-#endif
-    }
     if (!strncmp(attrname, "dnssec_allowed_skew", strlen("dnssec_allowed_skew")))  {
         uint32_t dnssec_allowed_skew;
         if ((ret = getdns_dict_get_int(all_context, "dnssec_allowed_skew", &dnssec_allowed_skew)) !=
@@ -1043,20 +1066,6 @@ context_getattro(PyObject *self, PyObject *nameobj)
         if ((py_suffix = glist_to_plist(suffix)) == NULL)
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return py_suffix;
-    }
-    if (!strncmp(attrname, "dns_root_servers", strlen("dns_root_servers")))  {
-        PyObject *py_rootservers;
-        getdns_list *dns_root_servers;
-        getdns_return_t ret;
-        if ((ret = getdns_dict_get_list(all_context, "dns_root_servers", &dns_root_servers)) !=
-            GETDNS_RETURN_GOOD)  {
-            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-            return NULL;
-        }
-        if ((py_rootservers = glist_to_plist(dns_root_servers)) == NULL)  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-        }
-        return py_rootservers;
     }
     if (!strncmp(attrname, "upstream_recursive_servers", strlen("upstream_recursive_servers")))  {
         PyObject *py_upstream_servers;
