@@ -37,7 +37,6 @@
 #include <string.h>
 #include <getdns/getdns.h>
 #include <getdns/getdns_extra.h>
-#include <ldns/ldns.h>
 #include "pygetdns.h"
 
 
