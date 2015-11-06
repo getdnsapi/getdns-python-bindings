@@ -95,6 +95,7 @@ typedef struct {
     struct event_base *event_base;
     char *implementation_string;
     char *version_string;
+    uint16_t tls_authentication;
 } getdns_ContextObject;
 
 

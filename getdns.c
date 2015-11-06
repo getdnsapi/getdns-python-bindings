@@ -192,7 +192,8 @@ PyMemberDef Context_members[] = {
       "list of dictionaries of root servers" },
     { "dnssec_trust_anchors", T_OBJECT, offsetof(getdns_ContextObject, dnssec_trust_anchors), 0,
       "list of trust anchors" },
-    { "suffix", T_OBJECT, offsetof(getdns_ContextObject, suffix), 0, "list of strings to be appended to search strings" },
+    { "suffix", T_OBJECT, offsetof(getdns_ContextObject, suffix), 0,
+      "list of strings to be appended to search strings" },
     { "upstream_recursive_servers", T_OBJECT, offsetof(getdns_ContextObject,
                                                        upstream_recursive_servers), 0,
       "list of dictionaries defining where a stub resolver will send queries" },
@@ -201,6 +202,8 @@ PyMemberDef Context_members[] = {
     { "version_string", T_STRING|READONLY, offsetof(getdns_ContextObject, version_string), 0,
       "string set by the implementer" },
     {"idle_timeout", T_INT, offsetof(getdns_ContextObject, idle_timeout), 0, "TCP idle timeout" },
+    {"tls_authentication", T_INT, offsetof(getdns_ContextObject, tls_authentication), 0,
+     "TLS authentication basis" },
     { NULL }
 };
 

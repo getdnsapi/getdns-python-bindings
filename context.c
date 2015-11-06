@@ -223,7 +223,7 @@ int
 context_set_limit_outstanding_queries(getdns_context *context, PyObject *py_value)
 {
     getdns_return_t ret;
-    uint16_t value;
+    long value;
     
 #if PY_MAJOR_VERSION >= 3
     if (!PyLong_Check(py_value))  {
@@ -236,12 +236,13 @@ context_set_limit_outstanding_queries(getdns_context *context, PyObject *py_valu
 #if PY_MAJOR_VERSION >= 3
     if ((value = PyLong_AsLong(py_value)) < 0)  {
 #else
-    if ((value = PyInt_AsLong(py_value)) < 0)  {
+      if ((value = PyInt_AsLong(py_value)) < 0)  {
 #endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if ((ret = getdns_context_set_limit_outstanding_queries(context, value)) != GETDNS_RETURN_GOOD)  {
+      if ((ret = getdns_context_set_limit_outstanding_queries(context, (uint16_t) value)) !=
+          GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return -1;
     }
@@ -460,6 +461,38 @@ context_set_edns_extended_rcode(getdns_context *context, PyObject *py_value)
     }
     return 0;
 }
+
+
+int
+context_set_tls_authentication(getdns_context *context, PyObject *py_value)  
+{
+    getdns_return_t ret;
+    getdns_tls_authentication_t value;
+
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
+    if (!PyInt_Check(py_value))  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+#if PY_MAJOR_VERSION >= 3
+    if ((value = (getdns_tls_authentication_t)PyLong_AsLong(py_value)) < 0)  {
+#else
+    if ((value = (getdns_tls_authentication_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+    if ((ret = getdns_context_set_tls_authentication(context, value))
+        != GETDNS_RETURN_GOOD)  {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return -1;
+    }
+    return 0;
+}
+
 
 
 int
@@ -1152,6 +1185,9 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     }
     if (!strncmp(name, "dns_transport_list", strlen("dns_transport_list")))  {
         return(context_set_dns_transport_list(context, py_value));
+    }
+    if (!strncmp(name, "tls_authentication", strlen("tls_authentication")))  {
+        return(context_set_tls_authentication(context, py_value));
     }
 #if 0
     if (!strncmp(name, "dns_transport", strlen("dns_transport")))  {
