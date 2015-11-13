@@ -383,20 +383,16 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "RETURN_DNSSEC_WITH_STUB_DISALLOWED", 309);
     PyModule_AddIntConstant(g, "RETURN_MEMORY_ERROR", 310);
     PyModule_AddIntConstant(g, "RETURN_INVALID_PARAMETER", 311);
+    PyModule_AddIntConstant(g, "RETURN_NOT_IMPLEMENTED", 312);
 
 /*
  * dnssec values
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_SECURE", 400);
     PyModule_AddIntConstant(g, "DNSSEC_SECURE", 400);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_BOGUS", 401);
     PyModule_AddIntConstant(g, "DNSSEC_BOGUS", 401);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_INDETERMINATE", 402);
     PyModule_AddIntConstant(g, "DNSSEC_INDETERMINATE", 402);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_INSECURE", 403);
     PyModule_AddIntConstant(g, "DNSSEC_INSECURE", 403);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_NOT_PERFORMED", 404);
     PyModule_AddIntConstant(g, "DNSSEC_NOT_PERFORMED", 404);
 
 /*
@@ -432,10 +428,6 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "TRANSPORT_UDP_ONLY", 541);
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY", 542);
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
-#if defined(WITH_TLS)
-    PyModule_AddIntConstant(g, "TRANSPORT_TLS_ONLY_KEEP_CONNECTIONS_OPEN", 544);
-    PyModule_AddIntConstant(g, "TRANSPORT_TLS_FIRST_AND_FALL_BACK_TO_TCP_KEEP_CONNECTIONS_OPEN", 545);
-#endif
 
 /*
  * transport list constants
@@ -475,6 +467,16 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "CONTEXT_CODE_DNSSEC_ALLOWED_SKEW", 614);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_MEMORY_FUNCTIONS", 615);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_TIMEOUT", 616);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_IDLE_TIMEOUT", 617);
+    
+/*
+ *  callback types
+ */
+
+    PyModule_AddIntConstant(g, "CALLBACK_COMPLETE", 700);
+    PyModule_AddIntConstant(g, "CALLBACK_CANCEL", 701);
+    PyModule_AddIntConstant(g, "CALLBACK_TIMEOUT", 702);
+    PyModule_AddIntConstant(g, "CALLBACK_ERROR", 703);
 
 /*
  * name service types
@@ -482,9 +484,6 @@ add_getdns_constants(PyObject *g)
 
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_DNS", 800);
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_WINS", 801);
-
-    PyModule_AddIntConstant(g, "EXTENSION_TRUE", 1000);
-    PyModule_AddIntConstant(g, "EXTENSION_FALSE", 1001);
 
     PyModule_AddIntConstant(g, "CALLBACK_COMPLETE", 700);
     PyModule_AddIntConstant(g, "CALLBACK_CANCEL", 701);
@@ -496,6 +495,9 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "RESPSTATUS_ALL_TIMEOUT", 902);
     PyModule_AddIntConstant(g, "RESPSTATUS_NO_SECURE_ANSWERS", 903);
     PyModule_AddIntConstant(g, "RESPSTATUS_ALL_BOGUS_ANSWERS", 904);
+
+    PyModule_AddIntConstant(g, "EXTENSION_TRUE", 1000);
+    PyModule_AddIntConstant(g, "EXTENSION_FALSE", 1001);
 
     PyModule_AddIntConstant(g, "BAD_DNS_CNAME_IN_TARGET", 1100);
     PyModule_AddIntConstant(g, "BAD_DNS_ALL_NUMERIC_LABEL", 1101);
@@ -581,8 +583,42 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "RRTYPE_AXFR", 252);
     PyModule_AddIntConstant(g, "RRTYPE_MAILB", 253);
     PyModule_AddIntConstant(g, "RRTYPE_MAILA", 254);
+    PyModule_AddIntConstant(g, "RRTYPE_ANY", 255);
     PyModule_AddIntConstant(g, "RRTYPE_URI", 256);
     PyModule_AddIntConstant(g, "RRTYPE_CAA", 257);
     PyModule_AddIntConstant(g, "RRTYPE_TA", 32768);
     PyModule_AddIntConstant(g, "RRTYPE_DLV", 32769);
+
+    PyModule_AddIntConstant(g, "RRCLASS_IN", 1);
+    PyModule_AddIntConstant(g, "RRCLASS_CH", 3);
+    PyModule_AddIntConstant(g, "RRCLASS_HS", 4);
+    PyModule_AddIntConstant(g, "RRCLASS_NONE", 254);
+    PyModule_AddIntConstant(g, "RRCLASS_ANY", 255);
+
+    PyModule_AddIntConstant(g, "OPCODE_QUERY", 0);
+    PyModule_AddIntConstant(g, "OPCODE_IQUERY", 1);
+    PyModule_AddIntConstant(g, "OPCODE_STATUS", 2);
+    PyModule_AddIntConstant(g, "OPCODE_NOTIFY", 4);
+    PyModule_AddIntConstant(g, "OPCODE_UPDATE", 5);
+
+    PyModule_AddIntConstant(g, "RCODE_NOERROR", 0);
+    PyModule_AddIntConstant(g, "RCODE_FORMERR", 1);
+    PyModule_AddIntConstant(g, "RCODE_SERVFAIL", 2);
+    PyModule_AddIntConstant(g, "RCODE_NXDOMAIN", 3);
+    PyModule_AddIntConstant(g, "RCODE_NOTIMP", 4);
+    PyModule_AddIntConstant(g, "RCODE_REFUSED", 5);
+    PyModule_AddIntConstant(g, "RCODE_YXDOMAIN", 6);
+    PyModule_AddIntConstant(g, "RCODE_YXRRSET", 7);
+    PyModule_AddIntConstant(g, "RCODE_NXRRSET", 8);
+    PyModule_AddIntConstant(g, "RCODE_NOTAUTH", 9);
+    PyModule_AddIntConstant(g, "RCODE_NOTZONE", 10);
+    PyModule_AddIntConstant(g, "RCODE_BADVERS", 16);
+    PyModule_AddIntConstant(g, "RCODE_BADSIG", 16);
+    PyModule_AddIntConstant(g, "RCODE_BADKEY", 17);
+    PyModule_AddIntConstant(g, "RCODE_BADTIME", 18);
+    PyModule_AddIntConstant(g, "RCODE_BADMODE", 19);
+    PyModule_AddIntConstant(g, "RCODE_BADNAME", 20);
+    PyModule_AddIntConstant(g, "RCODE_BADALG", 21);
+    PyModule_AddIntConstant(g, "RCODE_BADTRUNC", 22);
+
 }
