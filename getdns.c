@@ -621,4 +621,14 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "RCODE_BADALG", 21);
     PyModule_AddIntConstant(g, "RCODE_BADTRUNC", 22);
 
+/*
+ * extras
+ */
+
+/*
+ * values for tls_authentication
+ */
+
+    PyModule_AddIntConstant(g, "AUTHENTICATION_NONE", 1300);
+    PyModule_AddIntConstant(g, "AUTHENTICATION_HOSTNAME", 1301);
 }
