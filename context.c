@@ -1022,6 +1022,19 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong(limit_outstanding_queries);
 #endif
     }
+    if (!strncmp(attrname, "tls_query_padding_blocksize", strlen("tls_query_padding_blocksize")))  {
+        uint16_t tls_query_padding_blocksize;
+        if ((ret = getdns_context_get_tls_query_padding_blocksize(context, &tls_query_padding_blocksize)) !=
+            GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)tls_query_padding_blocksize);
+#else
+        return PyInt_FromLong((long)tls_query_padding_blocksize);
+#endif
+    }
     if (!strncmp(attrname, "follow_redirects", strlen("follow_redirects")))  {
         uint32_t follow_redirects;
         if ((ret = getdns_dict_get_int(all_context, "follow_redirects",
