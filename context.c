@@ -526,6 +526,41 @@ context_set_tls_query_padding_blocksize(getdns_context *context, PyObject *py_va
 
 
 int
+context_set_edns_client_subnet_private(getdns_context *context, PyObject *py_value)
+{
+    getdns_return_t ret;
+    uint8_t value;
+    
+#if PY_MAJOR_VERSION >= 3
+    if (!PyLong_Check(py_value))  {
+#else
+    if (!PyInt_Check(py_value))  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+#if PY_MAJOR_VERSION >= 3
+    if ((value = (uint8_t)PyLong_AsLong(py_value)) < 0)  {
+#else
+    if ((value = (uint8_t)PyInt_AsLong(py_value)) < 0)  {
+#endif
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+    if (! ((value == 0) || (value == 1)) )  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return -1;
+    }
+    if ((ret = getdns_context_set_edns_client_subnet_private(context, (uint8_t)value))
+        != GETDNS_RETURN_GOOD)  {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return -1;
+    }
+    return 0;
+}
+
+
+int
 context_set_edns_version(getdns_context *context, PyObject *py_value)
 {
     getdns_return_t ret;
@@ -1035,6 +1070,19 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong((long)tls_query_padding_blocksize);
 #endif
     }
+    if (!strncmp(attrname, "edns_client_subnet_private", strlen("edns_client_subnet_private")))  {
+        uint8_t edns_client_subnet_private;
+        if ((ret = getdns_context_get_edns_client_subnet_private(context, &edns_client_subnet_private)) !=
+            GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)edns_client_subnet_private);
+#else
+        return PyInt_FromLong((long)edns_client_subnet_private);
+#endif
+    }
     if (!strncmp(attrname, "follow_redirects", strlen("follow_redirects")))  {
         uint32_t follow_redirects;
         if ((ret = getdns_dict_get_int(all_context, "follow_redirects",
@@ -1234,6 +1282,9 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     }
     if (!strncmp(name, "tls_query_padding_blocksize", strlen("tls_query_padding_blocksize")))  {
         return(context_set_tls_query_padding_blocksize(context, py_value));
+    }
+    if (!strncmp(name, "edns_client_subnet_private", strlen("edns_client_subnet_private")))  {
+        return(context_set_edns_client_subnet_private(context, py_value));
     }
     return 0;
 }

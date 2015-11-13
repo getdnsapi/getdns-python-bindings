@@ -206,6 +206,8 @@ PyMemberDef Context_members[] = {
      "TLS authentication basis" },
     {"tls_query_padding_blocksize", T_INT, offsetof(getdns_ContextObject, tls_query_padding_blocksize),
      0, "padding blocksize" },
+    { "edns_client_subnet_private", T_INT, offsetof(getdns_ContextObject, edns_client_subnet_private), 0,
+     "ask upstreams not to reveal query's originating network" },
     { NULL }
 };
 

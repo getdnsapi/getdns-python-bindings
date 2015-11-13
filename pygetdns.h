@@ -97,6 +97,7 @@ typedef struct {
     char *version_string;
     uint16_t tls_authentication;
     uint16_t tls_query_padding_blocksize;
+    uint8_t edns_client_subnet_private;
 } getdns_ContextObject;
 
 
@@ -135,7 +136,7 @@ int context_set_upstream_recursive_servers(getdns_context *context, PyObject *py
 int context_set_edns_do_bit(getdns_context *context, PyObject *py_value);
 int context_set_dns_transport_list(getdns_context *context, PyObject *py_value);
 int context_set_tls_query_padding_blocksize(getdns_context *context, PyObject *py_value);
-
+int context_set_edns_client_subnet_private(getdns_context *context, PyObject *py_value);
 
 PyObject *context_str(PyObject *self);
 
