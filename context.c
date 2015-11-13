@@ -1083,6 +1083,19 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong((long)edns_client_subnet_private);
 #endif
     }
+    if (!strncmp(attrname, "tls_authentication", strlen("tls_authentication")))  {
+        getdns_tls_authentication_t value;
+        if ((ret = getdns_context_get_tls_authentication(context, &value)) !=
+            GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+#if PY_MAJOR_VERSION >= 3
+        return PyLong_FromLong((long)value);
+#else
+        return PyInt_FromLong((long)value);
+#endif
+    }
     if (!strncmp(attrname, "follow_redirects", strlen("follow_redirects")))  {
         uint32_t follow_redirects;
         if ((ret = getdns_dict_get_int(all_context, "follow_redirects",
