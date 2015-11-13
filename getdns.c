@@ -204,6 +204,8 @@ PyMemberDef Context_members[] = {
     {"idle_timeout", T_INT, offsetof(getdns_ContextObject, idle_timeout), 0, "TCP idle timeout" },
     {"tls_authentication", T_INT, offsetof(getdns_ContextObject, tls_authentication), 0,
      "TLS authentication basis" },
+    {"tls_query_padding_blocksize", T_INT, offsetof(getdns_ContextObject, tls_query_padding_blocksize),
+     0, "padding blocksize" },
     { NULL }
 };
 
