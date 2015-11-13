@@ -122,6 +122,20 @@ get_validation_chain(struct getdns_dict *result_dict)
 }
 
 
+PyObject *
+get_call_debugging(struct getdns_dict *result_dict)
+{
+    struct getdns_list *call_debugging;
+    getdns_return_t ret;
+
+
+    if ((ret = getdns_dict_get_list(result_dict, "call_debugging", &call_debugging)) !=
+        GETDNS_RETURN_GOOD)
+        Py_RETURN_NONE;
+    else
+        return glist_to_plist(call_debugging);
+}
+
 struct getdns_dict *
 extensions_to_getdnsdict(PyDictObject *pydict)
 {

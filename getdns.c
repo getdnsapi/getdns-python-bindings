@@ -92,6 +92,8 @@ PyMemberDef Result_members[] = {
       "Canonical name" },
     { "validation_chain", T_OBJECT_EX, offsetof(getdns_ResultObject, validation_chain),
       READONLY, "DNSSEC certificate chain" },
+    { "call_debugging", T_OBJECT_EX, offsetof(getdns_ResultObject, call_debugging),
+      READONLY, "Query debugging info" },
     { NULL },
 };
 
