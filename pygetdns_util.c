@@ -156,12 +156,8 @@ extensions_to_getdnsdict(PyDictObject *pydict)
              (!strncmp(tmp_key, "dnssec_return_only_secure", strlen("dnssec_return_only_secure")))  ||
              (!strncmp(tmp_key, "dnssec_return_validation_chain", strlen("dnssec_return_validation_chain")))  ||
              (!strncmp(tmp_key, "return_both_v4_and_v6", strlen("return_both_v4_and_v6")))  ||
-             (!strncmp(tmp_key, "dnssec_return_supporting_responses", strlen("dnssec_return_supporting_responses")))  ||
              (!strncmp(tmp_key, "return_api_information", strlen("return_api_information")))  ||
              (!strncmp(tmp_key, "return_call_debugging", strlen("return_call_debugging")))  ||
-#if defined(WITH_EDNS_COOKIES)
-             (!strncmp(tmp_key, "edns_cookies", strlen("edns_cookies")))  ||
-#endif             
              (!strncmp(tmp_key, "add_warning_for_bad_dns", strlen("add_warning_for_bad_dns"))) )  {
 #if PY_MAJOR_VERSION >= 3
             if (!PyLong_Check(value))  {
@@ -276,7 +272,8 @@ extensions_to_getdnsdict(PyDictObject *pydict)
                         /* optionitem should be a dict with keys option_code and option_data */
                         while (PyDict_Next(optionitem, &optiondictpos, &optiondictkey, &optiondictvalue))  {
 #if PY_MAJOR_VERSION >= 3
-                            tmpoptionlistkey = PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(optiondictkey), "ascii", NULL)); /* XXX */
+                            tmpoptionlistkey = PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(optiondictkey),
+                                                                                          "ascii", NULL)); /* XXX */
 #else
                             tmpoptionlistkey = PyString_AsString(PyObject_Str(optiondictkey));
 #endif
@@ -298,9 +295,11 @@ extensions_to_getdnsdict(PyDictObject *pydict)
                                 option_data = (struct getdns_bindata *)malloc(sizeof(struct getdns_bindata));
                                 option_data->size = PyObject_Length(optiondictvalue);
 #if PY_MAJOR_VERSION >= 3
-                                option_data->data = (uint8_t *)PyBytes_AsString(PyObject_Bytes(optiondictvalue)); /* This is almost certainly wrong */
+/* This is almost certainly wrong */
+                                option_data->data = (uint8_t *)PyBytes_AsString(PyObject_Bytes(optiondictvalue));
 #else
-                                option_data->data = (uint8_t *)PyString_AsString(PyObject_Bytes(optiondictvalue)); /* This is almost certainly wrong */
+/* ditto */
+                                option_data->data = (uint8_t *)PyString_AsString(PyObject_Bytes(optiondictvalue)); 
 #endif
                                 getdns_dict_set_bindata(tmpoptions_list_dict, "option_data", option_data);
                             } else  {
