@@ -53,12 +53,18 @@ PyObject *getdns_error;
 static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *root_trust_anchor(PyObject *self, PyObject *args, PyObject *keywds);
 static void add_getdns_constants(PyObject *g);
-
+static PyObject *ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds);
+	
 static struct PyMethodDef getdns_methods[] = {
     { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
       METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
     { "root_trust_anchor", (PyCFunction)root_trust_anchor, METH_NOARGS,
       "retrieve default list of trust anchor records used to validate DNSSEC" },
+    { "alabel_to_ulabel", (PyCFunction)alabel_to_ulabel,
+      METH_VARARGS|METH_KEYWORDS, "return ulabel from alabel" },
+    { "ulabel_to_alabel", (PyCFunction)ulabel_to_alabel,
+      METH_VARARGS|METH_KEYWORDS, "return alabel from ulabel" },
     { 0, 0, 0 }
 };
 
@@ -258,6 +264,42 @@ PyTypeObject getdns_ContextType = {
     (initproc)context_init,    /* tp_init           */
 };
 
+static PyObject  * 
+alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = { "alabel", NULL };
+    char *alabel;
+    char *ulabel;
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s", kwlist, &alabel))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    ulabel = (char*)getdns_convert_alabel_to_ulabel((char*)alabel);
+#if PY_MAJOR_VERSION >= 3
+    return PyUnicode_FromString(ulabel);
+#else
+    return PyString_FromString(ulabel);
+#endif
+}
+
+static PyObject  *
+ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = { "ulabel", NULL };
+    char *alabel;
+    char *ulabel; 
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "s", kwlist, &ulabel))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    alabel = (char*)getdns_convert_ulabel_to_alabel((char*)ulabel);
+	
+#if PY_MAJOR_VERSION >= 3
+    return PyUnicode_FromString(alabel);
+#else
+    return PyString_FromString(alabel);
+#endif
+}
 
 static PyObject *
 get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)

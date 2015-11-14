@@ -31,10 +31,7 @@
 #include <getdns/getdns_extra.h>
 #include <arpa/inet.h>
 #include <event2/event.h>
-<<<<<<< HEAD
 #include <getdns/getdns_ext_libevent.h>
-=======
->>>>>>> develop
 #include <sys/wait.h>
 #include "pygetdns.h"
 

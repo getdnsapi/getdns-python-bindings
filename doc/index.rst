@@ -50,7 +50,7 @@ you must compile support for them into libgetdns, by
 including the --enable-draft-edns-cookies argument to
 configure.
 
-This release has been tested against libgetdns 0.1.7.
+This release has been tested against libgetdns 0.3.1.
 
 Building
 ========
