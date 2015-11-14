@@ -684,7 +684,7 @@ gdict_to_pdict(struct getdns_dict *dict)
                 PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
                 return NULL;
             }
-            if ((py_localbindata = convertBinData(bindata_item, "")) == 0)  {
+            if ((py_localbindata = convertBinData(bindata_item, (char *)key_name->data)) == 0)  {
                 return NULL;
             }
             if (PyDict_SetItemString(py_dict, (char *)key_name->data, py_localbindata) == -1)  {
