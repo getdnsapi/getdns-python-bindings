@@ -12,10 +12,10 @@ extensions = { "return_both_v4_and_v6" : getdns.EXTENSION_TRUE }
 
 
 def usage():
-    print """Usage: get-ns-ip.py <zone>
+    print("""Usage: get-ns-ip.py <zone>
 
 where <zone> is a DNS zone (domain).
-"""
+""")
     sys.exit(1)
 
 
@@ -23,7 +23,7 @@ def get_ip(ctx, qname):
     iplist = []
     try:
         results = ctx.address(name=qname, extensions=extensions)
-    except getdns.error, e:
+    except getdns.error as e:
         print(str(e))
         sys.exit(1)
 
@@ -31,7 +31,7 @@ def get_ip(ctx, qname):
         for addr in results.just_address_answers:
             iplist.append(addr['address_data'])
     else:
-        print "getdns.address() returned an error: %d" % results['status']
+        print("getdns.address() returned an error: {0}".format(results['status']))
     return iplist
 
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     ctx = getdns.Context()
     try:
         results = ctx.general(name=qname, request_type=getdns.RRTYPE_NS)
-    except getdns.error, e:
+    except getdns.error as e:
         print(str(e))
         sys.exit(1)
     status = results.status
@@ -60,12 +60,12 @@ if __name__ == '__main__':
                     for ip in iplist:
                         hostlist.append( (answer['rdata']['nsdname'], ip) )
     elif status == getdns.RESPSTATUS_NO_NAME:
-        print "%s: no such DNS zone" % qname
+        print("{0}: no such DNS zone".format(qname))
     elif status == getdns.RESPSTATUS_ALL_TIMEOUT:
-        print "%s, NS: query timed out" % qname
+        print("{0}, NS: query timed out".format(qname))
     else:
-        print "%s, %s: unknown return code: %d" % results["status"]
+        print("{0}, NS: unknown return code: {1}".format(qname, results["status"]))
 
     # Print out each NS server name and IP address
     for (nsdname, addr) in sorted(hostlist):
-        print nsdname, addr
+        print(nsdname, addr)

@@ -41,13 +41,42 @@
 #include <stdio.h>
 #include <string.h>
 #include <getdns/getdns.h>
-#include <getdns/getdns_ext_libevent.h>
+#include <getdns/getdns_extra.h>
 #include <event2/event.h>
-#include <pthread.h>
+#include <datetime.h>
+#include <time.h>
 #include "pygetdns.h"
 
 
 PyObject *getdns_error;
+
+static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *root_trust_anchor(PyObject *self, PyObject *args, PyObject *keywds);
+static void add_getdns_constants(PyObject *g);
+
+static struct PyMethodDef getdns_methods[] = {
+    { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
+      METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
+    { "root_trust_anchor", (PyCFunction)root_trust_anchor, METH_NOARGS,
+      "retrieve default list of trust anchor records used to validate DNSSEC" },
+    { 0, 0, 0 }
+};
+
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef getdnsdef = {
+    PyModuleDef_HEAD_INIT,
+    "getdns",     /* m_name */
+    GETDNS_DOCSTRING,    /* m_doc */
+    -1,                  /* m_size */
+    getdns_methods,      /* m_methods */
+    NULL,                /* m_reload */
+    NULL,                /* m_traverse */
+    NULL,                /* m_clear */
+    NULL,                /* m_free */
+
+};
+#endif
 
 PyMemberDef Result_members[] = {
     { "just_address_answers", T_OBJECT_EX, offsetof(getdns_ResultObject, just_address_answers),
@@ -63,6 +92,8 @@ PyMemberDef Result_members[] = {
       "Canonical name" },
     { "validation_chain", T_OBJECT_EX, offsetof(getdns_ResultObject, validation_chain),
       READONLY, "DNSSEC certificate chain" },
+    { "call_debugging", T_OBJECT_EX, offsetof(getdns_ResultObject, call_debugging),
+      READONLY, "Query debugging info" },
     { NULL },
 };
 
@@ -72,8 +103,12 @@ static PyMethodDef Result_methods[] = {
 
 
 PyTypeObject getdns_ResultType = {
-   PyObject_HEAD_INIT(NULL)
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
+#endif
     "getdns.Result",           /*tp_name*/
     sizeof(getdns_ResultObject), /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -136,8 +171,8 @@ PyMemberDef Context_members[] = {
     { "timeout", T_INT, offsetof(getdns_ContextObject, timeout), 0, "timeout in milliseconds" },
     { "resolution_type", T_INT, offsetof(getdns_ContextObject, resolution_type), 0,
       "lookup as recursive or stub resolver" },
-    { "dns_transport", T_INT, offsetof(getdns_ContextObject, dns_transport),
-      0, "dns transport" },
+    { "dns_transport_list", T_OBJECT, offsetof(getdns_ContextObject, dns_transport_list), 0, 
+      "ordered list of dns transports" },
     { "limit_outstanding_queries", T_INT, offsetof(getdns_ContextObject, limit_outstanding_queries),
       0, "limit on the number of unanswered queries" },
     { "follow_redirects", T_INT, offsetof(getdns_ContextObject, follow_redirects),
@@ -159,7 +194,8 @@ PyMemberDef Context_members[] = {
       "list of dictionaries of root servers" },
     { "dnssec_trust_anchors", T_OBJECT, offsetof(getdns_ContextObject, dnssec_trust_anchors), 0,
       "list of trust anchors" },
-    { "suffix", T_OBJECT, offsetof(getdns_ContextObject, suffix), 0, "list of strings to be appended to search strings" },
+    { "suffix", T_OBJECT, offsetof(getdns_ContextObject, suffix), 0,
+      "list of strings to be appended to search strings" },
     { "upstream_recursive_servers", T_OBJECT, offsetof(getdns_ContextObject,
                                                        upstream_recursive_servers), 0,
       "list of dictionaries defining where a stub resolver will send queries" },
@@ -167,13 +203,24 @@ PyMemberDef Context_members[] = {
       "string set by the implementer" },
     { "version_string", T_STRING|READONLY, offsetof(getdns_ContextObject, version_string), 0,
       "string set by the implementer" },
+    {"idle_timeout", T_INT, offsetof(getdns_ContextObject, idle_timeout), 0, "TCP idle timeout" },
+    {"tls_authentication", T_INT, offsetof(getdns_ContextObject, tls_authentication), 0,
+     "TLS authentication basis" },
+    {"tls_query_padding_blocksize", T_INT, offsetof(getdns_ContextObject, tls_query_padding_blocksize),
+     0, "padding blocksize" },
+    { "edns_client_subnet_private", T_INT, offsetof(getdns_ContextObject, edns_client_subnet_private), 0,
+     "ask upstreams not to reveal query's originating network" },
     { NULL }
 };
 
 
 PyTypeObject getdns_ContextType = {
+#if PY_MAJOR_VERSION >= 3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
     PyObject_HEAD_INIT(NULL)
     0,
+#endif
     "getdns.Context",
     sizeof(getdns_ContextObject),
     0,                         /*tp_itemsize*/
@@ -211,14 +258,6 @@ PyTypeObject getdns_ContextType = {
     (initproc)context_init,    /* tp_init           */
 };
 
-static PyObject *get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds);
-
-static struct PyMethodDef getdns_methods[] = {
-    { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
-      METH_VARARGS|METH_KEYWORDS, "return getdns error text by error id" },
-    { 0, 0, 0 }
-};
-
 
 static PyObject *
 get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
@@ -235,17 +274,78 @@ get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
     if ((errstr = (char *)getdns_get_errorstr_by_id((uint16_t)id)) == 0) 
         return Py_None;
     else
+#if PY_MAJOR_VERSION >= 3
+        return PyUnicode_FromString(errstr);
+#else
         return PyString_FromString(errstr);
+#endif
 }
 
 
+static PyObject *
+root_trust_anchor(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    getdns_list *trust_anchors;
+    time_t anchors_date;
+    struct tm *but;             /* busted out time */
+    PyObject *pdate;
+    PyObject *ta_tuple;
+
+    PyDateTime_IMPORT;
+    if ((trust_anchors = getdns_root_trust_anchor(&anchors_date)) == NULL)
+        Py_RETURN_NONE;
+    but = gmtime(&anchors_date);
+    pdate = PyDateTime_FromDateAndTime(but->tm_year+1900, but->tm_mon+1, but->tm_mday,
+                                       but->tm_hour, but->tm_min, but->tm_sec, 0);
+    ta_tuple = PyTuple_Pack(2, glist_to_plist(trust_anchors), pdate);
+    Py_INCREF(ta_tuple);
+    return ta_tuple;
+}
+
+
+#if PY_MAJOR_VERSION >= 3
+
+PyMODINIT_FUNC
+PyInit_getdns(void)
+{
+    PyObject *g;                /* the getdns module object */
+
+    Py_Initialize();
+    if ((g = PyModule_Create(&getdnsdef)) == NULL)  {
+        PyErr_SetString(PyExc_ImportError, "Unable to initialize getdns");
+        return NULL;
+    }
+    getdns_error = PyErr_NewException("getdns.error", NULL, NULL);
+    Py_INCREF(getdns_error);
+    PyModule_AddObject(g, "error", getdns_error);
+    getdns_ContextType.tp_new = PyType_GenericNew;
+    getdns_ResultType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&getdns_ResultType) < 0)  {
+        PyErr_SetString(PyExc_ImportError, "Unable to initialize getdns");
+        return NULL;
+    }
+    Py_INCREF(&getdns_ResultType);
+    PyModule_AddObject(g, "Result", (PyObject *)&getdns_ResultType);
+    if (PyType_Ready(&getdns_ContextType) < 0)  {
+        PyErr_SetString(PyExc_ImportError, "Unable to initialize getdns");
+        return NULL;
+    }
+    Py_INCREF(&getdns_ContextType);
+    PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
+    PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
+    add_getdns_constants(g);
+    return g;
+}
+    
+
+#else
+        
 PyMODINIT_FUNC
 initgetdns(void)
 {
     PyObject *g;
 
     Py_Initialize();
-    PyEval_InitThreads();
     if ((g = Py_InitModule3("getdns", getdns_methods, GETDNS_DOCSTRING)) == NULL)
         return;
     getdns_error = PyErr_NewException("getdns.error", NULL, NULL);
@@ -262,6 +362,15 @@ initgetdns(void)
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
     PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
+    add_getdns_constants(g);
+}
+
+#endif
+
+    
+static void
+add_getdns_constants(PyObject *g)
+{
 /*
  * return value constants
  */
@@ -280,20 +389,16 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "RETURN_DNSSEC_WITH_STUB_DISALLOWED", 309);
     PyModule_AddIntConstant(g, "RETURN_MEMORY_ERROR", 310);
     PyModule_AddIntConstant(g, "RETURN_INVALID_PARAMETER", 311);
+    PyModule_AddIntConstant(g, "RETURN_NOT_IMPLEMENTED", 312);
 
 /*
  * dnssec values
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_SECURE", 400);
     PyModule_AddIntConstant(g, "DNSSEC_SECURE", 400);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_BOGUS", 401);
     PyModule_AddIntConstant(g, "DNSSEC_BOGUS", 401);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_INDETERMINATE", 402);
     PyModule_AddIntConstant(g, "DNSSEC_INDETERMINATE", 402);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_INSECURE", 403);
     PyModule_AddIntConstant(g, "DNSSEC_INSECURE", 403);
-    PyModule_AddIntConstant(g, "GETDNS_DNSSEC_NOT_PERFORMED", 404);
     PyModule_AddIntConstant(g, "DNSSEC_NOT_PERFORMED", 404);
 
 /*
@@ -331,6 +436,15 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
 
 /*
+ * transport list constants
+ */
+
+    PyModule_AddIntConstant(g, "TRANSPORT_UDP", 1200);
+    PyModule_AddIntConstant(g, "TRANSPORT_TCP", 1201);
+    PyModule_AddIntConstant(g, "TRANSPORT_TLS", 1202);
+    PyModule_AddIntConstant(g, "TRANSPORT_STARTTLS", 1203);
+
+/*
  * suffix appending methods
  */
 
@@ -359,6 +473,16 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "CONTEXT_CODE_DNSSEC_ALLOWED_SKEW", 614);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_MEMORY_FUNCTIONS", 615);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_TIMEOUT", 616);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_IDLE_TIMEOUT", 617);
+    
+/*
+ *  callback types
+ */
+
+    PyModule_AddIntConstant(g, "CALLBACK_COMPLETE", 700);
+    PyModule_AddIntConstant(g, "CALLBACK_CANCEL", 701);
+    PyModule_AddIntConstant(g, "CALLBACK_TIMEOUT", 702);
+    PyModule_AddIntConstant(g, "CALLBACK_ERROR", 703);
 
 /*
  * name service types
@@ -366,9 +490,6 @@ initgetdns(void)
 
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_DNS", 800);
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_WINS", 801);
-
-    PyModule_AddIntConstant(g, "EXTENSION_TRUE", 1000);
-    PyModule_AddIntConstant(g, "EXTENSION_FALSE", 1001);
 
     PyModule_AddIntConstant(g, "CALLBACK_COMPLETE", 700);
     PyModule_AddIntConstant(g, "CALLBACK_CANCEL", 701);
@@ -380,6 +501,9 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "RESPSTATUS_ALL_TIMEOUT", 902);
     PyModule_AddIntConstant(g, "RESPSTATUS_NO_SECURE_ANSWERS", 903);
     PyModule_AddIntConstant(g, "RESPSTATUS_ALL_BOGUS_ANSWERS", 904);
+
+    PyModule_AddIntConstant(g, "EXTENSION_TRUE", 1000);
+    PyModule_AddIntConstant(g, "EXTENSION_FALSE", 1001);
 
     PyModule_AddIntConstant(g, "BAD_DNS_CNAME_IN_TARGET", 1100);
     PyModule_AddIntConstant(g, "BAD_DNS_ALL_NUMERIC_LABEL", 1101);
@@ -465,9 +589,52 @@ initgetdns(void)
     PyModule_AddIntConstant(g, "RRTYPE_AXFR", 252);
     PyModule_AddIntConstant(g, "RRTYPE_MAILB", 253);
     PyModule_AddIntConstant(g, "RRTYPE_MAILA", 254);
+    PyModule_AddIntConstant(g, "RRTYPE_ANY", 255);
     PyModule_AddIntConstant(g, "RRTYPE_URI", 256);
     PyModule_AddIntConstant(g, "RRTYPE_CAA", 257);
     PyModule_AddIntConstant(g, "RRTYPE_TA", 32768);
     PyModule_AddIntConstant(g, "RRTYPE_DLV", 32769);
 
+    PyModule_AddIntConstant(g, "RRCLASS_IN", 1);
+    PyModule_AddIntConstant(g, "RRCLASS_CH", 3);
+    PyModule_AddIntConstant(g, "RRCLASS_HS", 4);
+    PyModule_AddIntConstant(g, "RRCLASS_NONE", 254);
+    PyModule_AddIntConstant(g, "RRCLASS_ANY", 255);
+
+    PyModule_AddIntConstant(g, "OPCODE_QUERY", 0);
+    PyModule_AddIntConstant(g, "OPCODE_IQUERY", 1);
+    PyModule_AddIntConstant(g, "OPCODE_STATUS", 2);
+    PyModule_AddIntConstant(g, "OPCODE_NOTIFY", 4);
+    PyModule_AddIntConstant(g, "OPCODE_UPDATE", 5);
+
+    PyModule_AddIntConstant(g, "RCODE_NOERROR", 0);
+    PyModule_AddIntConstant(g, "RCODE_FORMERR", 1);
+    PyModule_AddIntConstant(g, "RCODE_SERVFAIL", 2);
+    PyModule_AddIntConstant(g, "RCODE_NXDOMAIN", 3);
+    PyModule_AddIntConstant(g, "RCODE_NOTIMP", 4);
+    PyModule_AddIntConstant(g, "RCODE_REFUSED", 5);
+    PyModule_AddIntConstant(g, "RCODE_YXDOMAIN", 6);
+    PyModule_AddIntConstant(g, "RCODE_YXRRSET", 7);
+    PyModule_AddIntConstant(g, "RCODE_NXRRSET", 8);
+    PyModule_AddIntConstant(g, "RCODE_NOTAUTH", 9);
+    PyModule_AddIntConstant(g, "RCODE_NOTZONE", 10);
+    PyModule_AddIntConstant(g, "RCODE_BADVERS", 16);
+    PyModule_AddIntConstant(g, "RCODE_BADSIG", 16);
+    PyModule_AddIntConstant(g, "RCODE_BADKEY", 17);
+    PyModule_AddIntConstant(g, "RCODE_BADTIME", 18);
+    PyModule_AddIntConstant(g, "RCODE_BADMODE", 19);
+    PyModule_AddIntConstant(g, "RCODE_BADNAME", 20);
+    PyModule_AddIntConstant(g, "RCODE_BADALG", 21);
+    PyModule_AddIntConstant(g, "RCODE_BADTRUNC", 22);
+
+/*
+ * extras
+ */
+
+/*
+ * values for tls_authentication
+ */
+
+    PyModule_AddIntConstant(g, "AUTHENTICATION_NONE", 1300);
+    PyModule_AddIntConstant(g, "AUTHENTICATION_HOSTNAME", 1301);
 }

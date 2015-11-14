@@ -32,7 +32,7 @@
 #ifndef PYGETDNS_H
 #define PYGETDNS_H
 
-#define PYGETDNS_VERSION "0.3.1"
+#define PYGETDNS_VERSION "0.4.1"
 #define GETDNS_DOCSTRING "getdns bindings for Python (see http://www.getdnsapi.net)"
 
 #define GETDNS_STR_IPV4 "IPv4"
@@ -59,6 +59,7 @@ typedef struct  {
     PyObject *canonical_name;
     PyObject *replies_full;
     PyObject *validation_chain;
+    PyObject *call_debugging;
 } getdns_ResultObject;
 
 
@@ -73,8 +74,11 @@ typedef struct {
     PyObject_HEAD
     PyObject *py_context;       /* Python capsule containing getdns_context */
     uint64_t  timeout;          /* timeout attribute (milliseconds) */
+    uint64_t  idle_timeout;     /* TCP timeout attribute (milliseconds) */
     getdns_resolution_t resolution_type; /* stub or recursive? */
+#if 0
     getdns_transport_t dns_transport;    /* udp/tcp/etc */
+#endif    
     uint16_t limit_outstanding_queries;
     getdns_redirects_t follow_redirects;
     getdns_append_name_t append_name;
@@ -88,9 +92,13 @@ typedef struct {
     getdns_list *dns_root_servers;
     getdns_list *dnssec_trust_anchors;
     getdns_list *upstream_recursive_servers;
+    getdns_transport_list_t *dns_transport_list;
     struct event_base *event_base;
     char *implementation_string;
     char *version_string;
+    uint16_t tls_authentication;
+    uint16_t tls_query_padding_blocksize;
+    uint8_t edns_client_subnet_private;
 } getdns_ContextObject;
 
 
@@ -107,6 +115,7 @@ char *get_canonical_name(struct getdns_dict *result_dict);
 PyObject *get_just_address_answers(struct getdns_dict *result_dict);
 PyObject *get_replies_tree(struct getdns_dict *result_dict);
 PyObject *get_validation_chain(struct getdns_dict *result_dict);
+PyObject *get_call_debugging(struct getdns_dict *result_dict);
 
 int context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_getattro(PyObject *self, PyObject *nameobj);
@@ -127,6 +136,9 @@ int context_set_dns_root_servers(getdns_context *context, PyObject *py_value);
 int context_set_dnssec_trust_anchors(getdns_context *context, PyObject *py_value);
 int context_set_upstream_recursive_servers(getdns_context *context, PyObject *py_value);
 int context_set_edns_do_bit(getdns_context *context, PyObject *py_value);
+int context_set_dns_transport_list(getdns_context *context, PyObject *py_value);
+int context_set_tls_query_padding_blocksize(getdns_context *context, PyObject *py_value);
+int context_set_edns_client_subnet_private(getdns_context *context, PyObject *py_value);
 
 PyObject *context_str(PyObject *self);
 

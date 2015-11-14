@@ -59,12 +59,16 @@ as its methods and attributes.
    be information leakage that is similar to that seen with
    POSIX *getaddrinfo()*. The default is determined by the OS.
 
-  .. py:attribute:: dns_transport
+   .. py:attribute:: dns_transport_list
 
-   Specifies what transport is used for DNS lookups. The
-   value must be one of ``getdns.TRANSPORT_UDP_FIRST_AND_FALL_BACK_TO_TCP``,
-   ``getdns.TRANSPORT_UDP_ONLY``, ``getdns.TRANSPORT_TCP_ONLY``, or
-   ``getdns.TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN``. 
+   An ordered list of transport options to be used for DNS
+   lookups, ordered by preference (first choice as list
+   element 0, second as list element 1, and so on).  The
+   possible values are ``getdns.TRANSPORT_UDP``,
+   ``getdns.TRANSPORT_TCP``, ``getdns.TRANSPORT_TLS``,
+   and ``getdns.TRANSPORT_STARTTLS``.  [n.b.: *the
+   ``dns_transport`` attribute is still supported but will
+   be deprecated in a future release*]
 
   .. py:attribute:: limit_outstanding_queries
 
@@ -266,6 +270,12 @@ The extensions currently supported by :py:mod:`getdns` are:
    * ``specify_class``
    * ``return_call_debugging``
 
+Extensions that are optionally built (see above) include
+
+   * ``edns-cookies``
+
+``edns-cookies`` also takes the value ``getdns.EXTENSION_TRUE``.
+
 Extensions for DNSSEC
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -434,7 +444,7 @@ differences:
      address lookup could look like
 
    >>> c = getdns.Context()
-   >>> tid = c.address('www.example.org', callback='my_callback')
+   >>> tid = c.address('www.example.org', callback=my_callback)
 
    * We've introduced a new ``Context`` method, called
      ``run``.  When your program is ready to check to see
@@ -445,6 +455,11 @@ differences:
      outstanding events associated with a particular
      context, ``run`` will invoke all of those that are
      waiting and ready.
+
+   * In previous releases the callback argument took the
+     form of a literal string, but as of this release you
+     may pass in the name of any Python runnable, without
+     quotes.  The newer form is preferred.
 
 The callback script takes four arguments: ``type``,
 ``result``, ``userarg``, and ``transaction_id.  The ``type``
