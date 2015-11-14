@@ -169,5 +169,6 @@ PyObject *decode_getdns_replies_tree_response(struct getdns_dict *response);
 PyObject *getFullResponse(struct getdns_dict *dict);
 getdns_dict *getdnsify_addressdict(PyObject *pydict);
 
+PyObject *convertToDict(struct getdns_dict* dict);
 
 #endif /* PYGETDNS_H */

@@ -1,4 +1,4 @@
- /*
+/*
  * \ file pygetdns_util.c
  * @brief utility functions to support pygetdns bindings
  */
@@ -350,17 +350,39 @@ getdnsify_addressdict(PyObject *pydict)
     PyObject *str;
     unsigned char buf[sizeof(struct in6_addr)];
     int domain;
-
+    getdns_bindata tls_auth_name;
+    uint32_t tls_port;
 
     if (!PyDict_Check(pydict))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#if 0
     if (PyDict_Size(pydict) != 2)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#endif
     addr_dict = getdns_dict_create();
+    /* XXX rewrite this so it's more general */
+    if ((str = PyDict_GetItemString(pydict, "tls_auth_name")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        tls_auth_name.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
+        tls_auth_name.data = (uint8_t *)strdup(PyString_AsString(str));
+#endif
+        tls_auth_name.size = (size_t)strlen((char *)tls_auth_name.data);
+        getdns_dict_set_bindata(addr_dict, "tls_auth_name", &tls_auth_name);
+    }
+    if ((str = PyDict_GetItemString(pydict, "tls_port")) != NULL)  {
+        if (!PyInt_Check(str))  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+        tls_port = (uint32_t)PyInt_AsLong(str);
+        getdns_dict_set_int(addr_dict, "tls_port", tls_port);
+    }
+
     if ((str = PyDict_GetItemString(pydict, "address_type")) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
@@ -416,6 +438,7 @@ getdnsify_addressdict(PyObject *pydict)
     addr_data.data = (uint8_t *)buf;
     addr_data.size = (domain == AF_INET ? 4 : 16);
     getdns_dict_set_bindata(addr_dict, "address_data", &addr_data);
+
     return addr_dict;
 }
 
