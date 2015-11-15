@@ -1207,12 +1207,12 @@ context_getattro(PyObject *self, PyObject *nameobj)
         getdns_list *upstream_list;
         getdns_return_t ret;
 
-        if ((ret = getdns_dict_get_list(all_context, "upstream_recursive_servers",
-                                        &upstream_list)) != GETDNS_RETURN_GOOD)  {
+        if ((ret = getdns_context_get_upstream_recursive_servers(context,
+                                                                 &upstream_list)) != GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
             return NULL;
         }
-        if ((py_upstream_servers = pythonify_address_list(upstream_list)) == NULL)  {
+        if ((py_upstream_servers = glist_to_plist(upstream_list)) == NULL)  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
             return NULL;
         }
