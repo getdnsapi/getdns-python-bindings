@@ -1222,6 +1222,42 @@ context_getattro(PyObject *self, PyObject *nameobj)
     return PyObject_GenericGetAttr((PyObject *)self, nameobj);
 }
 
+/*
+ * must be in alphabetical order by attribute name.  attribute name and the
+ * name of its setter function
+ */
+
+struct setter_table setters[] = {
+    { "append_name", context_set_append_name },
+    { "dnssec_allowed_skew", context_set_dnssec_allowed_skew },
+    { "dns_root_servers", context_set_dns_root_servers },
+    { "dns_transport_list", context_set_dns_transport_list },
+    { "edns_client_subnet_private", context_set_edns_client_subnet_private },
+    { "edns_do_bit", context_set_edns_do_bit },
+    { "edns_extended_rcode", context_set_edns_extended_rcode },
+    { "edns_maximum_udp_payload_size", context_set_edns_maximum_udp_payload_size },
+    { "edns_version", context_set_edns_version },
+    { "idle_timeout", context_set_idle_timeout },
+    { "follow_redirects", context_set_follow_redirects },
+    { "limit_outstanding_queries", context_set_limit_outstanding_queries },
+    { "namespaces", context_set_namespaces },
+    { "resolution_type", context_set_resolution_type },
+    { "suffix", context_set_suffix },
+    { "timeout", context_set_timeout },
+    { "tls_authentication", context_set_tls_authentication },
+    { "tls_query_padding_blocksize", context_set_tls_query_padding_blocksize },
+    { "upstream_recursive_servers", context_set_upstream_recursive_servers },
+};
+
+#define NSETTERS  (sizeof(setters) / sizeof(setters[0]))
+static int
+compare_setters(const void *key, const void *entry)
+{
+    struct setter_table *s1 = (struct setter_table *)key;
+    struct setter_table *s2 = (struct setter_table *)entry;
+
+    return strcmp(s1->name, s2->name);
+}
 
 
 int
@@ -1230,74 +1266,36 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     getdns_ContextObject *myself = (getdns_ContextObject *)self;
     struct getdns_context *context;
     char *name;
+    struct setter_table key;
+    struct setter_table *setter;
 
 #if PY_MAJOR_VERSION >= 3
     name = PyBytes_AsString(PyUnicode_AsEncodedString(PyObject_Str(attrname), "ascii", NULL));
 #else
     name = PyString_AsString(attrname);
 #endif
+    key.name = name;
     if ((context = PyCapsule_GetPointer(myself->py_context, "context")) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
-    if (!strncmp(name, "timeout", strlen("timeout")))  {
-        return(context_set_timeout(context, py_value));
-    }
-    if (!strncmp(name, "idle_timeout", strlen("idle_timeout")))  {
-        return(context_set_idle_timeout(context, py_value));
-    }
-    if (!strncmp(name, "resolution_type", strlen("resolution_type")))  {
-        return(context_set_resolution_type(context, py_value));
-    }
-    if (!strncmp(name, "limit_outstanding_queries", strlen("limit_outstanding_queries")))  {
-        return(context_set_limit_outstanding_queries(context, py_value));
-    }
-    if (!strncmp(name, "follow_redirects", strlen("follow_redirects")))  {
-        return(context_set_follow_redirects(context, py_value));
-    }
-    if (!strncmp(name, "append_name", strlen("append_name")))  {
-        return(context_set_append_name(context, py_value));
-    }
-    if (!strncmp(name, "suffix", strlen("suffix")))  {
-        return(context_set_suffix(context, py_value));
-    }
-    if (!strncmp(name, "dnssec_allowed_skew", strlen("dnssec_allowed_skew")))  {
-        return(context_set_dnssec_allowed_skew(context, py_value));
-    }
-    if (!strncmp(name, "edns_maximum_udp_payload_size", strlen("edns_maximum_udp_payload_size")))  {
-        return(context_set_edns_maximum_udp_payload_size(context, py_value));
-    }
-    if (!strncmp(name, "edns_extended_rcode", strlen("edns_extended_rcode")))  {
-        return(context_set_edns_extended_rcode(context, py_value));
-    }
-    if (!strncmp(name, "edns_version", strlen("edns_version")))  {
-        return(context_set_edns_version(context, py_value));
-    }
-    if (!strncmp(name, "edns_do_bit", strlen("edns_do_bit")))  {
-        return(context_set_edns_do_bit(context, py_value));
-    }
-    if (!strncmp(name, "namespaces", strlen("namespaces")))  {
-        return(context_set_namespaces(context, py_value));
-    }
-    if (!strncmp(name, "dns_root_servers", strlen("dns_root_servers")))  {
-        return(context_set_dns_root_servers(context, py_value));
-    }
-    if (!strncmp(name, "upstream_recursive_servers", strlen("upstream_recursive_servers")))  {
-        return(context_set_upstream_recursive_servers(context, py_value));
-    }
-    if (!strncmp(name, "dns_transport_list", strlen("dns_transport_list")))  {
-        return(context_set_dns_transport_list(context, py_value));
-    }
-    if (!strncmp(name, "tls_authentication", strlen("tls_authentication")))  {
-        return(context_set_tls_authentication(context, py_value));
-    }
-    if (!strncmp(name, "tls_query_padding_blocksize", strlen("tls_query_padding_blocksize")))  {
-        return(context_set_tls_query_padding_blocksize(context, py_value));
-    }
-    if (!strncmp(name, "edns_client_subnet_private", strlen("edns_client_subnet_private")))  {
-        return(context_set_edns_client_subnet_private(context, py_value));
-    }
+    if ((setter = bsearch(&key, setters, NSETTERS, sizeof(struct setter_table),
+                          compare_setters)) != NULL)
+        return setter->setter(context, py_value);
     return 0;
+}
+
+
+PyObject *
+context_get_attributes(getdns_ContextObject *self, PyObject *unused)
+{
+    int i;
+    PyObject *py_attr_list = PyList_New(NSETTERS);
+
+    for (i = 0 ; i < NSETTERS ; i++)  {
+        (void)PyList_SetItem(py_attr_list, (Py_ssize_t) i, PyString_FromString(setters[i].name));
+    }
+    return py_attr_list;
 }
 
 

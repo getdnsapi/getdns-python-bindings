@@ -101,6 +101,10 @@ typedef struct {
     uint8_t edns_client_subnet_private;
 } getdns_ContextObject;
 
+struct setter_table  {          /* we're now using bsearch to find */
+    char *name;                 /* setters for attribute names - somewhat */
+    int (*setter)(getdns_context *, PyObject *);            /* more efficient but much more maintainable */
+};
 
 extern PyTypeObject getdns_ResultType;
 void result_dealloc(getdns_ResultObject *self);
@@ -149,6 +153,8 @@ PyObject *context_hostname(getdns_ContextObject *self, PyObject *args, PyObject 
 PyObject *context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
+
+PyObject *context_get_attributes(getdns_ContextObject *self, PyObject *unused);
 
 void context_dealloc(getdns_ContextObject *self);
 PyObject *get_callback(char *py_main, char *callback);

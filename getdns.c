@@ -170,6 +170,8 @@ PyMethodDef Context_methods[] = {
       "run unprocessed events" },
     { "cancel_callback", (PyCFunction)context_cancel_callback, METH_VARARGS|METH_KEYWORDS,
       "cancel outstanding callbacks" },
+    { "get_supported_attributes", (PyCFunction)context_get_attributes, METH_NOARGS,
+      "Return a list of support attributes" },
     { NULL }
 };
 
