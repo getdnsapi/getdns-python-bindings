@@ -351,6 +351,7 @@ getdnsify_addressdict(PyObject *pydict)
     unsigned char buf[sizeof(struct in6_addr)];
     int domain;
     getdns_bindata tls_auth_name;
+    getdns_bindata scope_id;
     uint32_t tls_port;
 
     if (!PyDict_Check(pydict))  {
@@ -373,6 +374,15 @@ getdnsify_addressdict(PyObject *pydict)
 #endif
         tls_auth_name.size = (size_t)strlen((char *)tls_auth_name.data);
         getdns_dict_set_bindata(addr_dict, "tls_auth_name", &tls_auth_name);
+    }
+    if ((str = PyDict_GetItemString(pydict, "scope_id")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        scope_id.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
+        scope_id.data = (uint8_t *)strdup(PyString_AsString(str));
+#endif
+        scope_id.size = (size_t)strlen((char *)scope_id.data);
+        getdns_dict_set_bindata(addr_dict, "scope_id", &scope_id);
     }
     if ((str = PyDict_GetItemString(pydict, "tls_port")) != NULL)  {
         if (!PyInt_Check(str))  {
