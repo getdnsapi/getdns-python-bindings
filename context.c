@@ -1282,7 +1282,15 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     if ((setter = bsearch(&key, setters, NSETTERS, sizeof(struct setter_table),
                           compare_setters)) != NULL)
         return setter->setter(context, py_value);
-    return 0;
+/*
+ *  if it's not an attribute we define, throw an error.  The
+ *    tradeoff is between ease of use and extensibility, and
+ *    given that people are getting attribute names wrong this
+ *    is worth trying.  Back it out if there are complaints
+ */
+
+    PyErr_SetString(PyExc_AttributeError, "No such attribute");
+    return -1;
 }
 
 
