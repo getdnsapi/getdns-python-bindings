@@ -8,7 +8,7 @@ ctx = getdns.Context()
 ctx.resolution_type = getdns.RESOLUTION_STUB
 
 extensions = { "return_both_v4_and_v6" : getdns.EXTENSION_TRUE }
-ctx.resolver_type = getdns.RESOLUTION_STUB
+ctx.resolution_type = getdns.RESOLUTION_STUB
 
 try:
     results = ctx.address(name=hostname, extensions=extensions)
