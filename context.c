@@ -492,6 +492,7 @@ context_set_tls_authentication(getdns_context *context, PyObject *py_value)
 }
 
 
+#if GETDNS_NUMERIC_VERSION > 0x00050000
 int
 context_set_tls_query_padding_blocksize(getdns_context *context, PyObject *py_value)  
 {
@@ -521,8 +522,9 @@ context_set_tls_query_padding_blocksize(getdns_context *context, PyObject *py_va
     }
     return 0;
 }
+#endif
 
-
+#if GETDNS_NUMERIC_VERSION > 0x00050000
 int
 context_set_edns_client_subnet_private(getdns_context *context, PyObject *py_value)
 {
@@ -556,7 +558,7 @@ context_set_edns_client_subnet_private(getdns_context *context, PyObject *py_val
     }
     return 0;
 }
-
+#endif
 
 int
 context_set_edns_version(getdns_context *context, PyObject *py_value)
@@ -1055,6 +1057,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong(limit_outstanding_queries);
 #endif
     }
+#if GETDNS_NUMERIC_VERSION > 0x00050000
     if (!strncmp(attrname, "tls_query_padding_blocksize", strlen("tls_query_padding_blocksize")))  {
         uint16_t tls_query_padding_blocksize;
         if ((ret = getdns_context_get_tls_query_padding_blocksize(context, &tls_query_padding_blocksize)) !=
@@ -1068,6 +1071,8 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong((long)tls_query_padding_blocksize);
 #endif
     }
+#endif
+#if GETDNS_NUMERIC_VERSION > 0x00050000
     if (!strncmp(attrname, "edns_client_subnet_private", strlen("edns_client_subnet_private")))  {
         uint8_t edns_client_subnet_private;
         if ((ret = getdns_context_get_edns_client_subnet_private(context, &edns_client_subnet_private)) !=
@@ -1081,6 +1086,8 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong((long)edns_client_subnet_private);
 #endif
     }
+#endif
+#if GETDNS_NUMERIC_VERSION > 0x00050000
     if (!strncmp(attrname, "tls_authentication", strlen("tls_authentication")))  {
         getdns_tls_authentication_t value;
         if ((ret = getdns_context_get_tls_authentication(context, &value)) !=
@@ -1094,6 +1101,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
         return PyInt_FromLong((long)value);
 #endif
     }
+#endif
     if (!strncmp(attrname, "follow_redirects", strlen("follow_redirects")))  {
         uint32_t follow_redirects;
         if ((ret = getdns_dict_get_int(all_context, "follow_redirects",
@@ -1232,7 +1240,9 @@ struct setter_table setters[] = {
     { "dnssec_allowed_skew", context_set_dnssec_allowed_skew },
     { "dns_root_servers", context_set_dns_root_servers },
     { "dns_transport_list", context_set_dns_transport_list },
+#if GETDNS_NUMERIC_VERSION > 0x00050000
     { "edns_client_subnet_private", context_set_edns_client_subnet_private },
+#endif
     { "edns_do_bit", context_set_edns_do_bit },
     { "edns_extended_rcode", context_set_edns_extended_rcode },
     { "edns_maximum_udp_payload_size", context_set_edns_maximum_udp_payload_size },
@@ -1245,7 +1255,9 @@ struct setter_table setters[] = {
     { "suffix", context_set_suffix },
     { "timeout", context_set_timeout },
     { "tls_authentication", context_set_tls_authentication },
+#if GETDNS_NUMERIC_VERSION > 0x00050000
     { "tls_query_padding_blocksize", context_set_tls_query_padding_blocksize },
+#endif
     { "upstream_recursive_servers", context_set_upstream_recursive_servers },
 };
 

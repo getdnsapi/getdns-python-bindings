@@ -97,8 +97,10 @@ typedef struct {
     char *implementation_string;
     char *version_string;
     uint16_t tls_authentication;
+#if GETDNS_NUMERIC_VERSION > 0x00050000
     uint16_t tls_query_padding_blocksize;
     uint8_t edns_client_subnet_private;
+#endif
 } getdns_ContextObject;
 
 struct setter_table  {          /* we're now using bsearch to find */
