@@ -30,8 +30,6 @@ This version of getdns has been built and tested against Python
 installed:
 
 * `libgetdns <http://getdnsapi.net/>`_, version 0.5.0 or later
-* `libldns <https://www.nlnetlabs.nl/projects/ldns/>`_,
-  version 1.6.11 or later
 * `libunbound
   <http://www.nlnetlabs.nl/projects/unbound/>`_, version
   1.4.16 or later
