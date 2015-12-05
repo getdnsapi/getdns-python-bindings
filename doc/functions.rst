@@ -29,16 +29,104 @@ as its methods and attributes.
 
   The :class:`Context` class has the following public read/write attributes:
 
-  .. py:attribute:: resolution_type
+  .. py:attribute:: append_name
 
-   Specifies whether DNS queries are performed with
-   nonrecursive lookups or as a stub resolver. The value is
-   either ``getdns.RESOLUTION_RECURSING`` or
-   ``getdns.RESOLUTION_STUB``.
+   Specifies whether to append a suffix to the query string
+   before the API starts resolving a name. Its value must be
+   one of
+   ``getdns.APPEND_NAME_ALWAYS``,
+   ``getdns.APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE``,
+   ``getdns.APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE``,
+   or ``getdns.APPEND_NAME_NEVER``. This controls whether or not
+   to append the suffix given by :attr:`suffix`.
 
-   If an implementation of this API is only able to act as a
-   recursive resolver, setting `resolution_type`
-   to ``getdns.RESOLUTION_STUB`` will throw an exception.
+  .. py:attribute:: dns_root_servers
+
+   The value of `dns_root_servers` is a list of dictionaries
+   containing addresses to be used for looking up top-level
+   domains.  Each dict in the list contains two key-value
+   pairs:
+  
+   * address_data: a string representation of an IPv4 or
+     IPv6 address
+   * address_type: either the string "IPv4" or "IPv6"
+
+   For example, the addresses list could look like
+
+   >>> addrs = [ { 'address_data': '2001:7b8:206:1::4:53', 'address_type': 'IPv6' },
+   ...         { 'address_data': '65.22.9.1', 'address_type': 'IPv4' } ]
+   >>> mycontext.dns_root_servers = addrs
+
+  .. py:attribute:: dns_transport_list
+
+   An ordered list of transport options to be used for DNS
+   lookups, ordered by preference (first choice as list
+   element 0, second as list element 1, and so on).  The
+   possible values are ``getdns.TRANSPORT_UDP``,
+   ``getdns.TRANSPORT_TCP``, ``getdns.TRANSPORT_TLS``,
+   and ``getdns.TRANSPORT_STARTTLS``. 
+
+  .. py:attribute:: dnssec_allowed_skew
+
+   Its value is the number of seconds of skew that is
+   allowed in either direction when checking an RRSIG's
+   Expiration and Inception fields. The default is 0.
+
+  .. py:attribute:: dnssec_trust_anchors
+
+   Its value is a list of DNSSEC trust anchors, expressed as
+   RDATAs from DNSKEY resource records.
+
+  .. py:attribute:: edns_client_subnet_private
+
+   May be set to 0 or 1.  When 1, requests upstreams not to
+   reveal query's originating network.
+
+  .. py:attribute:: edns_do_bit
+
+   Its value must be an integer valued either 0 or 1.  The default is 0.
+
+  .. py:attribute:: edns_extended_rcode
+
+   Its value must be an integer between 0 and 255, inclusive.
+   The default is 0.
+
+  .. py:attribute:: edns_maximum_udp_payload_size
+
+   Its value must be an integer between 512 and 65535,
+   inclusive.  The default is 512.
+
+  .. py:attribute:: edns_version
+
+   Its value must be an integer between 0 and 255, inclusive.
+   The default is 0.
+
+  .. py:attribute:: follow_redirects
+
+   Specifies whether or not DNS queries follow
+   redirects.  The value must be one of ``getdns.REDIRECTS_FOLLOW`` for
+   normal following of redirects though CNAME and DNAME; or
+   ``getdns.REDIRECTS_DO_NOT_FOLLOW`` to cause any lookups that
+   would have gone through CNAME and DNAME to return the
+   CNAME or DNAME, not the eventual target.
+
+  .. py:attribute:: idle_timeout
+
+   The idle timeout for TCP connections.
+
+  .. py:attribute:: implementation_string
+
+   A string describing the implementation of the underlying
+   getdns library, retrieved from
+   libgetdns.  Currently "https://getdnsapi.net"
+
+  .. py:attribute:: limit_outstanding_queries
+
+   Specifies `limit` (an integer value) on the number of outstanding DNS
+   queries. The API will block itself from sending more
+   queries if it is about to exceed this value, and instead
+   keep those queries in an internal queue. The a value of 0
+   indicates that the number of outstanding DNS queries is unlimited.
 
   .. py:attribute:: namespaces
 
@@ -59,61 +147,16 @@ as its methods and attributes.
    be information leakage that is similar to that seen with
    POSIX *getaddrinfo()*. The default is determined by the OS.
 
-   .. py:attribute:: dns_transport_list
+  .. py:attribute:: resolution_type
 
-   An ordered list of transport options to be used for DNS
-   lookups, ordered by preference (first choice as list
-   element 0, second as list element 1, and so on).  The
-   possible values are ``getdns.TRANSPORT_UDP``,
-   ``getdns.TRANSPORT_TCP``, ``getdns.TRANSPORT_TLS``,
-   and ``getdns.TRANSPORT_STARTTLS``.  [n.b.: *the
-   ``dns_transport`` attribute is still supported but will
-   be deprecated in a future release*]
+   Specifies whether DNS queries are performed with
+   nonrecursive lookups or as a stub resolver. The value is
+   either ``getdns.RESOLUTION_RECURSING`` or
+   ``getdns.RESOLUTION_STUB``.
 
-  .. py:attribute:: limit_outstanding_queries
-
-   Specifies `limit` (an integer value) on the number of outstanding DNS
-   queries. The API will block itself from sending more
-   queries if it is about to exceed this value, and instead
-   keep those queries in an internal queue. The a value of 0
-   indicates that the number of outstanding DNS queries is unlimited.
-
-  .. py:attribute:: follow_redirects
-
-   Specifies whether or not DNS queries follow
-   redirects.  The value must be one of ``getdns.REDIRECTS_FOLLOW`` for
-   normal following of redirects though CNAME and DNAME; or
-   ``getdns.REDIRECTS_DO_NOT_FOLLOW`` to cause any lookups that
-   would have gone through CNAME and DNAME to return the
-   CNAME or DNAME, not the eventual target.
-
-  .. py:attribute:: dns_root_servers
-
-   The value of `dns_root_servers` is a list of dictionaries
-   containing addresses to be used for looking up top-level
-   domains.  Each dict in the list contains two key-value
-   pairs:
-  
-   * address_data: a string representation of an IPv4 or
-     IPv6 address
-   * address_type: either the string "IPv4" or "IPv6"
-
-   For example, the addresses list could look like
-
-   >>> addrs = [ { 'address_data': '2001:7b8:206:1::4:53', 'address_type': 'IPv6' },
-   ...         { 'address_data': '65.22.9.1', 'address_type': 'IPv4' } ]
-   >>> mycontext.dns_root_servers = addrs
-
-  .. py:attribute:: append_name
-
-   Specifies whether to append a suffix to the query string
-   before the API starts resolving a name. Its value must be
-   one of
-   ``getdns.APPEND_NAME_ALWAYS``,
-   ``getdns.APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE``,
-   ``getdns.APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE``,
-   or ``getdns.APPEND_NAME_NEVER``. This controls whether or not
-   to append the suffix given by :attr:`suffix`.
+   If an implementation of this API is only able to act as a
+   recursive resolver, setting `resolution_type`
+   to ``getdns.RESOLUTION_STUB`` will throw an exception.
 
   .. py:attribute:: suffix
 
@@ -121,40 +164,22 @@ as its methods and attributes.
    :attr:`append_name`.  The list elements must
    follow the rules in :rfc:`4343#section-2.1`
 
-  .. py:attribute:: dnssec_trust_anchors
-
-   Its value is a list of DNSSEC trust anchors, expressed as
-   RDATAs from DNSKEY resource records.
-
-  .. py:attribute:: dnssec_allowed_skew
-
-   Its value is the number of seconds of skew that is
-   allowed in either direction when checking an RRSIG's
-   Expiration and Inception fields. The default is 0.
-
-  .. py:attribute:: edns_maximum_udp_payload_size
-
-   Its value must be an integer between 512 and 65535,
-   inclusive.  The default is 512.
-
-  .. py:attribute:: edns_extended_rcode
-
-   Its value must be an integer between 0 and 255, inclusive.
-   The default is 0.
-
-  .. py:attribute:: edns_version
-
-   Its value must be an integer between 0 and 255, inclusive.
-   The default is 0.
-
-  .. py:attribute:: edns_do_bit
-
-   Its value must be an integer valued either 0 or 1.  The default is 0.
-
   .. py:attribute:: timeout
    
    Its value must be an integer specifying a timeout for a query, expressed 
    in milliseconds.
+
+  .. py:attribute:: tls_authentication
+
+   The mechanism to be used for authenticating the TLS
+   server when using a TLS transport.  May be ``getdns.AUTHENTICATION_HOSTNAME`` or
+   ``getdns.AUTHENTICATION_NONE``.
+
+  .. py:attribute:: tls_query_padding_blocksize
+
+   Optional padding blocksize for queries when using TLS.  Used to
+   increase the difficulty for observers to guess traffic
+   content.
 
   .. py:attribute:: upstream_recursive_servers
 
@@ -168,6 +193,10 @@ as its methods and attributes.
    tsig_algorithm (a bindata) that is the name of the TSIG hash
    algorithm, and tsig_secret (a bindata) that is the TSIG key.
 
+  .. py:attribute:: version_string
+
+    The libgetdns version, retrieved from the underlying
+    getdns library.
                     
   The :class:`Context` class includes public methods to execute a DNS query, as well as a
   method to return the entire set of context attributes as a Python dictionary.  :class:`Context`
@@ -243,6 +272,10 @@ as its methods and attributes.
    * ``timeout``
    * ``upstream_recursive_servers``
 
+  .. py:method:: get_supported_attributes()
+
+   Returns a list of the attributes supported by this
+   Context object.
 
 The ``getdns`` module has the following read-only attribute:
 

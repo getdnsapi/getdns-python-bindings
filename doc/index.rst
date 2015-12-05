@@ -29,13 +29,12 @@ This version of getdns has been built and tested against Python
 2.7.  We also expect these other prerequisites to be
 installed:
 
-* `libgetdns <http://getdnsapi.net/>`_, version 0.1.7 or later
+* `libgetdns <http://getdnsapi.net/>`_, version 0.5.0 or later
 * `libldns <https://www.nlnetlabs.nl/projects/ldns/>`_,
   version 1.6.11 or later
 * `libunbound
   <http://www.nlnetlabs.nl/projects/unbound/>`_, version
   1.4.16 or later
-* `libexpat <http://expat.sourceforge.net/>`_ (needed for unbound)
 * `libidn <http://www.gnu.org/software/libidn/>`_ version 1
 * `libevent <http://libevent.org/>`_ version 2.0.21 stable
 
@@ -50,7 +49,7 @@ you must compile support for them into libgetdns, by
 including the --enable-draft-edns-cookies argument to
 configure.
 
-This release has been tested against libgetdns 0.3.1.
+This release has been tested against libgetdns 0.5.0.
 
 Building
 ========
@@ -198,6 +197,32 @@ In this example, we do a DNSSEC query and check the response:
     if __name__ == "__main__":
         main()
         
+
+Module-level attributes and methods
+===================================
+
+.. py:attribute:: __version__
+
+   The ``getdns.__version__`` attribute contains the version
+   string for the Python getdns module.  Please note that
+   this is independent of the version of the underlying
+   getdns library, which may be retrieved through attributes
+   associated with a Context.
+
+.. py:method:: get_errorstr_by_id()
+
+   Returns a human-friendly string representation of an
+   error ID.
+
+.. py:method:: ulabel_to_alabel()
+
+   Converts a ulabel to an alabel.  Takes one argument (the ulabel)
+
+.. py:method:: alabel_to_ulabel()
+
+   Converts an alabel to a ulabel.  Takes one argument (the
+   alabel)
+
 
 Known issues
 ============

@@ -154,6 +154,11 @@ Response data from queries
    RRSIGs) that are needed to perform the validation from
    the root up.                    
 
+  .. py:attribute:: call_debugging
+
+    A list of dictionaries containing call_debugging
+    information, if requested in the query.
+
   .. py:attribute:: replies_tree
 
    The names in each entry in the the ``replies_tree`` list for DNS
