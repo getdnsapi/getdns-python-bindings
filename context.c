@@ -1313,7 +1313,11 @@ context_get_attributes(getdns_ContextObject *self, PyObject *unused)
     PyObject *py_attr_list = PyList_New(NSETTERS);
 
     for (i = 0 ; i < NSETTERS ; i++)  {
+#if PY_MAJOR_VERSION >= 3
+        (void)PyList_SetItem(py_attr_list, (Py_ssize_t) i, PyUnicode_FromString(setters[i].name));        
+#else
         (void)PyList_SetItem(py_attr_list, (Py_ssize_t) i, PyString_FromString(setters[i].name));
+#endif
     }
     return py_attr_list;
 }

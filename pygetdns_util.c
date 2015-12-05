@@ -385,12 +385,21 @@ getdnsify_addressdict(PyObject *pydict)
         getdns_dict_set_bindata(addr_dict, "scope_id", &scope_id);
     }
     if ((str = PyDict_GetItemString(pydict, "tls_port")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        if (!PyLong_Check(str))  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+        tls_port = (uint32_t)PyLong_AsLong(str);
+        getdns_dict_set_int(addr_dict, "tls_port", tls_port);
+#else
         if (!PyInt_Check(str))  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
             return NULL;
         }
         tls_port = (uint32_t)PyInt_AsLong(str);
         getdns_dict_set_int(addr_dict, "tls_port", tls_port);
+#endif
     }
 
     if ((str = PyDict_GetItemString(pydict, "address_type")) == NULL)  {
