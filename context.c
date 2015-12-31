@@ -875,7 +875,7 @@ context_set_dns_transport_list(getdns_context *context, PyObject *py_value)
         long transport;
         if ((py_transport = PyList_GetItem(py_value, (Py_ssize_t)i)) != NULL)  {
             transport = PyLong_AsLong(py_transport);
-            if ((transport < GETDNS_TRANSPORT_UDP) || (transport > GETDNS_TRANSPORT_STARTTLS))  {
+            if ((transport < GETDNS_TRANSPORT_UDP) || (transport > GETDNS_TRANSPORT_TLS))  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }

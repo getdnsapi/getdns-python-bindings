@@ -488,7 +488,6 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "TRANSPORT_UDP", 1200);
     PyModule_AddIntConstant(g, "TRANSPORT_TCP", 1201);
     PyModule_AddIntConstant(g, "TRANSPORT_TLS", 1202);
-    PyModule_AddIntConstant(g, "TRANSPORT_STARTTLS", 1203);
 
 /*
  * suffix appending methods
