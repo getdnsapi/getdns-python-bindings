@@ -98,8 +98,13 @@ PyMemberDef Result_members[] = {
       "Canonical name" },
     { "validation_chain", T_OBJECT_EX, offsetof(getdns_ResultObject, validation_chain),
       READONLY, "DNSSEC certificate chain" },
+#if GETDNS_NUMERIC_VERSION < 0x00090000
     { "call_debugging", T_OBJECT_EX, offsetof(getdns_ResultObject, call_debugging),
       READONLY, "Query debugging info" },
+#else
+    { "call_reporting", T_OBJECT_EX, offsetof(getdns_ResultObject, call_reporting),
+      READONLY, "Return call reporting data" },
+#endif
     { NULL },
 };
 

@@ -59,7 +59,11 @@ typedef struct  {
     PyObject *canonical_name;
     PyObject *replies_full;
     PyObject *validation_chain;
+#if GETDNS_NUMERIC_VERSION < 0x00090000
     PyObject *call_debugging;
+#else 
+    PyObject *call_reporting;
+#endif
 } getdns_ResultObject;
 
 
@@ -121,7 +125,11 @@ char *get_canonical_name(struct getdns_dict *result_dict);
 PyObject *get_just_address_answers(struct getdns_dict *result_dict);
 PyObject *get_replies_tree(struct getdns_dict *result_dict);
 PyObject *get_validation_chain(struct getdns_dict *result_dict);
+#if GETDNS_NUMERIC_VERSION < 0x00090000
 PyObject *get_call_debugging(struct getdns_dict *result_dict);
+#else
+PyObject *get_call_reporting(struct getdns_dict *result_dict);
+#endif
 
 int context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 PyObject *context_getattro(PyObject *self, PyObject *nameobj);

@@ -122,18 +122,35 @@ get_validation_chain(struct getdns_dict *result_dict)
 }
 
 
+#if GETDNS_NUMERIC_VERSION < 0x00090000
 PyObject *
 get_call_debugging(struct getdns_dict *result_dict)
+#else
+PyObject *
+get_call_reporting(struct getdns_dict *result_dict)
+#endif
 {
+#if GETDNS_NUMERIC_VERSION < 0x00090000
     struct getdns_list *call_debugging;
+#else
+    struct getdns_list *call_reporting;
+#endif
     getdns_return_t ret;
 
 
+#if GETDNS_NUMERIC_VERSION < 0x00090000
     if ((ret = getdns_dict_get_list(result_dict, "call_debugging", &call_debugging)) !=
+#else
+    if ((ret = getdns_dict_get_list(result_dict, "call_reporting", &call_reporting)) !=
+#endif
         GETDNS_RETURN_GOOD)
         Py_RETURN_NONE;
     else
+#if GETDNS_NUMERIC_VERSION < 0x00090000
         return glist_to_plist(call_debugging);
+#else
+        return glist_to_plist(call_reporting);
+#endif
 }
 
 struct getdns_dict *
@@ -171,7 +188,11 @@ extensions_to_getdnsdict(PyDictObject *pydict)
              (!strncmp(tmp_key, "dnssec_return_validation_chain", strlen("dnssec_return_validation_chain")))  ||
              (!strncmp(tmp_key, "return_both_v4_and_v6", strlen("return_both_v4_and_v6")))  ||
              (!strncmp(tmp_key, "return_api_information", strlen("return_api_information")))  ||
+#if GETDNS_NUMERIC_VERSION < 0x00090000
              (!strncmp(tmp_key, "return_call_debugging", strlen("return_call_debugging")))  ||
+#else
+             (!strncmp(tmp_key, "return_call_reporting", strlen("return_call_reporting")))  ||
+#endif
              (!strncmp(tmp_key, "add_warning_for_bad_dns", strlen("add_warning_for_bad_dns"))) )  {
 #if PY_MAJOR_VERSION >= 3
             if (!PyLong_Check(value))  {
