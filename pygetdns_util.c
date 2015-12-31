@@ -406,11 +406,19 @@ getdnsify_addressdict(PyObject *pydict)
         getdns_dict_set_bindata(addr_dict, "scope_id", &scope_id);
     }
     if ((str = PyDict_GetItemString(pydict, "tls_port")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        if (!PyLong_Check(str))  {
+#else
         if (!PyInt_Check(str))  {
+#endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
             return NULL;
         }
+#if PY_MAJOR_VERSION >= 3
+        tls_port = (uint32_t)PyLong_AsLong(str);
+#else
         tls_port = (uint32_t)PyInt_AsLong(str);
+#endif
         getdns_dict_set_int(addr_dict, "tls_port", tls_port);
     }
 
