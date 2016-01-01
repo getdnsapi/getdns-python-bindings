@@ -947,6 +947,19 @@ context_getattro(PyObject *self, PyObject *nameobj)
         }
     }
 
+    if (!strncmp(attrname, "suffix", strlen("suffix")))  {
+        PyObject *py_suffix;
+        getdns_list *suffix;
+
+        if ((ret = getdns_context_get_suffix(context, &suffix)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+        if ((py_suffix = glist_to_plist(suffix)) == NULL)
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return py_suffix;
+    }
+
     api_info = getdns_context_get_api_information(context);
     if (!strncmp(attrname, "resolution_type", strlen("resolution_type")))  {
         uint32_t resolution_type;
@@ -1197,18 +1210,6 @@ context_getattro(PyObject *self, PyObject *nameobj)
         if ((py_namespaces = glist_to_plist(namespaces)) == NULL)  
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return py_namespaces;
-    }
-    if (!strncmp(attrname, "suffix", strlen("suffix")))  {
-        PyObject *py_suffix;
-        getdns_list *suffix;
-        if ((ret = getdns_dict_get_list(all_context, "suffix",
-                                        &suffix)) != GETDNS_RETURN_GOOD)  {
-            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-            return NULL;
-        }
-        if ((py_suffix = glist_to_plist(suffix)) == NULL)
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-        return py_suffix;
     }
     if (!strncmp(attrname, "upstream_recursive_servers", strlen("upstream_recursive_servers")))  {
         PyObject *py_upstream_servers;
