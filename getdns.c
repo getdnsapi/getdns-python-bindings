@@ -687,4 +687,5 @@ add_getdns_constants(PyObject *g)
 
     PyModule_AddIntConstant(g, "AUTHENTICATION_NONE", 1300);
     PyModule_AddIntConstant(g, "AUTHENTICATION_HOSTNAME", 1301);
+    PyModule_AddIntConstant(g, "AUTHENTICATION_REQUIRED", 1301);
 }
