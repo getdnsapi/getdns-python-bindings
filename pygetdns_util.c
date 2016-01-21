@@ -363,7 +363,7 @@ extensions_to_getdnsdict(PyDictObject *pydict)
 
 
 getdns_dict *
-getdnsify_addressdict(PyObject *pydict)
+    getdnsify_addressdict(PyObject *pydict)
 {
     getdns_dict *addr_dict;
     getdns_bindata addr_data;
@@ -373,55 +373,32 @@ getdnsify_addressdict(PyObject *pydict)
     int domain;
     getdns_bindata tls_auth_name;
     getdns_bindata scope_id;
-    uint32_t tls_port;
+    getdns_bindata tsig_name;
+    getdns_bindata tsig_alg;
+    getdns_bindata tsig_secret;
+    uint32_t tls_port, port;
+    getdns_return_t ret;
 
     if (!PyDict_Check(pydict))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
-#if 0
-    if (PyDict_Size(pydict) != 2)  {
-        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-        return NULL;
-    }
-#endif
-    addr_dict = getdns_dict_create();
-    /* XXX rewrite this so it's more general */
-    if ((str = PyDict_GetItemString(pydict, "tls_auth_name")) != NULL)  {
-#if PY_MAJOR_VERSION >= 3
-        tls_auth_name.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
-#else
-        tls_auth_name.data = (uint8_t *)strdup(PyString_AsString(str));
-#endif
-        tls_auth_name.size = (size_t)strlen((char *)tls_auth_name.data);
-        getdns_dict_set_bindata(addr_dict, "tls_auth_name", &tls_auth_name);
-    }
-    if ((str = PyDict_GetItemString(pydict, "scope_id")) != NULL)  {
-#if PY_MAJOR_VERSION >= 3
-        scope_id.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
-#else
-        scope_id.data = (uint8_t *)strdup(PyString_AsString(str));
-#endif
-        scope_id.size = (size_t)strlen((char *)scope_id.data);
-        getdns_dict_set_bindata(addr_dict, "scope_id", &scope_id);
-    }
-    if ((str = PyDict_GetItemString(pydict, "tls_port")) != NULL)  {
-#if PY_MAJOR_VERSION >= 3
-        if (!PyLong_Check(str))  {
-#else
-        if (!PyInt_Check(str))  {
-#endif
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-#if PY_MAJOR_VERSION >= 3
-        tls_port = (uint32_t)PyLong_AsLong(str);
-#else
-        tls_port = (uint32_t)PyInt_AsLong(str);
-#endif
-        getdns_dict_set_int(addr_dict, "tls_port", tls_port);
-    }
 
+    /* XXX rewrite this so it's more general */
+
+    /* dict members supported:
+     *  address_data
+     *  address_type
+     *  tls_auth_name
+     *  scope_id
+     *  port
+     *  tls_port
+     *  tsig_name
+     *  tsig_secret
+     *  tsig_algorithm
+     */
+
+    addr_dict = getdns_dict_create();
     if ((str = PyDict_GetItemString(pydict, "address_type")) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
@@ -478,6 +455,98 @@ getdnsify_addressdict(PyObject *pydict)
     addr_data.size = (domain == AF_INET ? 4 : 16);
     getdns_dict_set_bindata(addr_dict, "address_data", &addr_data);
 
+    if ((str = PyDict_GetItemString(pydict, "tls_auth_name")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        tls_auth_name.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
+        tls_auth_name.data = (uint8_t *)strdup(PyString_AsString(str));
+#endif
+        tls_auth_name.size = (size_t)strlen((char *)tls_auth_name.data);
+        getdns_dict_set_bindata(addr_dict, "tls_auth_name", &tls_auth_name);
+    }
+
+    if ((str = PyDict_GetItemString(pydict, "scope_id")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        scope_id.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
+        scope_id.data = (uint8_t *)strdup(PyString_AsString(str));
+#endif
+        scope_id.size = (size_t)strlen((char *)scope_id.data);
+        getdns_dict_set_bindata(addr_dict, "scope_id", &scope_id);
+    }
+
+    if ((str = PyDict_GetItemString(pydict, "tsig_name")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        tsig_name.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
+        tsig_name.data = (uint8_t *)strdup(PyBytes_AsString(str));
+#endif
+        tsig_name.size = (size_t)strlen((char *)tsig_name.data);
+        if ((ret = getdns_dict_set_bindata(addr_dict, "tsig_name", &tsig_name)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, "bad tsig name");
+            return NULL;
+        }
+    }
+
+    if ((str = PyDict_GetItemString(pydict, "tsig_algorithm")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        tsig_alg.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
+        tsig_alg.data = (uint8_t *)strdup(PyBytes_AsString(str));
+#endif
+        tsig_alg.size = (size_t)strlen((char *)tsig_alg.data);
+        if ((ret = getdns_dict_set_bindata(addr_dict, "tsig_algorithm", &tsig_alg)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, "bad tsig algorithm");
+            return NULL;
+        }
+    }
+
+    if ((str = PyDict_GetItemString(pydict, "tsig_secret")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        tsig_secret.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+#else
+        tsig_secret.data = (uint8_t *)strdup(PyBytes_AsString(str));
+#endif
+        tsig_secret.size = (size_t)strlen((char *)tsig_secret.data);
+        if ((ret = getdns_dict_set_bindata(addr_dict, "tsig_secret", &tsig_secret)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, "bad tsig secret");
+            return NULL;
+        }
+    }
+
+    if ((str = PyDict_GetItemString(pydict, "port")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        if (!PyLong_Check(str))  {
+#else
+        if (!PyInt_Check(str))  {
+#endif
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+#if PY_MAJOR_VERSION >= 3
+        port = (uint32_t)PyLong_AsLong(str);
+#else
+        port = (uint32_t)PyInt_AsLong(str);
+#endif
+        getdns_dict_set_int(addr_dict, "port", port);
+    }
+
+    if ((str = PyDict_GetItemString(pydict, "tls_port")) != NULL)  {
+#if PY_MAJOR_VERSION >= 3
+        if (!PyLong_Check(str))  {
+#else
+        if (!PyInt_Check(str))  {
+#endif
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+#if PY_MAJOR_VERSION >= 3
+        tls_port = (uint32_t)PyLong_AsLong(str);
+#else
+        tls_port = (uint32_t)PyInt_AsLong(str);
+#endif
+        getdns_dict_set_int(addr_dict, "tls_port", tls_port);
+    }
     return addr_dict;
 }
 
@@ -651,6 +720,7 @@ glist_to_plist(struct getdns_list *list)
 }
 
 
+
 PyObject *
 gdict_to_pdict(struct getdns_dict *dict)
 {
@@ -674,6 +744,9 @@ gdict_to_pdict(struct getdns_dict *dict)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
+#if 0
+    printf("%s\n", getdns_pretty_print_dict(dict)); /* XXX */
+#endif
     py_dict = PyDict_New();
     (void)getdns_list_get_length(keys, &n_keys);
     for (i = 0 ; i < (int)n_keys ; i++ )  {
@@ -745,6 +818,9 @@ gdict_to_pdict(struct getdns_dict *dict)
                 != GETDNS_RETURN_GOOD)  {
                 PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
                 return NULL;
+            }
+            if ((bindata_item == 0) || (bindata_item->data == 0) || bindata_item->size == 0)  {
+                break;
             }
             if ((py_localbindata = convertBinData(bindata_item, (char *)key_name->data)) == 0)  {
                 return NULL;
