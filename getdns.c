@@ -55,6 +55,10 @@ static PyObject *root_trust_anchor(PyObject *self, PyObject *args, PyObject *key
 static void add_getdns_constants(PyObject *g);
 static PyObject *ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds);
+#if 0
+static PyObject *wire_to_string(PyObject *self, PyObject *args, PyObject *keywds);
+#endif
+
 	
 static struct PyMethodDef getdns_methods[] = {
     { "get_errorstr_by_id", (PyCFunction)get_errorstr_by_id,
@@ -65,6 +69,10 @@ static struct PyMethodDef getdns_methods[] = {
       METH_VARARGS|METH_KEYWORDS, "return ulabel from alabel" },
     { "ulabel_to_alabel", (PyCFunction)ulabel_to_alabel,
       METH_VARARGS|METH_KEYWORDS, "return alabel from ulabel" },
+#if 0
+    { "wire_to_string", (PyCFunction)wire_to_string,
+      METH_VARARGS|METH_KEYWORDS, "convert a wire format buffer to a zone file format string" },
+#endif
     { 0, 0, 0 }
 };
 
@@ -291,6 +299,7 @@ alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds)
 #endif
 }
 
+
 static PyObject  *
 ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds)
 {
@@ -310,11 +319,32 @@ ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds)
 #endif
 }
 
+#if 0
+static PyObject *
+wire_to_string(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = { "wirebuf",
+                              NULL };
+    int  nbytes;
+
+    char *wirebuf;
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "t#", kwlist,
+                                     &wirebuf, &nbytes))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    printf("len = %d\n", nbytes);
+    printf("%s\n", gldns_wire2str_rr(wirebuf, (size_t)nbytes));
+    return Py_None;
+}
+#endif
+
+
 static PyObject *
 get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = { "id",
-                            NULL };
+                              NULL };
     int id;
     char *errstr;
 

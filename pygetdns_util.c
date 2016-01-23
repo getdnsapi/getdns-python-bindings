@@ -502,12 +502,12 @@ getdns_dict *
     }
 
     if ((str = PyDict_GetItemString(pydict, "tsig_secret")) != NULL)  {
+        tsig_secret.size = PyByteArray_Size(str);
 #if PY_MAJOR_VERSION >= 3
-        tsig_secret.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
+        tsig_secret.data = (uint8_t *)strdup(PyBytes_AS_STRING(str));
 #else
         tsig_secret.data = (uint8_t *)strdup(PyBytes_AsString(str));
 #endif
-        tsig_secret.size = (size_t)strlen((char *)tsig_secret.data);
         if ((ret = getdns_dict_set_bindata(addr_dict, "tsig_secret", &tsig_secret)) != GETDNS_RETURN_GOOD)  {
             PyErr_SetString(getdns_error, "bad tsig secret");
             return NULL;
