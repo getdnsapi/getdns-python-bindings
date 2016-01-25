@@ -378,6 +378,7 @@ getdns_dict *
     getdns_bindata tsig_secret;
     uint32_t tls_port, port;
     getdns_return_t ret;
+    getdns_list *tls_pubkey_pinset;
 
     if (!PyDict_Check(pydict))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
@@ -396,6 +397,7 @@ getdns_dict *
      *  tsig_name
      *  tsig_secret
      *  tsig_algorithm
+     *  tls_pubkey_pinset
      */
 
     addr_dict = getdns_dict_create();
@@ -512,6 +514,45 @@ getdns_dict *
             PyErr_SetString(getdns_error, "bad tsig secret");
             return NULL;
         }
+    }
+
+    if ((str = PyDict_GetItemString(pydict, "tls_pubkey_pinset")) != NULL)  {
+        Py_ssize_t pinset_len;
+        int  i;
+        PyObject *py_item;
+        char *str_item;
+        getdns_dict *pubkey_pin = 0;
+
+        if (!PyList_Check(str))  {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+        pinset_len = PyList_Size(str);
+        if (pinset_len == 0)    {
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+            return NULL;
+        }
+        tls_pubkey_pinset = getdns_list_create();
+        for ( i = 0 ; i < (int)pinset_len ; i++ )  {
+            py_item = PyList_GetItem(str, (Py_ssize_t)i);
+#if PY_MAJOR_VERSION >= 3
+            str_item = PyBytes_AsString(PyUnicode_AsEncodedString(py_item, "ascii", NULL));
+#else
+            str_item = PyString_AsString(py_item);
+#endif
+            pubkey_pin = getdns_pubkey_pin_create_from_string(0, str_item);
+            if (pubkey_pin == NULL)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+                return NULL;
+            }
+            if ((ret = getdns_list_set_dict(tls_pubkey_pinset, i, pubkey_pin)) != GETDNS_RETURN_GOOD)  {
+                PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+                return NULL;
+            }
+        }
+        if (pubkey_pin)
+            getdns_dict_destroy(pubkey_pin);
+        getdns_dict_set_list(addr_dict, "tls_pubkey_pinset", tls_pubkey_pinset);
     }
 
     if ((str = PyDict_GetItemString(pydict, "port")) != NULL)  {
@@ -862,6 +903,7 @@ void error_exit(char* msg, getdns_return_t ret)
 // replies_tree
 
 // Taken from getdns source to do label checking
+
 static int
 priv_getdns_bindata_is_dname(struct getdns_bindata *bindata)
 {
