@@ -10,7 +10,7 @@ Built and tested against Python 2.7 and Python 3.4.  You will need to install
 the Python headers and libraries - this is usually a package
 called "python-dev"
 
-Currently building against the getdns 0.3.1 release.
+Currently building against the getdns v0.9.0 release.
 getdns external dependencies include:
 
 * [libldns from NLnet Labs](https://www.nlnetlabs.nl/projects/ldns/) version 1.6.11 or later (ldns requires ope
