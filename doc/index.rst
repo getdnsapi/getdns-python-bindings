@@ -18,20 +18,18 @@ getdns implementation developed as a joint project between
 and `NLnet Labs <http://nlnetlabs.nl/>`_.
 
 We have tried to keep this interface as Pythonic as we can
-while staying true to the getdns architecture.  With this 
-release we are moving towards a design that is more consistent with
+while staying true to the getdns architecture, including
+trying to maintain consistency with
 Python object design.
 
 Dependencies
 ============
 
 This version of getdns has been built and tested against Python
-2.7.  We also expect these other prerequisites to be
+2.7 and Python 3.4.  We also expect these other prerequisites to be
 installed:
 
-* `libgetdns <http://getdnsapi.net/>`_, version 0.1.7 or later
-* `libldns <https://www.nlnetlabs.nl/projects/ldns/>`_,
-  version 1.6.11 or later
+* `libgetdns <http://getdnsapi.net/>`_, version 0.9.0 or later
 * `libunbound
   <http://www.nlnetlabs.nl/projects/unbound/>`_, version
   1.4.16 or later
@@ -56,7 +54,8 @@ Building
 ========
 
 The code repository for getdns is available at:
-`<https://github.com/getdnsapi/getdns-python-bindings>`_.  If you are building from source you will
+`<https://github.com/getdnsapi/getdns-python-bindings>`_.  
+If you are building from source you will
 need the Python development package for Python 2.7.  On
 Linux systems this is typically something along the lines of
 "python-dev" or "python2.7-dev", available through your
@@ -198,6 +197,36 @@ In this example, we do a DNSSEC query and check the response:
     if __name__ == "__main__":
         main()
         
+
+Module-level attributes and methods
+===================================
+
+.. py:attribute:: __version__
+
+   The ``getdns.__version__`` attribute contains the version
+   string for the Python getdns module.  Please note that
+   this is independent of the version of the underlying
+   getdns library, which may be retrieved through attributes
+   associated with a Context.
+
+.. py:method:: get_errorstr_by_id()
+
+   Returns a human-friendly string representation of an
+   error ID.
+
+.. py:method:: ulabel_to_alabel()
+
+   Converts a ulabel to an alabel.  Takes one argument (the
+   ulabel)
+
+.. py:method:: alabel_to_ulabel()
+
+   Converts an alabel to a ulabel.  Takes one argument (the
+   alabel)
+
+.. py:method:: root_trust_anchor()
+
+   Returns the default root trust anchor for DNSSEC.
 
 Known issues
 ============

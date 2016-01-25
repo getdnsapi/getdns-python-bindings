@@ -49,6 +49,13 @@ Response data from queries
     specified, and at least one DNS response was received, but
     no DNS response was determined to be secure through DNSSEC.
 
+    .. py:data:: getdns.RESPSTATUS_ALL_BOGUS_ANSWERS
+
+    The context setting for getting only secure responses
+    was specified, and at least one DNS response was
+    received, but all received responses for the requested
+    name were bogus.
+
   .. py:attribute:: answer_type
 
    The ``answer_type`` attribute contains the type of data
@@ -153,6 +160,11 @@ Response data from queries
    dicts for all the resource records (DS, DNSKEY and their
    RRSIGs) that are needed to perform the validation from
    the root up.                    
+
+  .. py:attribute:: call_reporting
+
+   A list of dictionaries containing call_debugging
+   information, if requested in the query.
 
   .. py:attribute:: replies_tree
 
@@ -346,3 +358,7 @@ The return codes for all the functions are:
 .. py:data:: RETURN_INVALID_PARAMETER
 
   A required parameter had an invalid value.
+
+.. py:data:: RETURN_NOT_IMPLEMENTED
+
+  The requested API feature is not implemented.
