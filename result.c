@@ -100,8 +100,13 @@ result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
     }
     if ((self->validation_chain = get_validation_chain(result_dict)) == NULL)  
         self->validation_chain = Py_None;
+#if GETDNS_NUMERIC_VERSION < 0x00090000
     if ((self->call_debugging = get_call_debugging(result_dict)) == NULL)
         self->call_debugging = Py_None;
+#else
+    if ((self->call_reporting = get_call_reporting(result_dict)) == NULL)
+        self->call_reporting = Py_None;
+#endif
     return 0;
 }
 
@@ -120,7 +125,11 @@ result_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->canonical_name = Py_None;
         self->replies_full = Py_None;
         self->validation_chain = Py_None;
+#if GETDNS_NUMERIC_VERSION < 0x00090000
         self->call_debugging = Py_None;
+#else
+        self->call_reporting = Py_None;
+#endif
     }
     return (PyObject *)self;
 }
@@ -137,7 +146,11 @@ result_dealloc(getdns_ResultObject *self)
     Py_XDECREF(self->replies_full);
     Py_XDECREF(self->canonical_name);
     Py_XDECREF(self->validation_chain);
+#if GETDNS_NUMERIC_VERSION < 0x00090000
     Py_XDECREF(self->call_debugging);
+#else
+    Py_XDECREF(self->call_reporting);
+#endif
 
 #if PY_MAJOR_VERSION >= 3
     Py_TYPE(self)->tp_free((PyObject *)self);

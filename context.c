@@ -875,7 +875,7 @@ context_set_dns_transport_list(getdns_context *context, PyObject *py_value)
         long transport;
         if ((py_transport = PyList_GetItem(py_value, (Py_ssize_t)i)) != NULL)  {
             transport = PyLong_AsLong(py_transport);
-            if ((transport < GETDNS_TRANSPORT_UDP) || (transport > GETDNS_TRANSPORT_STARTTLS))  {
+            if ((transport < GETDNS_TRANSPORT_UDP) || (transport > GETDNS_TRANSPORT_TLS))  {
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
@@ -945,6 +945,19 @@ context_getattro(PyObject *self, PyObject *nameobj)
         }
         return py_rootservers;
         }
+    }
+
+    if (!strncmp(attrname, "suffix", strlen("suffix")))  {
+        PyObject *py_suffix;
+        getdns_list *suffix;
+
+        if ((ret = getdns_context_get_suffix(context, &suffix)) != GETDNS_RETURN_GOOD)  {
+            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+            return NULL;
+        }
+        if ((py_suffix = glist_to_plist(suffix)) == NULL)
+            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return py_suffix;
     }
 
     api_info = getdns_context_get_api_information(context);
@@ -1197,18 +1210,6 @@ context_getattro(PyObject *self, PyObject *nameobj)
         if ((py_namespaces = glist_to_plist(namespaces)) == NULL)  
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return py_namespaces;
-    }
-    if (!strncmp(attrname, "suffix", strlen("suffix")))  {
-        PyObject *py_suffix;
-        getdns_list *suffix;
-        if ((ret = getdns_dict_get_list(all_context, "suffix",
-                                        &suffix)) != GETDNS_RETURN_GOOD)  {
-            PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
-            return NULL;
-        }
-        if ((py_suffix = glist_to_plist(suffix)) == NULL)
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-        return py_suffix;
     }
     if (!strncmp(attrname, "upstream_recursive_servers", strlen("upstream_recursive_servers")))  {
         PyObject *py_upstream_servers;

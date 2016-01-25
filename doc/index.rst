@@ -18,18 +18,18 @@ getdns implementation developed as a joint project between
 and `NLnet Labs <http://nlnetlabs.nl/>`_.
 
 We have tried to keep this interface as Pythonic as we can
-while staying true to the getdns architecture.  With this 
-release we are moving towards a design that is more consistent with
+while staying true to the getdns architecture, including
+trying to maintain consistency with
 Python object design.
 
 Dependencies
 ============
 
 This version of getdns has been built and tested against Python
-2.7.  We also expect these other prerequisites to be
+2.7 and Python 3.4.  We also expect these other prerequisites to be
 installed:
 
-* `libgetdns <http://getdnsapi.net/>`_, version 0.5.0 or later
+* `libgetdns <http://getdnsapi.net/>`_, version 0.9.0 or later
 * `libunbound
   <http://www.nlnetlabs.nl/projects/unbound/>`_, version
   1.4.16 or later
@@ -53,7 +53,8 @@ Building
 ========
 
 The code repository for getdns is available at:
-`<https://github.com/getdnsapi/getdns-python-bindings>`_.  If you are building from source you will
+`<https://github.com/getdnsapi/getdns-python-bindings>`_.  
+If you are building from source you will
 need the Python development package for Python 2.7.  On
 Linux systems this is typically something along the lines of
 "python-dev" or "python2.7-dev", available through your
@@ -214,13 +215,17 @@ Module-level attributes and methods
 
 .. py:method:: ulabel_to_alabel()
 
-   Converts a ulabel to an alabel.  Takes one argument (the ulabel)
+   Converts a ulabel to an alabel.  Takes one argument (the
+   ulabel)
 
 .. py:method:: alabel_to_ulabel()
 
    Converts an alabel to a ulabel.  Takes one argument (the
    alabel)
 
+.. py:method:: root_trust_anchor()
+
+   Returns the default root trust anchor for DNSSEC.
 
 Known issues
 ============

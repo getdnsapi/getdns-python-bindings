@@ -36,10 +36,6 @@ long_description = ( 'getdns is a set of wrappers around the getdns'
 CFLAGS = [ '-g' ]
 lib_dir = ''
 
-if '--with-edns-cookies' in sys.argv:
-    CFLAGS.append('-DWITH_EDNS_COOKIES')
-    sys.argv.remove('--with-edns-cookies')
-
 if '--with-getdns' in sys.argv:
     getdns_root = sys.argv[sys.argv.index('--with-getdns')+1]
     inc_dir = getdns_root + '/include'
@@ -56,7 +52,7 @@ if not ((platform_version[0] == '3') or (platform_version == ['2', '7'])):
 
 getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
-                    libraries = [ 'ldns', 'getdns', 'getdns_ext_event', 'event' ],
+                    libraries = [ 'getdns', 'getdns_ext_event', 'event' ],
                     library_dirs = [ '/usr/local/lib', lib_dir ],
                     sources = [ 'getdns.c', 'pygetdns_util.c', 'context.c',
                                 'context_util.c', 'result.c' ],
@@ -65,7 +61,11 @@ getdns_module = Extension('getdns',
                     )
 
 setup(name='getdns',
+<<<<<<< HEAD
       version='0.5.0',
+=======
+      version='0.6.0',
+>>>>>>> develop
       description='getdns Python bindings for getdns',
       long_description=long_description,
       license='BSD',
