@@ -386,44 +386,6 @@ getdns_dict *
     }
 
     /* XXX rewrite this so it's more general */
-<<<<<<< HEAD
-    if ((str = PyDict_GetItemString(pydict, "tls_auth_name")) != NULL)  {
-#if PY_MAJOR_VERSION >= 3
-        tls_auth_name.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
-#else
-        tls_auth_name.data = (uint8_t *)strdup(PyString_AsString(str));
-#endif
-        tls_auth_name.size = (size_t)strlen((char *)tls_auth_name.data);
-        getdns_dict_set_bindata(addr_dict, "tls_auth_name", &tls_auth_name);
-    }
-    if ((str = PyDict_GetItemString(pydict, "scope_id")) != NULL)  {
-#if PY_MAJOR_VERSION >= 3
-        scope_id.data = (uint8_t *)strdup(PyBytes_AsString(PyUnicode_AsEncodedString(str, "ascii", NULL)));
-#else
-        scope_id.data = (uint8_t *)strdup(PyString_AsString(str));
-#endif
-        scope_id.size = (size_t)strlen((char *)scope_id.data);
-        getdns_dict_set_bindata(addr_dict, "scope_id", &scope_id);
-    }
-    if ((str = PyDict_GetItemString(pydict, "tls_port")) != NULL)  {
-#if PY_MAJOR_VERSION >= 3
-        if (!PyLong_Check(str))  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-        tls_port = (uint32_t)PyLong_AsLong(str);
-        getdns_dict_set_int(addr_dict, "tls_port", tls_port);
-#else
-        if (!PyInt_Check(str))  {
-            PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-            return NULL;
-        }
-        tls_port = (uint32_t)PyInt_AsLong(str);
-        getdns_dict_set_int(addr_dict, "tls_port", tls_port);
-#endif
-    }
-=======
->>>>>>> develop
 
     /* dict members supported:
      *  address_data
