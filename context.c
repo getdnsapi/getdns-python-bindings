@@ -476,9 +476,9 @@ context_set_tls_authentication(getdns_context *context, PyObject *py_value)
         return -1;
     }
 #if PY_MAJOR_VERSION >= 3
-    if ((value = (getdns_tls_authentication_t)PyLong_AsLong(py_value)) < 0)  {
+    if ((int)(value = (getdns_tls_authentication_t)PyLong_AsLong(py_value)) < 0)  {
 #else
-    if ((value = (getdns_tls_authentication_t)PyInt_AsLong(py_value)) < 0)  {
+    if ((int)(value = (getdns_tls_authentication_t)PyInt_AsLong(py_value)) < 0)  {
 #endif
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
@@ -879,7 +879,7 @@ context_set_dns_transport_list(getdns_context *context, PyObject *py_value)
                 PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
                 return -1;
             }
-            transports[i] = transport;
+            transports[i] = (getdns_transport_list_t)transport;
         }
         else  {
             PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
