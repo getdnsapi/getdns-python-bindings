@@ -36,10 +36,6 @@ long_description = ( 'getdns is a set of wrappers around the getdns'
 CFLAGS = [ '-g' ]
 lib_dir = ''
 
-if '--with-edns-cookies' in sys.argv:
-    CFLAGS.append('-DWITH_EDNS_COOKIES')
-    sys.argv.remove('--with-edns-cookies')
-
 if '--with-getdns' in sys.argv:
     getdns_root = sys.argv[sys.argv.index('--with-getdns')+1]
     inc_dir = getdns_root + '/include'
