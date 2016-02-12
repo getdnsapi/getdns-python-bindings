@@ -329,13 +329,13 @@ extensions_to_getdnsdict(PyDictObject *pydict)
                             }  else if (!strncmp(tmpoptionlistkey, "option_data", strlen("option_data")))  {
                                 option_data = (struct getdns_bindata *)malloc(sizeof(struct getdns_bindata));
                                 option_data->size = PyObject_Length(optiondictvalue);
+                                printf("XXX size is %d\n", (int)option_data->size);
 #if PY_MAJOR_VERSION >= 3
-/* This is almost certainly wrong */
-                                option_data->data = (uint8_t *)PyBytes_AsString(PyObject_Bytes(optiondictvalue));
+                                option_data->data = (uint8_t *)PyBytes_AS_STRING(optiondictvalue);
 #else
-/* ditto */
-                                option_data->data = (uint8_t *)PyString_AsString(PyObject_Bytes(optiondictvalue)); 
+                                option_data->data = (uint8_t *)PyString_AS_STRING(optiondictvalue); 
 #endif
+
                                 getdns_dict_set_bindata(tmpoptions_list_dict, "option_data", option_data);
                             } else  {
                                 PyErr_SetString(getdns_error, GETDNS_RETURN_EXTENSION_MISFORMAT_TEXT);
