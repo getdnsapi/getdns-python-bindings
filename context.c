@@ -27,11 +27,8 @@
 
 #include <Python.h>
 #include <getdns/getdns.h>
-#include <getdns/getdns_ext_libevent.h>
 #include <getdns/getdns_extra.h>
 #include <arpa/inet.h>
-#include <event2/event.h>
-#include <getdns/getdns_ext_libevent.h>
 #include <sys/wait.h>
 #include "pygetdns.h"
 
@@ -1327,8 +1324,13 @@ context_get_attributes(getdns_ContextObject *self, PyObject *unused)
 PyObject *
 context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 {
-    if (self->event_base)  
-        (void)event_base_dispatch(self->event_base);
+    getdns_context *context;
+
+    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
+        return NULL;
+    }
+    getdns_context_run(context);
     Py_RETURN_NONE;
 }
 
@@ -1425,17 +1427,6 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     if (callback)  {
         userarg_blob *blob;
 
-        if (!self->event_base)  {
-            if ((self->event_base = event_base_new()) == 0)  {
-                PyErr_SetString(getdns_error, "Can't create event base");
-                return NULL;
-            }
-            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
-                GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, "Can't set event base");
-                return NULL;
-            }
-        }
         if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
             PyErr_SetString(getdns_error, "Memory allocation failed");
             return NULL;
@@ -1525,17 +1516,6 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     if (callback)  {
         userarg_blob *blob;
 
-        if (!self->event_base)  {
-            if ((self->event_base = event_base_new()) == 0)  {
-                PyErr_SetString(getdns_error, "Can't create event base");
-                return NULL;
-            }
-            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
-                GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, "Can't set event base");
-                return NULL;
-            }
-        }
         if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
             PyErr_SetString(getdns_error, "Memory allocation failed");
             return NULL;
@@ -1633,17 +1613,6 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     if (callback)  {
         userarg_blob *blob;
 
-        if (!self->event_base)  {
-            if ((self->event_base = event_base_new()) == 0)  {
-                PyErr_SetString(getdns_error, "Can't create event base");
-                return NULL;
-            }
-            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
-                GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, "Can't set event base");
-                return NULL;
-            }
-        }
         if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
             PyErr_SetString(getdns_error, "Memory allocation failed");
             return NULL;
@@ -1734,17 +1703,6 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     if (callback)  {
         userarg_blob *blob;
 
-        if (!self->event_base)  {
-            if ((self->event_base = event_base_new()) == 0)  {
-                PyErr_SetString(getdns_error, "Can't create event base");
-                return NULL;
-            }
-            if ((ret = getdns_extension_set_libevent_base(context, self->event_base)) !=
-                GETDNS_RETURN_GOOD)  {
-                PyErr_SetString(getdns_error, "Can't set event base");
-                return NULL;
-            }
-        }
         if ((blob = (userarg_blob *)malloc(sizeof(userarg_blob))) == (userarg_blob *)0)  {
             PyErr_SetString(getdns_error, "Memory allocation failed");
             return NULL;

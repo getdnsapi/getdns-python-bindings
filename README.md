@@ -18,11 +18,7 @@ nssl headers and libraries)
 * [libunbound from NLnet Labs](http://www.nlnetlabs.nl/projects/unbound/) version 1.4.16 or later
 * [libexpat](http://expat.sourceforge.net/) for libunbound.
 * [libidn from the FSF](http://www.gnu.org/software/libidn/) version 1.
-* [libevent](http://libevent.org) version 2.0.21 stable, sometimes called libevent2 (only needed if you plan to
- use it for asynchronous handling)
 
-Note that getdns **MUST** be built with the --with-libevent flag to
-configure.
 
 Building
 ========
