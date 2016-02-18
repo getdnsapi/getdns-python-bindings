@@ -44,10 +44,6 @@
 
 extern PyObject *getdns_error;
 
-typedef struct pygetdns_libevent_callback_data  {
-    void *userarg;
-    PyObject *callback_func;
-} pygetdns_libevent_callback_data;
 
 
 typedef struct  {
@@ -97,7 +93,6 @@ typedef struct {
     getdns_list *dnssec_trust_anchors;
     getdns_list *upstream_recursive_servers;
     getdns_transport_list_t *dns_transport_list;
-    struct event_base *event_base;
     char *implementation_string;
     char *version_string;
     uint16_t tls_authentication;

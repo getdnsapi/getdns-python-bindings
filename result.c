@@ -34,7 +34,6 @@
 #include <getdns/getdns.h>
 #include <getdns/getdns_extra.h>
 #include <event2/event.h>
-#include <pthread.h>
 #include "pygetdns.h"
 
 

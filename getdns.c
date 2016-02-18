@@ -42,7 +42,6 @@
 #include <string.h>
 #include <getdns/getdns.h>
 #include <getdns/getdns_extra.h>
-#include <event2/event.h>
 #include <datetime.h>
 #include <time.h>
 #include "pygetdns.h"

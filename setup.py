@@ -34,7 +34,8 @@ long_description = ( 'getdns is a set of wrappers around the getdns'
                      'Python language bindings for the API')
 
 CFLAGS = [ '-g' ]
-lib_dir = ''
+lib_dir = ""
+
 
 if '--with-getdns' in sys.argv:
     getdns_root = sys.argv[sys.argv.index('--with-getdns')+1]
@@ -43,6 +44,10 @@ if '--with-getdns' in sys.argv:
     CFLAGS.append('-I{0}'.format(inc_dir))
     sys.argv.remove('--with-getdns')
     sys.argv.remove(getdns_root)
+
+library_dirs = [ '/usr/local/lib' ]
+if lib_dir:
+    library_dirs.append(lib_dir)
 
 platform_version = list(platform.python_version_tuple())[0:2]
 
@@ -53,11 +58,12 @@ if not ((platform_version[0] == '3') or (platform_version == ['2', '7'])):
 getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
                     libraries = [ 'getdns', 'getdns_ext_event', 'event' ],
-                    library_dirs = [ '/usr/local/lib', lib_dir ],
+                    library_dirs = library_dirs,
+#                    library_dirs = [ '/usr/local/lib' ],
                     sources = [ 'getdns.c', 'pygetdns_util.c', 'context.c',
                                 'context_util.c', 'result.c' ],
                           extra_compile_args = CFLAGS,
-                    runtime_library_dirs = [ '/usr/local/lib', lib_dir ],
+                    runtime_library_dirs = library_dirs,
                     )
 
 setup(name='getdns',
