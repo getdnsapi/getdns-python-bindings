@@ -57,7 +57,7 @@ if not ((platform_version[0] == '3') or (platform_version == ['2', '7'])):
 
 getdns_module = Extension('getdns',
                     include_dirs = [ '/usr/local/include', ],
-                    libraries = [ 'getdns', 'getdns_ext_event', 'event' ],
+                    libraries = [ 'getdns' ],
                     library_dirs = library_dirs,
 #                    library_dirs = [ '/usr/local/lib' ],
                     sources = [ 'getdns.c', 'pygetdns_util.c', 'context.c',
