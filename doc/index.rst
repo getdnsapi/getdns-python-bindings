@@ -34,20 +34,8 @@ installed:
   <http://www.nlnetlabs.nl/projects/unbound/>`_, version
   1.4.16 or later
 * `libidn <http://www.gnu.org/software/libidn/>`_ version 1
-* `libevent <http://libevent.org/>`_ version 2.0.21 stable
 
-n.b.: libgetdns *must* be built with the libevent extension,
-as follows:
-::
-
-  ./configure --with-libevent
-
-To enable the use of edns cookies in the Python bindings,
-you must compile support for them into libgetdns, by
-including the --enable-draft-edns-cookies argument to
-configure.
-
-This release has been tested against libgetdns 0.5.0.
+This release has been tested against libgetdns 0.9.0.
 
 Building
 ========

@@ -2,4 +2,3 @@
 include *.c
 include *.h
 recursive-include examples *.py
-recursive-include doc 
