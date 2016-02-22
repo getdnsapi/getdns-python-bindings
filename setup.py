@@ -66,7 +66,7 @@ getdns_module = Extension('getdns',
                     )
 
 setup(name='getdns',
-      version='0.9.0',
+      version='0.6.1',
       description='Python bindings for getdns',
       long_description=long_description,
       license='BSD',
