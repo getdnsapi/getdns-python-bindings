@@ -8,3 +8,5 @@ getdns.cpython-34m.so
 doc/_build/
 doc/_build/*
 TAGS
+dist
+MANIFEST
