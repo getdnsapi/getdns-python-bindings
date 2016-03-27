@@ -96,6 +96,7 @@ typedef struct {
     char *implementation_string;
     char *version_string;
     uint16_t tls_authentication;
+    uint32_t num_pending_requests;
 #if GETDNS_NUMERIC_VERSION > 0x00050000
     uint16_t tls_query_padding_blocksize;
     uint8_t edns_client_subnet_private;

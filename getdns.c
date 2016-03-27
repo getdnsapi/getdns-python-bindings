@@ -226,6 +226,8 @@ PyMemberDef Context_members[] = {
     {"idle_timeout", T_INT, offsetof(getdns_ContextObject, idle_timeout), 0, "TCP idle timeout" },
     {"tls_authentication", T_INT, offsetof(getdns_ContextObject, tls_authentication), 0,
      "TLS authentication basis" },
+    {"num_pending_requests", T_INT, offsetof(getdns_ContextObject, num_pending_requests),
+                                             READONLY, "count of outstanding requests" },
 #if GETDNS_NUMERIC_VERSION > 0x00050000
     {"tls_query_padding_blocksize", T_INT, offsetof(getdns_ContextObject, tls_query_padding_blocksize),
      0, "padding blocksize" },
@@ -569,11 +571,6 @@ add_getdns_constants(PyObject *g)
 
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_DNS", 800);
     PyModule_AddIntConstant(g, "GETDNS_NAMETYPE_WINS", 801);
-
-    PyModule_AddIntConstant(g, "CALLBACK_COMPLETE", 700);
-    PyModule_AddIntConstant(g, "CALLBACK_CANCEL", 701);
-    PyModule_AddIntConstant(g, "CALLBACK_TIMEOUT", 702);
-    PyModule_AddIntConstant(g, "CALLBACK_ERROR", 703);
 
     PyModule_AddIntConstant(g, "RESPSTATUS_GOOD", 900);
     PyModule_AddIntConstant(g, "RESPSTATUS_NO_NAME", 901);
