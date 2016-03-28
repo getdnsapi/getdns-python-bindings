@@ -184,6 +184,7 @@ extensions_to_getdnsdict(PyDictObject *pydict)
         tmp_key = PyString_AsString(PyObject_Str(key));
 #endif
         if ( (!strncmp(tmp_key, "dnssec_return_status", strlen("dnssec_return_status")))  ||
+             (!strncmp(tmp_key, "dnssec_return_all_statuses", strlen("dnssec_return_all_statuses"))) ||
              (!strncmp(tmp_key, "dnssec_return_only_secure", strlen("dnssec_return_only_secure")))  ||
              (!strncmp(tmp_key, "dnssec_return_validation_chain", strlen("dnssec_return_validation_chain")))  ||
              (!strncmp(tmp_key, "return_both_v4_and_v6", strlen("return_both_v4_and_v6")))  ||
