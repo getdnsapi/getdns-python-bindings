@@ -523,6 +523,15 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
 
 /*
+ *  misc. implementation-specific constants
+ */
+
+    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_AUTHENTICATION", 618);
+    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_CLIENT_SUBNET_PRIVATE", 619);
+    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_QUERY_PADDING_BLOCKSIZE", 620);
+    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_PUBKEY_PINSET", 621);
+
+/*
  * transport list constants
  */
 
