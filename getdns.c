@@ -54,9 +54,8 @@ static PyObject *root_trust_anchor(PyObject *self, PyObject *args, PyObject *key
 static void add_getdns_constants(PyObject *g);
 static PyObject *ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds);
-#if 0
-static PyObject *wire_to_string(PyObject *self, PyObject *args, PyObject *keywds);
-#endif
+static PyObject *wire_to_dict(PyObject *self, PyObject *args, PyObject *keywds);
+
 
 	
 static struct PyMethodDef getdns_methods[] = {
@@ -68,10 +67,8 @@ static struct PyMethodDef getdns_methods[] = {
       METH_VARARGS|METH_KEYWORDS, "return ulabel from alabel" },
     { "ulabel_to_alabel", (PyCFunction)ulabel_to_alabel,
       METH_VARARGS|METH_KEYWORDS, "return alabel from ulabel" },
-#if 0
-    { "wire_to_string", (PyCFunction)wire_to_string,
-      METH_VARARGS|METH_KEYWORDS, "convert a wire format buffer to a zone file format string" },
-#endif
+    { "wire_to_dict", (PyCFunction)wire_to_dict,
+      METH_VARARGS, "convert a wire format buffer to a Python dictionary" },
     { 0, 0, 0 }
 };
 
@@ -320,25 +317,33 @@ ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds)
 #endif
 }
 
-#if 0
 static PyObject *
-wire_to_string(PyObject *self, PyObject *args, PyObject *keywds)
+wire_to_dict(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = { "wirebuf",
                               NULL };
     int  nbytes;
+    uint8_t *wirebuf;
+    getdns_dict *rrdict;
+    PyObject *py_rrdict;
+    getdns_return_t ret;
 
-    char *wirebuf;
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "t#", kwlist,
                                      &wirebuf, &nbytes))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
     printf("len = %d\n", nbytes);
-    printf("%s\n", gldns_wire2str_rr(wirebuf, (size_t)nbytes));
-    return Py_None;
+    if ((ret = getdns_wire2rr_dict(wirebuf, (size_t)nbytes, &rrdict)) != GETDNS_RETURN_GOOD)  {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return NULL;
+    }
+    if ((py_rrdict = gdict_to_pdict(rrdict)) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    return py_rrdict;    
 }
-#endif
 
 
 static PyObject *
@@ -533,7 +538,7 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE", 551);
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE", 552);
     PyModule_AddIntConstant(g, "APPEND_NAME_NEVER", 553);
-
+    PyModule_AddIntConstant(g, "GETDNS_APPEND_NAME_TO_SINGLE_LABEL_FIRST", 554);
 /*
  * context codes
  */

@@ -329,7 +329,6 @@ extensions_to_getdnsdict(PyDictObject *pydict)
                             }  else if (!strncmp(tmpoptionlistkey, "option_data", strlen("option_data")))  {
                                 option_data = (struct getdns_bindata *)malloc(sizeof(struct getdns_bindata));
                                 option_data->size = PyObject_Length(optiondictvalue);
-                                printf("XXX size is %d\n", (int)option_data->size);
 #if PY_MAJOR_VERSION >= 3
                                 option_data->data = (uint8_t *)PyBytes_AS_STRING(optiondictvalue);
 #else
@@ -785,9 +784,6 @@ gdict_to_pdict(struct getdns_dict *dict)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
-#if 0
-    printf("%s\n", getdns_pretty_print_dict(dict)); /* XXX */
-#endif
     py_dict = PyDict_New();
     (void)getdns_list_get_length(keys, &n_keys);
     for (i = 0 ; i < (int)n_keys ; i++ )  {
