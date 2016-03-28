@@ -955,9 +955,9 @@ convertBinData(getdns_bindata* data,
         PyObject *a_string;
 
 #if PY_MAJOR_VERSION >= 3
-        if ((a_string = PyUnicode_FromStringAndSize((char *)data->data, (Py_ssize_t)(data->size-1))) == NULL)  {
+        if ((a_string = PyUnicode_FromStringAndSize((char *)data->data, (Py_ssize_t)(data->size))) == NULL)  {
 #else
-        if ((a_string = PyString_FromStringAndSize((char *)data->data, (Py_ssize_t)(data->size-1))) == NULL)  {
+        if ((a_string = PyString_FromStringAndSize((char *)data->data, (Py_ssize_t)(data->size))) == NULL)  {
 #endif
             PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
             return NULL;
