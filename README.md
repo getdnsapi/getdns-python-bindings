@@ -5,7 +5,7 @@ Python bindings for getdns
 
 * Date: 2016-03-29
 * Github: https://github.com/getdnsapi/getdns-python-bindings
-* Current version: v1.0beta
+* Current version: v1.0.0b1
 
 External dependencies
 =====================
@@ -14,7 +14,7 @@ Built and tested against Python 2.7 and Python 3.4.  You will need to install
 the Python headers and libraries - this is usually a package
 called "python-dev"
 
-Currently building against the getdns v0.9.0 release.
+Currently building against the getdns v1.0.0b release.
 getdns external dependencies include:
 
 * [libunbound from NLnet Labs](http://www.nlnetlabs.nl/projects/unbound/) version 1.4.16 or later
