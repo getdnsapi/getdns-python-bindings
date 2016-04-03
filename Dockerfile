@@ -1,14 +1,16 @@
 FROM  python:2.7
+MAINTAINER Melinda Shore <melinda.shore@nomountain.net>
 
 RUN set -ex \
-    && apt-get update
+    && apt-get update \
     && curl -fOSL "https://unbound.net/downloads/unbound-1.5.8.tar.gz" \
-    && curl -fOSL "https://github.com/getdnsapi/getdns/archive/v0.9.0.tar.gz" \
+    && curl -fOSL "https://github.com/getdnsapi/getdns/archive/v1.0.0b1.tar.gz" \
     && mkdir -p /usr/src/unbound \
     && tar -xzC /usr/src/unbound --strip-components=1 -f unbound-1.5.8.tar.gz \
     && rm unbound-1.5.8.tar.gz \
     && mkdir /usr/src/libgetdns \
-    && tar -xzC /usr/src/libgetdns --strip-components=1 -f v0.9.0.tar.gz \
+    && tar -xzC /usr/src/libgetdns --strip-components=1 -f v1.0.0b1.tar.gz \
+    && rm v1.0.0b1.tar.gz \
     && apt-get -y install libidn11-dev \
     && apt-get -y install python-dev \
     && cd /usr/src/unbound \
@@ -24,12 +26,14 @@ RUN set -ex \
     && make install \
     && ldconfig \
     && mkdir -p /etc/unbound \
-    && unbound-anchor -a /etc/unbound/getdns-root.key \
+#    && /usr/local/sbin/unbound-anchor -a /etc/unbound/getdns-root.key ; exit 0
     && cd /usr/src \
     && git clone https://github.com/getdnsapi/getdns-python-bindings.git \
     && cd /usr/src/getdns-python-bindings \
-    && git checkout develop \
+    && git checkout release/v1.0.0b1 \
     && python setup.py build \
-    && python setup.py install
+    && python setup.py install 
+
+COPY /etc/unbound/getdns-root.key /etc/unbound/getdns-root.key
 
 CMD ["python2"]
