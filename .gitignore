@@ -12,3 +12,4 @@ dist
 MANIFEST
 .pypirc
 \#*
+etc/
