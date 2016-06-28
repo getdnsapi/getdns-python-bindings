@@ -523,13 +523,14 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
 
 /*
- *  misc. implementation-specific constants
+ *  misc. implementation-specific constants - getdns_extra.h
  */
 
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_AUTHENTICATION", 618);
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_CLIENT_SUBNET_PRIVATE", 619);
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_QUERY_PADDING_BLOCKSIZE", 620);
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_PUBKEY_PINSET", 621);
+    PyModule_AddIntConstant(g, "GETDNS_RETURN_NEED_MORE_SPACE", 399);
 
 /*
  * transport list constants
@@ -547,7 +548,9 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE", 551);
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE", 552);
     PyModule_AddIntConstant(g, "APPEND_NAME_NEVER", 553);
+    /* from getdns_extra.h */
     PyModule_AddIntConstant(g, "GETDNS_APPEND_NAME_TO_SINGLE_LABEL_FIRST", 554);
+
 /*
  * context codes
  */
