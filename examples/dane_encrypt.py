@@ -5,15 +5,17 @@
 #
 # requires the following Python modules:
 #    getdns
-#    m2crypto
+#    PyCA (cryptography)
 #
 
 
 import getdns
-import M2Crypto as m2
-from M2Crypto import RSA
 import sys
-
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 
 
 # 
@@ -52,14 +54,17 @@ def main():
         sys.exit(1)
     else:
         record = get_first_secure_response(results)
-        cert = record['rdata']['certificate_association_data']
+        cert_record = record['rdata']['certificate_association_data']
         try:
-            x509 = m2.X509.load_cert_der_string(cert)
-            rsakey = x509.get_pubkey().get_rsa()
-            encrypted = rsakey.public_encrypt("A chunk of text", RSA.pkcs1_oaep_padding)
+            cert = x509.load_der_x509_certificate(bytes(cert_record), default_backend())
+            rsakey = cert.public_key()
+            encrypted = rsakey.encrypt("A chunk of text", padding.OAEP(
+		mgf=padding.MGF1(algorithm=hashes.SHA1()),
+                algorithm=hashes.SHA1(),
+                label=None) )
             print encrypted.encode('base64')
-        except:
-            print 'Error: ', sys.exc_info()[0]
+        except Exception as e:
+            print ('Error: {0}'.format(e.message))
             sys.exit(1)
 
 if __name__ == '__main__':
