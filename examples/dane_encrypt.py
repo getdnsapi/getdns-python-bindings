@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 # an example of using getdns to pull out a TLSA record,
 # extract a certificate, extract the public key, and then
