@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #
 # Note that we expect that each pin in the pinset list
 #   must be prefaced with pin-<algorithm>= and the pin 
