@@ -23,6 +23,8 @@ www.isoc.org: IPv6 2001:41c8:20::19
 
 import getdns, sys, getopt
 
+desired_addr_type = None
+
 def cbk(type, result, userarg, tid):
     if type == getdns.CALLBACK_COMPLETE:
         status = result.status
@@ -30,7 +32,8 @@ def cbk(type, result, userarg, tid):
             for addr in result.just_address_answers:
                 addr_type = addr['address_type']
                 addr_data = addr['address_data']
-                print("{0}: {1} {2}".format(userarg, addr_type, addr_data))
+                if (desired_addr_type == None) or (addr_type == desired_addr_type):
+                    print("{0}: {1} {2}".format(userarg, addr_type, addr_data))
         elif status == getdns.RESPSTATUS_NO_SECURE_ANSWERS:
             print("{0}: No DNSSEC secured responses found".format(hostname))
         else:
@@ -64,6 +67,14 @@ else:
         usage()
 
 extensions = { "return_both_v4_and_v6" : getdns.EXTENSION_TRUE }
+
+for (opt, optval) in options:
+    if opt == "-s":
+        extensions["dnssec_return_only_secure"] = getdns.EXTENSION_TRUE
+    elif opt == "-4":
+        desired_addr_type = "IPv4"
+    elif opt == "-6":
+        desired_addr_type = "IPv6"
 
 ctx = getdns.Context()
 tids = []
