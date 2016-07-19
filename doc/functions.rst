@@ -238,9 +238,7 @@ as its methods and attributes.
    ``Context.general()`` is used for looking up any type of
    DNS record.  The keyword arguments are:
 
-   * ``name``: a representation of the query term; usually a
-     string but must be a dict (as described in ``Context.hostname()`` below) in the
-     case of a PTR record lookup
+   * ``name``: a string containing the query term.
    * ``request_type``: a DNS RR type as a getdns constant
      (listed here)
    * ``extensions``: optional.  A dictionary containing
