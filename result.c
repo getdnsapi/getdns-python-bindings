@@ -41,24 +41,12 @@
 #endif
 
 int
-result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
+result_init(getdns_ResultObject *self, getdns_dict *result_dict)
 {
-    PyObject *result_capsule;
-    struct getdns_dict *result_dict;
     int  status;
     int  answer_type;
     char *canonical_name;
 
-    if (!PyArg_ParseTuple(args, "|O", &result_capsule))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-        Py_DECREF(self);
-        return -1;
-    }
-    if ((result_dict = PyCapsule_GetPointer(result_capsule, "result")) == NULL)  {
-        PyErr_SetString(PyExc_AttributeError, "Unable to initialize result object");
-        Py_DECREF(self);
-        return -1;
-    }
     if ((self->replies_full = gdict_to_pdict(result_dict)) == NULL)  {
         Py_DECREF(self);
         return -1;
@@ -186,10 +174,9 @@ result_str(PyObject *self)
 PyObject *
 result_create(struct getdns_dict *resp)
 {
-    PyObject *result_capsule;
-    PyObject *args;
-
-    result_capsule = PyCapsule_New(resp, "result", 0);
-    args = Py_BuildValue("(O)", result_capsule);
-    return PyObject_CallObject((PyObject *)&getdns_ResultType, args);
+    PyObject *result = PyObject_CallObject((PyObject *)&getdns_ResultType, NULL);
+    if (result_init((getdns_ResultObject*)result, resp) < 0) {
+        return NULL;
+    }
+    return result;
 }

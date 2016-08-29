@@ -42,7 +42,6 @@ context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     struct getdns_context *context = 0;
     int  set_from_os = 1;       /* default to True */
     getdns_return_t ret;
-    PyObject *py_context;
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "|i", kwlist,
                                      &set_from_os))  {
@@ -57,9 +56,7 @@ context_init(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return -1;
     }
-    py_context = PyCapsule_New(context, "context", 0);
-    Py_INCREF(py_context);
-    self->py_context = py_context;
+    self->context = context;
     return 0;
 }
 
@@ -70,10 +67,10 @@ context_dealloc(getdns_ContextObject *self)
     getdns_context *context;
     int status;
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         return;
     }
-    Py_XDECREF(self->py_context);
+    self->context = NULL;
     getdns_context_destroy(context);
     (void)wait(&status);        /* reap the process spun off by unbound */
     return;
@@ -867,7 +864,7 @@ context_getattro(PyObject *self, PyObject *nameobj)
 #else
     attrname = PyString_AsString(nameobj);
 #endif
-    context = PyCapsule_GetPointer(myself->py_context, "context");
+    context = myself->context;
 
     if (!strncmp(attrname, "append_name", strlen("append_name")))  {
         getdns_append_name_t value;
@@ -1239,7 +1236,7 @@ context_setattro(PyObject *self, PyObject *attrname, PyObject *py_value)
     name = PyString_AsString(attrname);
 #endif
     key.name = name;
-    if ((context = PyCapsule_GetPointer(myself->py_context, "context")) == NULL)  {
+    if ((context = myself->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return -1;
     }
@@ -1280,7 +1277,7 @@ context_run(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
 {
     getdns_context *context;
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
@@ -1300,7 +1297,7 @@ context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *ke
     getdns_transaction_t tid = 0;
     getdns_return_t ret;
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
@@ -1325,7 +1322,7 @@ context_str(PyObject *self)
     char *str_api_dict;
     PyObject *py_str;
 
-    context = PyCapsule_GetPointer(myself->py_context, "context");
+    context = myself->context;
     api_info = getdns_context_get_api_information(context);
     if ((str_api_dict = getdns_print_json_dict(api_info, 0)) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
@@ -1364,7 +1361,7 @@ context_general(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     struct getdns_dict *resp;
     PyObject *callback_func;
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
@@ -1453,7 +1450,7 @@ context_address(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     PyObject *callback = 0;
     struct getdns_dict *resp;
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
@@ -1544,7 +1541,7 @@ context_hostname(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     getdns_return_t ret;
     PyObject *callback_func;
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
@@ -1640,7 +1637,7 @@ context_service(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     getdns_context *context;
     PyObject *callback_func;
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
@@ -1722,7 +1719,7 @@ context_get_api_information(getdns_ContextObject *self, PyObject *unused)
     getdns_return_t ret;
 
 
-    if ((context = PyCapsule_GetPointer(self->py_context, "context")) == NULL)  {
+    if ((context = self->context) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_BAD_CONTEXT_TEXT);
         return NULL;
     }
