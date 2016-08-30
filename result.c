@@ -85,25 +85,34 @@ result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
 #else
     self->answer_type = PyInt_FromLong((long)answer_type);
 #endif
-    if ((canonical_name = get_canonical_name(result_dict)) == 0)  
+    if ((canonical_name = get_canonical_name(result_dict)) == 0) {
         self->canonical_name = Py_None;
-    else
+        Py_INCREF(Py_None);
+    } else {
 #if PY_MAJOR_VERSION >= 3
         self->canonical_name = PyUnicode_FromString(canonical_name);
 #else
         self->canonical_name = PyString_FromString(canonical_name);
 #endif
+    }
     if ((self->just_address_answers = get_just_address_answers(result_dict)) == NULL)  {
         self->just_address_answers = Py_None;
+        Py_INCREF(Py_None);
     }
-    if ((self->validation_chain = get_validation_chain(result_dict)) == NULL)  
+    if ((self->validation_chain = get_validation_chain(result_dict)) == NULL) {
         self->validation_chain = Py_None;
+        Py_INCREF(Py_None);
+    }
 #if GETDNS_NUMERIC_VERSION < 0x00090000
-    if ((self->call_debugging = get_call_debugging(result_dict)) == NULL)
+    if ((self->call_debugging = get_call_debugging(result_dict)) == NULL) {
         self->call_debugging = Py_None;
+        Py_INCREF(Py_None);
+    }
 #else
-    if ((self->call_reporting = get_call_reporting(result_dict)) == NULL)
+    if ((self->call_reporting = get_call_reporting(result_dict)) == NULL) {
         self->call_reporting = Py_None;
+        Py_INCREF(Py_None);
+    }
 #endif
     return 0;
 }
@@ -117,16 +126,25 @@ result_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self = (getdns_ResultObject *)type->tp_alloc(type, 0);
     if (self != NULL)  {
         self->just_address_answers = Py_None;
+        Py_INCREF(Py_None);
         self->answer_type = Py_None;
+        Py_INCREF(Py_None);
         self->status = Py_None;
+        Py_INCREF(Py_None);
         self->replies_tree = Py_None;
+        Py_INCREF(Py_None);
         self->canonical_name = Py_None;
+        Py_INCREF(Py_None);
         self->replies_full = Py_None;
+        Py_INCREF(Py_None);
         self->validation_chain = Py_None;
+        Py_INCREF(Py_None);
 #if GETDNS_NUMERIC_VERSION < 0x00090000
         self->call_debugging = Py_None;
+        Py_INCREF(Py_None);
 #else
         self->call_reporting = Py_None;
+        Py_INCREF(Py_None);
 #endif
     }
     return (PyObject *)self;
