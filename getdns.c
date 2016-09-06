@@ -370,8 +370,8 @@ get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
-    if ((errstr = (char *)getdns_get_errorstr_by_id((uint16_t)id)) == 0) 
-        return Py_None;
+    if ((errstr = (char *)getdns_get_errorstr_by_id((uint16_t)id)) == 0)
+        Py_RETURN_NONE;
     else
 #if PY_MAJOR_VERSION >= 3
         return PyUnicode_FromString(errstr);
