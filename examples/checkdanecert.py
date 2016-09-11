@@ -6,8 +6,13 @@
 # 
 
 import os.path, sys, socket, hashlib
-from M2Crypto import SSL, X509
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.hazmat.primitives.serialization import PublicFormat
+
 import getdns
+import ssl
 
 
 def usage():
@@ -45,6 +50,7 @@ def get_addresses(hostname):
     else:
         print "getdns.address(): failed, return code: %d" % status
 
+    address_list = [ x for x in address_list if x[0] != 'IPv6' ]
     return address_list
 
 
@@ -94,7 +100,8 @@ def verify_tlsa(cert, usage, selector, matchtype, hexdata1):
     if selector == 0:
         certdata = cert.as_der()
     elif selector == 1:
-        certdata = cert.get_pubkey().as_der()
+        cert = x509.load_pem_x509_certificate(str(cert), default_backend())
+        certdata = cert.public_key().public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
     else:
         raise ValueError("selector type %d not recognized" % selector)
 
@@ -122,40 +129,11 @@ if __name__ == '__main__':
         usage()
 
     tlsa_rdata_set = get_tlsa(port, "tcp", hostname)
+    addrs = get_addresses(hostname)
 
-    for (iptype, ipaddr) in get_addresses(hostname):
+    for (iptype, ipaddr) in addrs:
 
-        print "Connecting to %s at address %s ..." % (hostname, ipaddr)
-        ctx = SSL.Context()
-
-        if iptype == "IPv4":
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        elif iptype == "IPv6":
-            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-        else:
-            raise ValueError, "Unknown address type: %s" % iptype
-
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        connection = SSL.Connection(ctx, sock=sock)
-
-        # set TLS SNI extension if available in M2Crypto on this platform
-        # Note: the official M2Crypto release does not yet (as of late 2014)
-        # have support for SNI, sigh, but patches exist.
-        try:
-            connection.set_tlsext_host_name(hostname)
-        except AttributeError:
-            pass
-
-        # Per https://tools.ietf.org/html/draft-ietf-dane-ops, for DANE-EE
-        # usage, certificate identity checks are based solely on the TLSA 
-        # record, so we ignore name mismatch conditions in the certificate.
-        try:
-            connection.connect((ipaddr, port))
-        except SSL.Checker.WrongHost:
-            pass
-
-        chain = connection.get_peer_cert_chain()
-        cert = chain[0]
+        cert = ssl.get_server_certificate((ipaddr, port))
 
         # find a matching TLSA record entry for the certificate
         tlsa_match = False
@@ -170,7 +148,4 @@ if __name__ == '__main__':
 
         if not tlsa_match:
             print "No Matching DANE-EE TLSA record found."
-
-        connection.close()
-        ctx.close()
 

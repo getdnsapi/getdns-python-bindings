@@ -203,21 +203,22 @@ as its methods and attributes.
    increase the difficulty for observers to guess traffic
    content.
 
-   .. py:attribute:: upstream_recursive_servers
+  .. py:attribute:: upstream_recursive_servers
 
    A list of dicts defining where a stub resolver will send queries.
    Each dict in the list contains at least two names: address_type
-   (whose value is a bindata; it is currently either "IPv4" or "IPv6")
-   and address_data (whose value is a bindata). It might also contain
-   port to specify which port to use to contact these DNS servers; the
+   (either "IPv4" or "IPv6")
+   and address_data (whose value is a string representation
+   of an IP address). It might also contain 
+   "port" to specify which port to use to contact these DNS servers; the
    default is 53. If the stub and a recursive resolver both support
    TSIG (RFC 2845), the upstream_list entry can also contain
-   tsig_algorithm (a bindata) that is the name of the TSIG hash
-   algorithm, and tsig_secret (a bindata) that is the TSIG key.
+   tsig_algorithm (a string) that is the name of the TSIG hash
+   algorithm, and tsig_secret (a base64 string) that is the TSIG key.
 
    There is also now support for pinning an upstream's
-   certificate's public keys, with pinsets (when using TLS
-   for transport.  Add an element to the
+   certificate's public keys with pinsets (when using TLS
+   for transport).  Add an element to the
    upstream_recursive_server list entry, called
    'tls_pubkey_pinset', which is a list of public key pins.
    (See the example code in our examples directory).
@@ -238,9 +239,7 @@ as its methods and attributes.
    ``Context.general()`` is used for looking up any type of
    DNS record.  The keyword arguments are:
 
-   * ``name``: a representation of the query term; usually a
-     string but must be a dict (as described in ``Context.hostname()`` below) in the
-     case of a PTR record lookup
+   * ``name``: a string containing the query term.
    * ``request_type``: a DNS RR type as a getdns constant
      (listed here)
    * ``extensions``: optional.  A dictionary containing

@@ -41,24 +41,12 @@
 #endif
 
 int
-result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
+result_init(getdns_ResultObject *self, getdns_dict *result_dict)
 {
-    PyObject *result_capsule;
-    struct getdns_dict *result_dict;
     int  status;
     int  answer_type;
     char *canonical_name;
 
-    if (!PyArg_ParseTuple(args, "|O", &result_capsule))  {
-        PyErr_SetString(PyExc_AttributeError, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
-        Py_DECREF(self);
-        return -1;
-    }
-    if ((result_dict = PyCapsule_GetPointer(result_capsule, "result")) == NULL)  {
-        PyErr_SetString(PyExc_AttributeError, "Unable to initialize result object");
-        Py_DECREF(self);
-        return -1;
-    }
     if ((self->replies_full = gdict_to_pdict(result_dict)) == NULL)  {
         Py_DECREF(self);
         return -1;
@@ -85,25 +73,34 @@ result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds)
 #else
     self->answer_type = PyInt_FromLong((long)answer_type);
 #endif
-    if ((canonical_name = get_canonical_name(result_dict)) == 0)  
+    if ((canonical_name = get_canonical_name(result_dict)) == 0) {
         self->canonical_name = Py_None;
-    else
+        Py_INCREF(Py_None);
+    } else {
 #if PY_MAJOR_VERSION >= 3
         self->canonical_name = PyUnicode_FromString(canonical_name);
 #else
         self->canonical_name = PyString_FromString(canonical_name);
 #endif
+    }
     if ((self->just_address_answers = get_just_address_answers(result_dict)) == NULL)  {
         self->just_address_answers = Py_None;
+        Py_INCREF(Py_None);
     }
-    if ((self->validation_chain = get_validation_chain(result_dict)) == NULL)  
+    if ((self->validation_chain = get_validation_chain(result_dict)) == NULL) {
         self->validation_chain = Py_None;
+        Py_INCREF(Py_None);
+    }
 #if GETDNS_NUMERIC_VERSION < 0x00090000
-    if ((self->call_debugging = get_call_debugging(result_dict)) == NULL)
+    if ((self->call_debugging = get_call_debugging(result_dict)) == NULL) {
         self->call_debugging = Py_None;
+        Py_INCREF(Py_None);
+    }
 #else
-    if ((self->call_reporting = get_call_reporting(result_dict)) == NULL)
+    if ((self->call_reporting = get_call_reporting(result_dict)) == NULL) {
         self->call_reporting = Py_None;
+        Py_INCREF(Py_None);
+    }
 #endif
     return 0;
 }
@@ -117,16 +114,25 @@ result_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     self = (getdns_ResultObject *)type->tp_alloc(type, 0);
     if (self != NULL)  {
         self->just_address_answers = Py_None;
+        Py_INCREF(Py_None);
         self->answer_type = Py_None;
+        Py_INCREF(Py_None);
         self->status = Py_None;
+        Py_INCREF(Py_None);
         self->replies_tree = Py_None;
+        Py_INCREF(Py_None);
         self->canonical_name = Py_None;
+        Py_INCREF(Py_None);
         self->replies_full = Py_None;
+        Py_INCREF(Py_None);
         self->validation_chain = Py_None;
+        Py_INCREF(Py_None);
 #if GETDNS_NUMERIC_VERSION < 0x00090000
         self->call_debugging = Py_None;
+        Py_INCREF(Py_None);
 #else
         self->call_reporting = Py_None;
+        Py_INCREF(Py_None);
 #endif
     }
     return (PyObject *)self;
@@ -186,10 +192,9 @@ result_str(PyObject *self)
 PyObject *
 result_create(struct getdns_dict *resp)
 {
-    PyObject *result_capsule;
-    PyObject *args;
-
-    result_capsule = PyCapsule_New(resp, "result", 0);
-    args = Py_BuildValue("(O)", result_capsule);
-    return PyObject_CallObject((PyObject *)&getdns_ResultType, args);
+    PyObject *result = PyObject_CallObject((PyObject *)&getdns_ResultType, NULL);
+    if (result_init((getdns_ResultObject*)result, resp) < 0) {
+        return NULL;
+    }
+    return result;
 }

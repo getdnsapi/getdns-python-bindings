@@ -87,8 +87,11 @@ callback_shim(struct getdns_context *context,
     }
     if (type == GETDNS_CALLBACK_CANCEL)  {
         py_result = Py_None;
+        Py_INCREF(Py_None);
         py_tid = Py_None;
+        Py_INCREF(Py_None);
         py_userarg = Py_None;
+        Py_INCREF(Py_None);
     }  else  {
         py_result = result_create(response);
 #if PY_MAJOR_VERSION >= 3
@@ -96,14 +99,16 @@ callback_shim(struct getdns_context *context,
 #else
         py_tid = PyInt_FromLong((long)tid);
 #endif
-        if (u->userarg)
+        if (u->userarg) {
 #if PY_MAJOR_VERSION >= 3
             py_userarg = PyUnicode_FromString(u->userarg);
 #else
             py_userarg = PyString_FromString(u->userarg);
 #endif
-        else
+        } else {
             py_userarg = Py_None;
+            Py_INCREF(Py_None);
+        }
     }
     PyObject_CallFunctionObjArgs(u->callback_func, py_callback_type, py_result, py_userarg, py_tid, NULL);
 }

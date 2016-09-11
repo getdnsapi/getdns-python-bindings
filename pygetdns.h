@@ -72,7 +72,7 @@ typedef struct  {
 
 typedef struct {
     PyObject_HEAD
-    PyObject *py_context;       /* Python capsule containing getdns_context */
+    getdns_context* context;
     uint64_t  timeout;          /* timeout attribute (milliseconds) */
     uint64_t  idle_timeout;     /* TCP timeout attribute (milliseconds) */
     getdns_resolution_t resolution_type; /* stub or recursive? */
@@ -111,7 +111,6 @@ struct setter_table  {          /* we're now using bsearch to find */
 extern PyTypeObject getdns_ResultType;
 void result_dealloc(getdns_ResultObject *self);
 extern PyObject *result_getattro(PyObject *self, PyObject *nameobj);
-PyObject *py_result(PyObject *result_capsule);
 PyObject *result_create(struct getdns_dict *resp);
 PyObject *result_str(PyObject *self);
 
@@ -167,7 +166,6 @@ PyObject *get_callback(char *py_main, char *callback);
 void callback_shim(struct getdns_context *context, getdns_callback_type_t type,
                    struct getdns_dict *response, void *userarg, getdns_transaction_t tid);
 
-int result_init(getdns_ResultObject *self, PyObject *args, PyObject *keywds);
 PyObject *result_getattro(PyObject *self, PyObject *nameobj);
 int result_setattro(PyObject *self, PyObject *attrname, PyObject *value);
 

@@ -1007,9 +1007,11 @@ convertBinData(getdns_bindata* data,
             return(addr_string);
         }
     }  else  {                  /* none of the above, treat it like a blob */
+
         uint8_t *blob = (uint8_t *)malloc(data->size);
         
         memcpy(blob, data->data, data->size);
+
 #if PY_MAJOR_VERSION >= 3                       
         return (PyMemoryView_FromMemory((char *)blob, (Py_ssize_t)data->size, PyBUF_READ));
 #else

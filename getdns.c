@@ -158,7 +158,7 @@ PyTypeObject getdns_ResultType = {
     0,                         /* tp_descr_get */
     0,                         /* tp_descr_set */
     0,                         /* tp_dictoffset */
-    (initproc)result_init,      /* tp_init */
+    0,                         /* tp_init */
     0,                         /* tp_alloc */
     PyType_GenericNew,                 /* tp_new */
 };
@@ -322,23 +322,35 @@ wire_to_dict(PyObject *self, PyObject *args, PyObject *keywds)
 {
     static char *kwlist[] = { "wirebuf",
                               NULL };
-    int  nbytes;
-    uint8_t *wirebuf;
-    getdns_dict *rrdict;
+    PyObject *py_wirebuf;
+    Py_buffer *view;
     PyObject *py_rrdict;
     getdns_return_t ret;
+    getdns_dict *rr_dict;
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "t#", kwlist,
-                                     &wirebuf, &nbytes))  {
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "O", kwlist,
+                                     &py_wirebuf))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
-    printf("len = %d\n", nbytes);
-    if ((ret = getdns_wire2rr_dict(wirebuf, (size_t)nbytes, &rrdict)) != GETDNS_RETURN_GOOD)  {
+    if (!PyBuffer_Check(py_wirebuf))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    if ((view = (Py_buffer *)malloc(sizeof(*view))) == NULL)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    if (PyObject_GetBuffer(py_wirebuf, view, PyBUF_SIMPLE) != 0)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    if ((ret = getdns_wire2rr_dict((uint8_t *)view->buf, view->len, &rr_dict)) !=
+        GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
     }
-    if ((py_rrdict = gdict_to_pdict(rrdict)) == NULL)  {
+    if ((py_rrdict = gdict_to_pdict(rr_dict)) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
@@ -358,8 +370,8 @@ get_errorstr_by_id(PyObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
-    if ((errstr = (char *)getdns_get_errorstr_by_id((uint16_t)id)) == 0) 
-        return Py_None;
+    if ((errstr = (char *)getdns_get_errorstr_by_id((uint16_t)id)) == 0)
+        Py_RETURN_NONE;
     else
 #if PY_MAJOR_VERSION >= 3
         return PyUnicode_FromString(errstr);
@@ -523,13 +535,14 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "TRANSPORT_TCP_ONLY_KEEP_CONNECTIONS_OPEN", 543);
 
 /*
- *  misc. implementation-specific constants
+ *  misc. implementation-specific constants - getdns_extra.h
  */
 
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_AUTHENTICATION", 618);
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_CLIENT_SUBNET_PRIVATE", 619);
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_QUERY_PADDING_BLOCKSIZE", 620);
     PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_PUBKEY_PINSET", 621);
+    PyModule_AddIntConstant(g, "GETDNS_RETURN_NEED_MORE_SPACE", 399);
 
 /*
  * transport list constants
@@ -547,7 +560,9 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_SINGLE_LABEL_AFTER_FAILURE", 551);
     PyModule_AddIntConstant(g, "APPEND_NAME_ONLY_TO_MULTIPLE_LABEL_NAME_AFTER_FAILURE", 552);
     PyModule_AddIntConstant(g, "APPEND_NAME_NEVER", 553);
+    /* from getdns_extra.h */
     PyModule_AddIntConstant(g, "GETDNS_APPEND_NAME_TO_SINGLE_LABEL_FIRST", 554);
+
 /*
  * context codes
  */
