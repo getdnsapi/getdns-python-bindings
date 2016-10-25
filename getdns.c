@@ -333,10 +333,17 @@ wire_to_dict(PyObject *self, PyObject *args, PyObject *keywds)
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    if (!PyObject_CheckBuffer(py_wirebuf))  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+#else
     if (!PyBuffer_Check(py_wirebuf))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
+#endif
     if ((view = (Py_buffer *)malloc(sizeof(*view))) == NULL)  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
