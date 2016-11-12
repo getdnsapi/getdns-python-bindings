@@ -30,6 +30,7 @@
 #include <getdns/getdns_extra.h>
 #include <arpa/inet.h>
 #include <sys/wait.h>
+#include <sys/socket.h>
 #include "pygetdns.h"
 
 int
@@ -630,7 +631,7 @@ context_set_dns_root_servers(getdns_context *context, PyObject *py_value)
     PyObject *str;
     getdns_dict *addr_dict;
     int domain;
-    unsigned char buf[sizeof(struct in6_addr)];
+    unsigned char buf[IPv6_ADDR_SIZE];
 
     if (!PyList_Check(py_value))  {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
