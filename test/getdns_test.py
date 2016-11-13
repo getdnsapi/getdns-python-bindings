@@ -1,5 +1,14 @@
 import unittest
+import sys, platform
+
+
+x = [ 'lib' ]
+un = platform.uname()
+d = 'lib.' + un[0].lower() + '-' + un[4] + '-' + '.'.join(platform.python_version().split('.')[:2])
+sys.path.append(d)
+
 import getdns
+
 
 class TestGetdnsMethods(unittest.TestCase):
 
@@ -7,6 +16,16 @@ class TestGetdnsMethods(unittest.TestCase):
         c = getdns.Context()
         self.assertIsNotNone(c)
         del(c)
+
+    def test_append_name(self):
+        c = getdns.Context()
+        c.append_name = getdns.APPEND_NAME_NEVER
+        self.assertEqual(c.append_name, getdns.APPEND_NAME_NEVER)
+        del(c)
+
+    def test_dns_root_servers(self):
+        c = getdns.Context()
+
 
     def test_sync_address(self):
         c = getdns.Context()
