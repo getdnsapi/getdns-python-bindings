@@ -1,16 +1,16 @@
-import unittest
+import getdns
+import inspect
+import StringIO
 import sys, platform
+import unittest
 
 
 un = platform.uname()
 d = 'lib.' + un[0].lower() + '-' + un[4] + '-' + '.'.join(platform.python_version().split('.')[:2])
 sys.path.append(d)
 
-import getdns
-
 
 class TestGetdnsMethods(unittest.TestCase):
-
     def test_context(self):
         c = getdns.Context()
         self.assertIsNotNone(c)
@@ -61,6 +61,29 @@ class TestGetdnsMethods(unittest.TestCase):
         r = c.general('nlnetlabs.nl', request_type=getdns.RRTYPE_NS)
         self.assertEqual(r.status, getdns.RESPSTATUS_GOOD)
         del(c)
+        del(r)
+
+    def test_file_to_list(self):
+        ns1 = {'class': 1,
+               'name': 'example.com.',
+               'rdata': {'nsdname': 'ns1.example.com.',
+                         'rdata_raw':'ns1.example.com.'},
+               'ttl': 3600,
+               'type': 2
+               }
+        ns2 = {'class': 1,
+               'name': 'example.com.',
+               'rdata': {'nsdname': 'ns2.example.com.',
+                         'rdata_raw': 'ns2.example.com.'},
+               'ttl': 3600,
+               'type': 2
+               }
+        f = open('example.com.zone')
+        r = getdns.file_to_list(f, 'example.com', 3600 )
+        self.assertIsInstance(r, list)
+        self.assertEqual(r[1], ns1)
+        self.assertEqual(r[2], ns2)
+        del(f)
         del(r)
 
 
