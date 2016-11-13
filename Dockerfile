@@ -26,7 +26,8 @@ RUN set -ex \
     && make install \
     && ldconfig \
     && mkdir -p /etc/unbound \
-#    && /usr/local/sbin/unbound-anchor -a /etc/unbound/getdns-root.key ; exit 0
+    && cd /etc/unbound \
+    && wget http://www.nomountain.net/getdns-root.key \
     && cd /usr/src \
     && git clone https://github.com/getdnsapi/getdns-python-bindings.git \
     && cd /usr/src/getdns-python-bindings \
