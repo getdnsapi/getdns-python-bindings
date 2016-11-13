@@ -38,6 +38,8 @@
 #define GETDNS_STR_IPV4 "IPv4"
 #define GETDNS_STR_IPV6 "IPv6"
 
+#define IPv6_ADDR_SIZE 16
+
 #if !defined(UNUSED_PARAM)
 # define UNUSED_PARAM(x) ((void)(x))
 #endif

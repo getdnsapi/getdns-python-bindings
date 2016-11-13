@@ -35,6 +35,10 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <getdns/getdns.h>
 #include <getdns/getdns_extra.h>
 #include "pygetdns.h"
@@ -369,7 +373,7 @@ getdns_dict *
     getdns_bindata addr_data;
     getdns_bindata addr_type;
     PyObject *str;
-    unsigned char buf[sizeof(struct in6_addr)];
+    unsigned char buf[IPv6_ADDR_SIZE];
     int domain;
     getdns_bindata tls_auth_name;
     getdns_bindata scope_id;
