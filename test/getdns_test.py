@@ -1,13 +1,34 @@
 import getdns
 import inspect
 import StringIO
+import sys, platform
 import unittest
+
+
+un = platform.uname()
+d = 'lib.' + un[0].lower() + '-' + un[4] + '-' + '.'.join(platform.python_version().split('.')[:2])
+sys.path.append(d)
+
 
 class TestGetdnsMethods(unittest.TestCase):
     def test_context(self):
         c = getdns.Context()
         self.assertIsNotNone(c)
         del(c)
+
+    def test_append_name(self):
+        c = getdns.Context()
+        c.append_name = getdns.APPEND_NAME_NEVER
+        self.assertEqual(c.append_name, getdns.APPEND_NAME_NEVER)
+        del(c)
+
+    def test_dns_root_servers(self):
+        c = getdns.Context()
+        addrs = [ { 'address_type': 'IPv4', 'address_data': '127.0.0.254' } ]
+        c.dns_root_servers = addrs
+        self.assertEqual(c.dns_root_servers, addrs)
+        del(c)
+
 
     def test_sync_address(self):
         c = getdns.Context()
