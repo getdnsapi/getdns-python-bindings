@@ -16,6 +16,13 @@ class TestGetdnsMethods(unittest.TestCase):
         self.assertIsNotNone(c)
         del(c)
 
+    def test_bogus_attribute(self):
+        c = getdns.Context()
+        with self.assertRaises(AttributeError, c.asdf) as e:
+
+        except
+        del(c)
+        
     def test_append_name(self):
         c = getdns.Context()
         c.append_name = getdns.APPEND_NAME_NEVER
@@ -29,6 +36,12 @@ class TestGetdnsMethods(unittest.TestCase):
         self.assertEqual(c.dns_root_servers, addrs)
         del(c)
 
+    def test_dns_transport_list(self):
+        c = getdns.Context()
+        transports = [ getdns.TRANSPORT_TLS, getdns.TRANSPORT_UDP, getdns.TRANSPORT_TCP ]
+        c.dns_transport_list = transports
+        self.assertEqual(c.dns_transport_list, transports)
+        del(c)
 
     def test_sync_address(self):
         c = getdns.Context()
