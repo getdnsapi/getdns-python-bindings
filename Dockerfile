@@ -35,6 +35,5 @@ RUN set -ex \
     && python setup.py build \
     && python setup.py install 
 
-COPY /etc/unbound/getdns-root.key /etc/unbound/getdns-root.key
 
 CMD ["python2"]
