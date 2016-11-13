@@ -1,12 +1,13 @@
 import getdns
-import inspect
-import StringIO
-import sys, platform
+import platform
+import sys
 import unittest
 
 
 un = platform.uname()
-d = 'lib.' + un[0].lower() + '-' + un[4] + '-' + '.'.join(platform.python_version().split('.')[:2])
+d = "lib.{0}-{1}-{2}".format(
+    un[0].lower(), un[4], '.'.join(platform.python_version().split('.')[:2])
+)
 sys.path.append(d)
 
 
@@ -22,7 +23,7 @@ class TestGetdnsMethods(unittest.TestCase):
 
         except
         del(c)
-        
+
     def test_append_name(self):
         c = getdns.Context()
         c.append_name = getdns.APPEND_NAME_NEVER
@@ -31,30 +32,33 @@ class TestGetdnsMethods(unittest.TestCase):
 
     def test_dns_root_servers(self):
         c = getdns.Context()
-        addrs = [ { 'address_type': 'IPv4', 'address_data': '127.0.0.254' } ]
+        addrs = [{'address_type': 'IPv4', 'address_data': '127.0.0.254'}]
         c.dns_root_servers = addrs
         self.assertEqual(c.dns_root_servers, addrs)
         del(c)
 
     def test_dns_transport_list(self):
         c = getdns.Context()
-        transports = [ getdns.TRANSPORT_TLS, getdns.TRANSPORT_UDP, getdns.TRANSPORT_TCP ]
+        transports = [getdns.TRANSPORT_TLS,
+                      getdns.TRANSPORT_UDP,
+                      getdns.TRANSPORT_TCP]
         c.dns_transport_list = transports
         self.assertEqual(c.dns_transport_list, transports)
         del(c)
 
     def test_sync_address(self):
         c = getdns.Context()
-        c.resolution_type=getdns.RESOLUTION_STUB
+        c.resolution_type = getdns.RESOLUTION_STUB
         r = c.address('www.getdnsapi.net')
         self.assertEqual(r.status, getdns.RESPSTATUS_GOOD)
-        self.assertTrue('185.49.141.37' in [ x['address_data'] for x in r.just_address_answers ])
+        self.assertTrue('185.49.141.37' in [x['address_data'] for x in
+                                            r.just_address_answers])
         del(c)
         del(r)
 
     def test_sync_service(self):
         c = getdns.Context()
-        c.resolution_type=getdns.RESOLUTION_STUB
+        c.resolution_type = getdns.RESOLUTION_STUB
         r = c.service('_xmpp-server._tcp.jabber.org')
         self.assertEqual(r.status, getdns.RESPSTATUS_GOOD)
         del(c)
@@ -62,15 +66,16 @@ class TestGetdnsMethods(unittest.TestCase):
 
     def test_sync_hostname(self):
         c = getdns.Context()
-        c.resolution_type=getdns.RESOLUTION_STUB
-        r = c.hostname( { 'address_type': 'IPv4', 'address_data': '185.49.141.37' } )
+        c.resolution_type = getdns.RESOLUTION_STUB
+        r = c.hostname({'address_type': 'IPv4',
+                        'address_data': '185.49.141.37'})
         self.assertEqual(r.status, getdns.RESPSTATUS_GOOD)
         del(c)
         del(r)
 
     def test_sync_general(self):
         c = getdns.Context()
-        c.resolution_type=getdns.RESOLUTION_STUB
+        c.resolution_type = getdns.RESOLUTION_STUB
         r = c.general('nlnetlabs.nl', request_type=getdns.RRTYPE_NS)
         self.assertEqual(r.status, getdns.RESPSTATUS_GOOD)
         del(c)
@@ -80,7 +85,7 @@ class TestGetdnsMethods(unittest.TestCase):
         ns1 = {'class': 1,
                'name': 'example.com.',
                'rdata': {'nsdname': 'ns1.example.com.',
-                         'rdata_raw':'ns1.example.com.'},
+                         'rdata_raw': 'ns1.example.com.'},
                'ttl': 3600,
                'type': 2
                }
@@ -92,7 +97,7 @@ class TestGetdnsMethods(unittest.TestCase):
                'type': 2
                }
         f = open('example.com.zone')
-        r = getdns.file_to_list(f, 'example.com', 3600 )
+        r = getdns.file_to_list(f, 'example.com', 3600)
         self.assertIsInstance(r, list)
         self.assertEqual(r[1], ns1)
         self.assertEqual(r[2], ns2)
