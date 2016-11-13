@@ -55,6 +55,7 @@ static void add_getdns_constants(PyObject *g);
 static PyObject *ulabel_to_alabel(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *alabel_to_ulabel(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *wire_to_dict(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *file_to_list(PyObject *self, PyObject *args, PyObject *keywds);
 
 
 	
@@ -69,6 +70,8 @@ static struct PyMethodDef getdns_methods[] = {
       METH_VARARGS|METH_KEYWORDS, "return alabel from ulabel" },
     { "wire_to_dict", (PyCFunction)wire_to_dict,
       METH_VARARGS, "convert a wire format buffer to a Python dictionary" },
+    { "file_to_list", (PyCFunction)file_to_list,
+      METH_VARARGS, "read a zone from a file and return a list of records" },
     { 0, 0, 0 }
 };
 
@@ -362,6 +365,48 @@ wire_to_dict(PyObject *self, PyObject *args, PyObject *keywds)
         return NULL;
     }
     return py_rrdict;    
+}
+
+
+static PyObject *
+file_to_list(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    static char *kwlist[] = { "file",
+                              "origin",
+                              "default_ttl" };
+
+    PyObject *py_file;
+    char *origin;
+    uint32_t default_ttl;
+    FILE *fp;
+    PyObject *py_rrlist;
+    getdns_return_t ret;
+    getdns_list *rr_list;
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsI", kwlist,
+                                     &py_file, &origin, &default_ttl)) {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if (!PyFile_Check(py_file)) {
+        PyErr_SetString(getdns_error, "file argument must be file object");
+        return NULL;
+    }
+    if ((fp = PyFile_AsFile(py_file)) == NULL) {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    if ((ret = getdns_fp2rr_list(fp, &rr_list, origin,
+                                 (uint32_t)default_ttl)
+                ) != GETDNS_RETURN_GOOD) {
+        PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
+        return NULL;
+    }
+    if ((py_rrlist = glist_to_plist(rr_list)) == NULL ) {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
+        return NULL;
+    }
+    return py_rrlist;
 }
 
 
