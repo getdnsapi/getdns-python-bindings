@@ -1,7 +1,7 @@
 FROM  python:2.7
 
 RUN set -ex \
-    && apt-get update
+    && apt-get update \
     && curl -fOSL "https://unbound.net/downloads/unbound-1.5.8.tar.gz" \
     && curl -fOSL "https://github.com/getdnsapi/getdns/archive/v0.9.0.tar.gz" \
     && mkdir -p /usr/src/unbound \
