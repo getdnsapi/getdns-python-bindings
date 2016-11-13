@@ -2,7 +2,6 @@ import unittest
 import sys, platform
 
 
-x = [ 'lib' ]
 un = platform.uname()
 d = 'lib.' + un[0].lower() + '-' + un[4] + '-' + '.'.join(platform.python_version().split('.')[:2])
 sys.path.append(d)
@@ -25,6 +24,10 @@ class TestGetdnsMethods(unittest.TestCase):
 
     def test_dns_root_servers(self):
         c = getdns.Context()
+        addrs = [ { 'address_type': 'IPv4', 'address_data': '127.0.0.254' } ]
+        c.dns_root_servers = addrs
+        self.assertEqual(c.dns_root_servers, addrs)
+        del(c)
 
 
     def test_sync_address(self):
