@@ -19,9 +19,8 @@ class TestGetdnsMethods(unittest.TestCase):
 
     def test_bogus_attribute(self):
         c = getdns.Context()
-        with self.assertRaises(AttributeError, c.asdf) as e:
-
-        except
+        with self.assertRaises(AttributeError):
+            c.asdf
         del(c)
 
     def test_append_name(self):
