@@ -382,20 +382,35 @@ file_to_list(PyObject *self, PyObject *args, PyObject *keywds)
     PyObject *py_rrlist;
     getdns_return_t ret;
     getdns_list *rr_list;
+    #if PY_MAJOR_VERSION >= 3
+    int  fd;
+    #endif
+
 
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "OsI", kwlist,
                                      &py_file, &origin, &default_ttl)) {
         PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
         return NULL;
     }
+#if PY_MAJOR_VERSION >= 3
+    if ((fd = PyObject_AsFileDescriptor(py_file)) < 0)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+    if ((fp = fdopen(fd, "r")) == 0)  {
+        PyErr_SetString(getdns_error, GETDNS_RETURN_INVALID_PARAMETER_TEXT);
+        return NULL;
+    }
+#else
     if (!PyFile_Check(py_file)) {
-        PyErr_SetString(getdns_error, "file argument must be file object");
+        PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
     if ((fp = PyFile_AsFile(py_file)) == NULL) {
         PyErr_SetString(getdns_error, GETDNS_RETURN_GENERIC_ERROR_TEXT);
         return NULL;
     }
+#endif
     if ((ret = getdns_fp2rr_list(fp, &rr_list, origin,
                                  (uint32_t)default_ttl)
                 ) != GETDNS_RETURN_GOOD) {
