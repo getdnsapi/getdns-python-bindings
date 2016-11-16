@@ -5,13 +5,14 @@ import unittest
 
 
 un = platform.uname()
-d = "lib.{0}-{1}-{2}".format(
+d = "../build/lib.{0}-{1}-{2}".format(
     un[0].lower(), un[4], '.'.join(platform.python_version().split('.')[:2])
 )
-sys.path.append(d)
+sys.path.insert(0, d)
 
 
 class TestGetdnsMethods(unittest.TestCase):
+
     def test_context(self):
         c = getdns.Context()
         self.assertIsNotNone(c)
@@ -45,6 +46,55 @@ class TestGetdnsMethods(unittest.TestCase):
         self.assertEqual(c.dns_transport_list, transports)
         del(c)
 
+    def test_dnssec_allowed_skew(self):
+        c = getdns.Context()
+        skew = 5
+        c.dnssec_allowed_skew = skew
+        self.assertEqual(c.dnssec_allowed_skew, skew)
+        del(c)
+
+    def test_edns_client_subnet_private(self):
+        c = getdns.Context()
+        p = 1
+        c.edns_client_subnet_private = p
+        self.assertEqual(c.edns_client_subnet_private, p)
+        del(c)
+
+    def test_edns_do_bit(self):
+        c = getdns.Context()
+        do = 1
+        c.edns_do_bit = do
+        self.assertEqual(c.edns_do_bit, do)
+        del(c)
+
+    def test_edns_extended_rcode(self):
+        c = getdns.Context()
+        r = 127
+        c.edns_extended_rcode = r
+        self.assertEqual(c.edns_extended_rcode, r)
+        del(c)
+
+    def test_edns_maximum_udp_payload_size(self):
+        c = getdns.Context()
+        s = 1024
+        c.edns_maximum_udp_payload_size = s
+        self.assertEqual(c.edns_maximum_udp_payload_size, s)
+        del(c)
+
+    def test_edns_version(self):
+        c = getdns.Context()
+        v = 2
+        c.edns_version = v
+        self.assertEqual(c.edns_version, v)
+        del(c)
+
+    def test_idle_timeout(self):
+        c = getdns.Context()
+        i = 5
+        c.idle_timeout = i
+        self.assertEqual(c.idle_timeout, i)
+        del(c)
+        
     def test_sync_address(self):
         c = getdns.Context()
         c.resolution_type = getdns.RESOLUTION_STUB
@@ -100,6 +150,7 @@ class TestGetdnsMethods(unittest.TestCase):
         self.assertIsInstance(r, list)
         self.assertEqual(r[1], ns1)
         self.assertEqual(r[2], ns2)
+        f.close()
         del(f)
         del(r)
 

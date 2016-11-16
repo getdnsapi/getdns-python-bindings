@@ -1191,9 +1191,9 @@ context_getattro(PyObject *self, PyObject *nameobj)
 
 struct setter_table setters[] = {
     { "append_name", context_set_append_name },
-    { "dnssec_allowed_skew", context_set_dnssec_allowed_skew },
     { "dns_root_servers", context_set_dns_root_servers },
     { "dns_transport_list", context_set_dns_transport_list },
+    { "dnssec_allowed_skew", context_set_dnssec_allowed_skew },
     { "edns_client_subnet_private", context_set_edns_client_subnet_private },
     { "edns_do_bit", context_set_edns_do_bit },
     { "edns_extended_rcode", context_set_edns_extended_rcode },
