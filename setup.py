@@ -73,7 +73,6 @@ setup(name='getdns',
       author='Melinda Shore',
       author_email='melinda.shore@nomountain.net',
       url='http://getdns.readthedocs.org',
-      dependency_links=['git+https://github.com/getdnsapi/getdns/tree/release/v0.9.0'],
       ext_modules = [ getdns_module ],
       classifiers = [
         'Development Status :: 4 - Beta',
