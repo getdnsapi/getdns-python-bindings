@@ -1,6 +1,7 @@
 import getdns
 import platform
 import sys
+import os
 import unittest
 
 
@@ -8,8 +9,10 @@ un = platform.uname()
 d = "../build/lib.{0}-{1}-{2}".format(
     un[0].lower(), un[4], '.'.join(platform.python_version().split('.')[:2])
 )
-sys.path.insert(0, d)
 
+# sys.path.insert(0, d)
+# print('XXX' + '"' + os.path.dirname(sys.argv[0]) + '"')
+print("YEAH" if os.path.dirname(sys.argv[0]) else "NO")
 
 class TestGetdnsMethods(unittest.TestCase):
 
@@ -145,7 +148,8 @@ class TestGetdnsMethods(unittest.TestCase):
                'ttl': 3600,
                'type': 2
                }
-        f = open('example.com.zone')
+        d = os.path.dirname(sys.argv[0])
+        f = open(('.' if d == '' else d) + '/example.com.zone')
         r = getdns.file_to_list(f, 'example.com', 3600)
         self.assertIsInstance(r, list)
         self.assertEqual(r[1], ns1)
