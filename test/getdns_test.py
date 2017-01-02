@@ -10,9 +10,7 @@ d = "../build/lib.{0}-{1}-{2}".format(
     un[0].lower(), un[4], '.'.join(platform.python_version().split('.')[:2])
 )
 
-# sys.path.insert(0, d)
-# print('XXX' + '"' + os.path.dirname(sys.argv[0]) + '"')
-print("YEAH" if os.path.dirname(sys.argv[0]) else "NO")
+sys.path.insert(0, d)
 
 class TestGetdnsMethods(unittest.TestCase):
 
