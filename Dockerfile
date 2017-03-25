@@ -25,6 +25,7 @@ RUN set -ex \
     && git clone https://github.com/getdnsapi/getdns.git \
     && cd /usr/src/getdns \
     && git checkout develop \
+    && git submodule update --init \
     && libtoolize -ci \
     && autoreconf -fi \
     && ./configure \
