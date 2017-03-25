@@ -96,6 +96,20 @@ class TestGetdnsMethods(unittest.TestCase):
         self.assertEqual(c.idle_timeout, i)
         del(c)
         
+    def test_round_robin_upstreams(self):
+        c = getdns.Context()
+        i = 1
+        c.round_robin_upstreams = i
+        self.assertEqual(c.round_robin_upstreams, i)
+        del(c)
+
+    def test_tls_backoff_time(self):
+        c = getdns.Context()
+        i = 6000
+        c.tls_backoff_time = i
+        self.assertEqual(c.round_robin_upstreams, i)
+        del(c)
+
     def test_sync_address(self):
         c = getdns.Context()
         c.resolution_type = getdns.RESOLUTION_STUB

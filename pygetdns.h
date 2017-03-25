@@ -99,10 +99,11 @@ typedef struct {
     char *version_string;
     uint16_t tls_authentication;
     uint32_t num_pending_requests;
-#if GETDNS_NUMERIC_VERSION > 0x00050000
+    uint8_t round_robin_upstreams;
+    uint16_t tls_backoff_time;
+    uint16_t tls_connection_retries;
     uint16_t tls_query_padding_blocksize;
     uint8_t edns_client_subnet_private;
-#endif
 } getdns_ContextObject;
 
 struct setter_table  {          /* we're now using bsearch to find */
@@ -162,6 +163,8 @@ PyObject *context_run(getdns_ContextObject *self, PyObject *args, PyObject *keyw
 PyObject *context_cancel_callback(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
 
 PyObject *context_get_attributes(getdns_ContextObject *self, PyObject *unused);
+PyObject *context_config(getdns_ContextObject *self, PyObject *args, PyObject *keywds);
+
 
 void context_dealloc(getdns_ContextObject *self);
 PyObject *get_callback(char *py_main, char *callback);
