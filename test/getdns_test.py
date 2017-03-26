@@ -216,7 +216,7 @@ class TestGetdnsMethods(unittest.TestCase):
         c = getdns.Context()
         i = 6000
         c.tls_backoff_time = i
-        self.assertEqual(c.round_robin_upstreams, i)
+        self.assertEqual(c.tls_backoff_time, i)
         del(c)
 
     def test_sync_address(self):
