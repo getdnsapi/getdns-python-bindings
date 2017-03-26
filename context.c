@@ -1474,8 +1474,6 @@ context_config(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
     }
     getdns_config = pdict_to_gdict(py_config);
     char buf[4096];
-    getdns_pretty_snprint_dict(buf, 4096, getdns_config);
-    printf("%s\n", buf);
     if ((ret = getdns_context_config(context, getdns_config)) != GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
@@ -1505,12 +1503,26 @@ pdict_to_gdict(PyObject *py_dict)
     for ( i = 0 ; i < keys_size ; i++ )  {
         key = PyList_GetItem(py_keys, i);
         py_item = PyDict_GetItem(py_dict, key);
-        if (PyInt_Check(py_item)) 
+#if PY_MAJOR_VERSION >= 3
+        if (PyLong_Check(py_item))
+            (void)getdns_dict_set_int(g_dict, PyBytes_AsString(PyUnicode_AsEncodedString(key, "ascii", NULL)), (uint32_t)PyLong_AsLong(py_item));
+#else
+        if (PyInt_Check(py_item))
             (void)getdns_dict_set_int(g_dict, PyString_AsString(key), (uint32_t)PyInt_AsLong(py_item));
+#endif
+#if PY_MAJOR_VERSION >= 3
+        else if (PyUnicode_Check(py_item))  {
+#else
         else if (PyString_Check(py_item))  {
+#endif
             getdns_bindata g_bindata;
+#if PY_MAJOR_VERSION >= 3
+            char *str = PyBytes_AsString(PyUnicode_AsEncodedString(py_item, "ascii", NULL));
+            keystr = PyBytes_AsString(PyUnicode_AsEncodedString(key, "ascii", NULL));
+#else
             char *str = PyString_AsString(py_item);
             keystr = PyString_AsString(key);
+#endif
             if (!strncmp(keystr, "address_data", strlen("address_data")))  {
                 int af;
                 char buf[16];
@@ -1531,12 +1543,27 @@ pdict_to_gdict(PyObject *py_dict)
                 g_bindata.data = (uint8_t *)str;
                 g_bindata.size = strlen(str);
             }
+#if PY_MAJOR_VERSION >= 3
+            (void)getdns_dict_set_bindata(g_dict, PyBytes_AsString(
+                                              PyUnicode_AsEncodedString(key, "ascii", NULL)),
+                                          &g_bindata);
+            } else if (PyList_Check(py_item))  {
+                getdns_list *tmp_list = plist_to_glist(py_item);
+                getdns_dict_set_list(g_dict, PyBytes_AsString(
+                                         PyUnicode_AsEncodedString(key, "ascii", NULL)),
+                                     tmp_list);
+            } else if (PyDict_Check(py_dict))
+                getdns_dict_set_dict(g_dict, PyBytes_AsString(
+                                         PyUnicode_AsEncodedString(key, "ascii", NULL)),
+                                     pdict_to_gdict(py_item));
+#else
             (void)getdns_dict_set_bindata(g_dict, PyString_AsString(key), &g_bindata);
             } else if (PyList_Check(py_item))  {
                 getdns_list *tmp_list = plist_to_glist(py_item);
                 getdns_dict_set_list(g_dict, PyString_AsString(key), tmp_list);
             } else if (PyDict_Check(py_dict))
                 getdns_dict_set_dict(g_dict, PyString_AsString(key), pdict_to_gdict(py_item));
+#endif
         }
         return g_dict;
     }
@@ -1557,11 +1584,24 @@ plist_to_glist(PyObject *py_list)
     list_size = PyList_Size(py_list);
     for ( i = 0 ; i < list_size ; i++ )  {
         py_item = PyList_GetItem(py_list, i);
+#if PY_MAJOR_VERSION >= 3
+        if (PyLong_Check(py_item))
+            (void)getdns_list_set_int(g_list, (int)i, (uint32_t)PyLong_AsLong(py_item));
+#else
         if (PyInt_Check(py_item)) 
             (void)getdns_list_set_int(g_list, (int)i, (uint32_t)PyInt_AsLong(py_item));
+#endif
+#if PY_MAJOR_VERSION >= 3
+        else if (PyUnicode_Check(py_item))  {
+#else
         else if (PyString_Check(py_item))  {
+#endif
             getdns_bindata g_bindata;
+#if PY_MAJOR_VERSION >= 3
+            char *str = PyBytes_AsString(PyUnicode_AsEncodedString(py_item, "ascii", NULL));
+#else
             char *str = PyString_AsString(py_item);
+#endif
             g_bindata.size = strlen(str);
             g_bindata.data = (uint8_t *)str;
             (void)getdns_list_set_bindata(g_list, (int)i, &g_bindata);

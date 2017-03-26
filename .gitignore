@@ -2,8 +2,7 @@ build/
 _build/
 *~
 *.pyc
-getdns.so
-getdns.cpython-34m.so
+*.so
 *.save
 doc/_build/
 doc/_build/*
