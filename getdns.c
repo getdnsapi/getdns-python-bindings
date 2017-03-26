@@ -76,6 +76,8 @@ static struct PyMethodDef getdns_methods[] = {
 };
 
 
+
+
 #if PY_MAJOR_VERSION >= 3
 static struct PyModuleDef getdnsdef = {
     PyModuleDef_HEAD_INIT,
@@ -184,6 +186,8 @@ PyMethodDef Context_methods[] = {
       "cancel outstanding callbacks" },
     { "get_supported_attributes", (PyCFunction)context_get_attributes, METH_NOARGS,
       "Return a list of support attributes" },
+    { "context_config", (PyCFunction)context_config, METH_VARARGS|METH_KEYWORDS,
+      "update context from dictionary" },
     { NULL }
 };
 
@@ -224,16 +228,17 @@ PyMemberDef Context_members[] = {
     { "version_string", T_STRING|READONLY, offsetof(getdns_ContextObject, version_string), 0,
       "string set by the implementer" },
     {"idle_timeout", T_INT, offsetof(getdns_ContextObject, idle_timeout), 0, "TCP idle timeout" },
+    {"round_robin_upstreams", T_INT, offsetof(getdns_ContextObject, round_robin_upstreams), 0, "round robin upstreams" },
     {"tls_authentication", T_INT, offsetof(getdns_ContextObject, tls_authentication), 0,
      "TLS authentication basis" },
+    {"tls_backoff_time", T_INT, offsetof(getdns_ContextObject, tls_backoff_time), 0, "TLS backoff time"},
+    {"tls_connection_retries", T_INT, offsetof(getdns_ContextObject, tls_connection_retries), 0, "TLS connection retries"},
     {"num_pending_requests", T_INT, offsetof(getdns_ContextObject, num_pending_requests),
                                              READONLY, "count of outstanding requests" },
-#if GETDNS_NUMERIC_VERSION > 0x00050000
     {"tls_query_padding_blocksize", T_INT, offsetof(getdns_ContextObject, tls_query_padding_blocksize),
      0, "padding blocksize" },
     { "edns_client_subnet_private", T_INT, offsetof(getdns_ContextObject, edns_client_subnet_private), 0,
      "ask upstreams not to reveal query's originating network" },
-#endif
     { NULL }
 };
 
@@ -498,6 +503,7 @@ PyInit_getdns(void)
     }
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
+    PyModule_AddStringConstant(g, "getdns_version", getdns_get_version());
     PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
     add_getdns_constants(g);
     return g;
@@ -528,6 +534,7 @@ initgetdns(void)
     Py_INCREF(&getdns_ContextType);
     PyModule_AddObject(g, "Context", (PyObject *)&getdns_ContextType);
     PyModule_AddStringConstant(g, "__version__", PYGETDNS_VERSION);
+    PyModule_AddStringConstant(g, "getdns_version", getdns_get_version());
     add_getdns_constants(g);
 }
 
@@ -605,10 +612,15 @@ add_getdns_constants(PyObject *g)
  *  misc. implementation-specific constants - getdns_extra.h
  */
 
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_AUTHENTICATION", 618);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_EDNS_CLIENT_SUBNET_PRIVATE", 619);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_TLS_QUERY_PADDING_BLOCKSIZE", 620);
-    PyModule_AddIntConstant(g, "GETDNS_CONTEXT_CODE_PUBKEY_PINSET", 621);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_TLS_AUTHENTICATION", 618);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_EDNS_CLIENT_SUBNET_PRIVATE", 619);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_TLS_QUERY_PADDING_BLOCKSIZE", 620);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_PUBKEY_PINSET", 621);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_ROUND_ROBIN_UPSTREAMS", 622);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_TLS_BACKOFF_TIME", 623);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_CONNECTION_RETRIES", 624);
+
+    PyModule_AddIntConstant(g, "GETDNS_RETURN_NO_UPSTREAM_AVAILABLE", 398);
     PyModule_AddIntConstant(g, "GETDNS_RETURN_NEED_MORE_SPACE", 399);
 
 /*
@@ -651,7 +663,7 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "CONTEXT_CODE_MEMORY_FUNCTIONS", 615);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_TIMEOUT", 616);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_IDLE_TIMEOUT", 617);
-    
+
 /*
  *  callback types
  */
@@ -798,6 +810,7 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "RCODE_BADNAME", 20);
     PyModule_AddIntConstant(g, "RCODE_BADALG", 21);
     PyModule_AddIntConstant(g, "RCODE_BADTRUNC", 22);
+    PyModule_AddIntConstant(g, "RCODE_COOKIE", 23);
 
 /*
  * extras

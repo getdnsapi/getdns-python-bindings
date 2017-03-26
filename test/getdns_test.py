@@ -20,7 +20,6 @@ d = "../build/lib.{0}-{1}-{2}".format(
 
 sys.path.insert(0, d)
 
-
 class TestGetdnsMethods(unittest.TestCase):
 
     def test_context(self):
@@ -206,6 +205,19 @@ class TestGetdnsMethods(unittest.TestCase):
         del(c)
         del(e)
 
+    def test_round_robin_upstreams(self):
+        c = getdns.Context()
+        i = 1
+        c.round_robin_upstreams = i
+        self.assertEqual(c.round_robin_upstreams, i)
+        del(c)
+
+    def test_tls_backoff_time(self):
+        c = getdns.Context()
+        i = 6000
+        c.tls_backoff_time = i
+        self.assertEqual(c.round_robin_upstreams, i)
+        del(c)
 
     def test_sync_address(self):
         c = getdns.Context()
