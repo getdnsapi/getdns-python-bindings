@@ -1,4 +1,4 @@
-FROM  ubuntu:14.04
+FROM  ubuntu:16.04
 MAINTAINER Melinda Shore <melinda.shore@nomountain.net>
 
 RUN set -ex \
@@ -7,10 +7,10 @@ RUN set -ex \
     && apt-get install -y git \
     && apt-get install -y wget \
     && apt-get install -y libssl-dev \
-    && curl -fOSL "https://unbound.net/downloads/unbound-1.5.8.tar.gz" \
+    && curl -fOSL "https://unbound.net/downloads/unbound-1.6.3.tar.gz" \
     && mkdir -p /usr/src/unbound \
-    && tar -xzC /usr/src/unbound --strip-components=1 -f unbound-1.5.8.tar.gz \
-    && rm unbound-1.5.8.tar.gz \
+    && tar -xzC /usr/src/unbound --strip-components=1 -f unbound-1.6.3.tar.gz \
+    && rm unbound-1.6.3.tar.gz \
     && apt-get -y install libidn11-dev \
     && apt-get -y install python-dev \
     && apt-get -y install make \
@@ -24,7 +24,7 @@ RUN set -ex \
     && cd /usr/src \
     && git clone https://github.com/getdnsapi/getdns.git \
     && cd /usr/src/getdns \
-    && git checkout develop \
+    && git checkout release/1.1.1 \
     && git submodule update --init \
     && libtoolize -ci \
     && autoreconf -fi \
