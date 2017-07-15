@@ -618,7 +618,7 @@ add_getdns_constants(PyObject *g)
     PyModule_AddIntConstant(g, "CONTEXT_CODE_PUBKEY_PINSET", 621);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_ROUND_ROBIN_UPSTREAMS", 622);
     PyModule_AddIntConstant(g, "CONTEXT_CODE_TLS_BACKOFF_TIME", 623);
-    PyModule_AddIntConstant(g, "CONTEXT_CODE_CONNECTION_RETRIES", 624);
+    PyModule_AddIntConstant(g, "CONTEXT_CODE_TLS_CONNECTION_RETRIES", 624);
 
     PyModule_AddIntConstant(g, "GETDNS_RETURN_NO_UPSTREAM_AVAILABLE", 398);
     PyModule_AddIntConstant(g, "GETDNS_RETURN_NEED_MORE_SPACE", 399);

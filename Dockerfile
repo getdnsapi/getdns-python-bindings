@@ -1,4 +1,4 @@
-FROM  ubuntu:14.04
+FROM  ubuntu:16.04
 MAINTAINER Melinda Shore <melinda.shore@nomountain.net>
 
 RUN set -ex \
@@ -34,7 +34,7 @@ RUN set -ex \
     && ldconfig \
     && mkdir -p /etc/unbound \
     && cd /etc/unbound \
-    && wget http://www.nomountain.net/getdns-root.key \
+    && unbound-anchor -a /etc/unbound/getdns-root.key || : \
     && cd /usr/src \
     && git clone https://github.com/getdnsapi/getdns-python-bindings.git \
     && cd /usr/src/getdns-python-bindings \
