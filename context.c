@@ -1473,7 +1473,6 @@ context_config(getdns_ContextObject *self, PyObject *args, PyObject *keywds)
         return NULL;
     }
     getdns_config = pdict_to_gdict(py_config);
-    char buf[4096];
     if ((ret = getdns_context_config(context, getdns_config)) != GETDNS_RETURN_GOOD)  {
         PyErr_SetString(getdns_error, getdns_get_errorstr_by_id(ret));
         return NULL;
